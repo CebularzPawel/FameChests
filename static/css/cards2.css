@@ -2026,6 +2026,299 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-steel img { filter: grayscale(.85) contrast(1.15) sepia(.15) hue-rotate(170deg); }
 .pick.v-steel { box-shadow: inset 0 0 0 2px #a9b2ba, inset 0 0 0 3px #3e464d, inset 0 -26px 26px -18px var(--rc); }
 
+/* ============================================================ CZEKOLADOWA, ODBLASKOWA, CUKIERKOWA, HOLLYWOOD '69 i KOBALTOWA (piąta partia makiet z /variants; domyślnie
+   wyłączone). Elementy: VX_BG / VX_PHOTO / VX_DECO chocolate / reflective w app.js. */
+.card:is(.v-chocolate, .v-reflective) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card:is(.v-chocolate, .v-reflective) :is(.card-sub, .card-attack, .card-stats) { background: var(--panel); border: none; border-radius: .3em; }
+.card:is(.v-chocolate, .v-reflective) .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-chocolate, .ph.vt-chocolate { background: linear-gradient(180deg, #8a5228, #4a240e); color: #ffe6c8; border: 1px solid #d4a12a; text-shadow: none; }
+.var-tag.vt-reflective, .ph.vt-reflective { background: #d8ff00; color: #111; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; text-shadow: none; box-shadow: 0 0 .7em #e6ff2a; }
+.vdot.vt-chocolate { background: linear-gradient(135deg, #f0d070, #d4a12a 30%, #6b3a1f 32%, #3a1a08); }
+.vdot.vt-reflective { background: linear-gradient(180deg, #e6ff2a 0 55%, #d8dde2 56% 70%, #e6ff2a 71%); box-shadow: 0 0 5px #e6ff2a; }
+.odd.odd-v.vt-chocolate { border-left-color: #8a5228; } .odd.odd-v.vt-reflective { border-left-color: #d8ff00; }
+
+/* Czekoladowa - tabliczka czekolady w złotku: wypukłe kostki z połyskiem, ramka z pogniecionej złotej folii */
+.card.v-chocolate { --panel: #2a120688; --spin: initial; box-shadow: 0 6px 18px #000a;
+  --frame: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.05' numOctaves='3' seed='3'/><feDiffuseLighting lighting-color='%23ffe08a' surfaceScale='3'><feDistantLight azimuth='225' elevation='45'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>") 0 0 / 60px, #d4a12a; }
+.card.v-chocolate .card-inner { background: #6b3a1f; color: #fff0dc; }
+.card.v-chocolate :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #fff0dc; }
+.card.v-chocolate .card-head { background: #2a120688; border-radius: .3em; padding: 0 .25em; }
+.card.v-chocolate .card-name { font-family: Shrikhand, Rubik, sans-serif; font-weight: 400; color: #ffe6c8; text-shadow: 0 .06em 0 #2a1206, 0 0 .3em #2a1206; }
+.card.v-chocolate .card-photo { border-image: none; border-color: #3a1a08; box-shadow: inset 0 0 .6em #0008, 0 .15em .3em #0006; }
+.card.v-chocolate .card-photo > img, .r-secret.v-chocolate .sc-art img { filter: sepia(.45) saturate(1.2) contrast(1.05); }
+.co-bar { position: absolute; inset: 0; width: 100%; height: 100%; }
+.co-sq { fill: #7a4424; stroke: #4a240e; stroke-width: .5; }
+.co-hi { fill: none; stroke: #b07a4a; stroke-width: .5; opacity: .8; }
+.co-tint { background: linear-gradient(180deg, #c47a3a40, #5a2e1430); mix-blend-mode: multiply; }
+.co-shine { inset: -30% -60%; background: linear-gradient(115deg, transparent 42%, #ffffff30 50%, transparent 58%); animation: coShine 5s ease-in-out infinite; }
+@keyframes coShine { 0%, 15% { transform: translateX(-40%); } 85%, 100% { transform: translateX(40%); } }
+.r-secret.v-chocolate .sc-border { background: linear-gradient(135deg, #f0d070, #8a5228 40%, #d4a12a 60%, #3a1a08); animation: none; }
+.pick.v-chocolate img { filter: sepia(.45) saturate(1.2); }
+.pick.v-chocolate { box-shadow: inset 0 0 0 2px #d4a12a, inset 0 0 0 4px #4a240e, inset 0 -26px 26px -18px var(--rc); }
+
+/* Odblaskowa - kamizelka odblaskowa: świecąca fluorescencyjna żółć, dwa pasy z mikrokulek; gdy przelatuje światło
+   reflektora, pasy i kulki rozbłyskują na biało, a cała karta jarzy się mocniej */
+.card.v-reflective { --panel: #11111199; --frame: linear-gradient(135deg, #c8f000, #f6ff7a 50%, #a8d000); --spin: initial;
+  box-shadow: 0 6px 18px #0009, 0 0 18px #e6ff2a99; animation: rfCardGlow 4s ease-in-out infinite; }
+@keyframes rfCardGlow { 0%, 45%, 75%, 100% { box-shadow: 0 6px 18px #0009, 0 0 18px #e6ff2a99; } 58% { box-shadow: 0 6px 18px #0009, 0 0 34px #f4ff8a, 0 0 60px #e6ff2a88; } }
+.card.v-reflective .card-inner { background: linear-gradient(170deg, #f0ff4a, #d4ff00 45%, #c2ee00); color: #f2f2f2; }
+.card.v-reflective :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2f2f2; }
+.card.v-reflective .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: #111; }
+.card.v-reflective .card-photo { border-image: none; border: .2em solid #d8dde2; box-shadow: 0 0 0 .08em #555, 0 0 .8em #f4ff8a; }
+/* fluorescencja: jasne plamy, które same z siebie lekko pulsują (jak farba w świetle UV) */
+.rf-fluo { inset: 0; background: radial-gradient(70% 45% at 30% 20%, #ffffffaa, transparent 70%), radial-gradient(60% 40% at 80% 70%, #ffffff66, transparent 70%);
+  mix-blend-mode: soft-light; animation: rfFluo 3s ease-in-out infinite alternate; }
+@keyframes rfFluo { from { opacity: .55; } to { opacity: 1; } }
+.rf-glow { inset: 0; background: radial-gradient(90% 70% at 50% 45%, #fbffc4, transparent 75%); mix-blend-mode: screen; opacity: 0; animation: rfGlow 4s ease-in-out infinite; }
+@keyframes rfGlow { 0%, 45%, 75%, 100% { opacity: 0; } 58% { opacity: .75; } }
+/* pas odblaskowy z mikrokulek: srebrny, w świetle jaskrawo biały */
+.rf-band { left: 0; right: 0; height: 7%; box-shadow: 0 0 0 .4cqw #8a9096; animation: rfFlash 4s ease-in-out infinite;
+  background: radial-gradient(circle, #ffffff 0 .18cqw, transparent .3cqw) 0 0 / .9cqw .9cqw, repeating-linear-gradient(90deg, #b8bec6 0 .4cqw, #a0a6ae .4cqw .8cqw); }
+.rf-band.a { top: 64%; } .rf-band.b { top: 80%; animation-delay: -.15s; }
+@keyframes rfFlash { 0%, 45%, 75%, 100% { filter: brightness(1); } 58% { filter: brightness(2.1) saturate(0) drop-shadow(0 0 2.4cqw #fff); } }
+.rf-beam { inset: -20% -80%; background: linear-gradient(105deg, transparent 42%, #ffffff40 47%, #ffffffaa 50%, #ffffff40 53%, transparent 58%); mix-blend-mode: screen; animation: rfBeam 4s ease-in-out infinite; }
+@keyframes rfBeam { 0%, 30% { transform: translateX(-45%); } 85%, 100% { transform: translateX(45%); } }
+.r-secret.v-reflective .sc-border { background: linear-gradient(135deg, #f0ff4a, #c8f000 40%, #d8dde2 60%, #a8d000); animation: none; }
+.pick.v-reflective img { filter: saturate(1.1) brightness(1.05); }
+.pick.v-reflective { box-shadow: inset 0 0 0 2px #e6ff2a, inset 0 0 0 4px #d8dde2, 0 0 8px #e6ff2a88, inset 0 -26px 26px -18px var(--rc); }
+.co-shine, .rf-beam, .rf-glow { will-change: transform, opacity; }
+
+/* Cukierkowa - sklep ze słodyczami: paski markizy przesuwają się w tle, falbanka markizy nad nazwą (variantTop),
+   ramka w różowo-miętowe paski laski cukrowej, sypiąca się posypka, migoczący cukier na zdjęciu */
+.card.v-candy .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-candy :is(.card-sub, .card-attack, .card-stats) { background: #ffffffb0; border: none; border-radius: .3em; }
+.card.v-candy .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-candy, .ph.vt-candy { background: linear-gradient(90deg, #ff8ac4, #ffe08a, #8ad8ff); color: #5a1a4a; border: 1px solid #fff; font-family: Bangers, sans-serif; font-weight: 400; letter-spacing: .05em; text-shadow: none; }
+.vdot.vt-candy { background: repeating-linear-gradient(-45deg, #ff5aa8 0 3px, #fff 3px 6px, #3ddc84 6px 9px, #fff 9px 12px); }
+.odd.odd-v.vt-candy { border-left-color: #ff5aa8; }
+.card.v-candy { --frame: #fff; --spin: initial; box-shadow: 0 6px 18px #0008; }
+.card.v-candy .card-inner { background: #fff2f8; color: #5a1a4a; }
+.card.v-candy :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #5a1a4a; }
+.card.v-candy .card-head { z-index: 3; }
+.card.v-candy .card-name { font-family: Bangers, Shrikhand, sans-serif; font-weight: 400; font-size: 1.15em; letter-spacing: .03em; color: #e8202f;
+  text-shadow: 0 0 .12em #fff, .05em .05em 0 #fff, -.05em -.05em 0 #fff, .05em -.05em 0 #fff, -.05em .05em 0 #fff, .1em .12em 0 #5a1a4a55; }
+.card.v-candy .card-photo { border-image: none; border: .22em solid #fff; border-radius: .6em; box-shadow: 0 .2em .5em #5a1a4a55; }
+.cd-stripes { inset: 0 -20%; background: repeating-linear-gradient(90deg, #ffc2de 0 5cqw, #fff 5cqw 10cqw); animation: cdStripes 6s linear infinite; }
+@keyframes cdStripes { to { transform: translateX(10cqw); } }
+.cd-awning { position: relative; height: 1.1em; margin: -3% -4% 1%; background: radial-gradient(circle at 50% 0, #ff5aa8 0 70%, transparent 72%) 0 100% / 1.2em .6em repeat-x,
+  repeating-linear-gradient(90deg, #ff5aa8 0 .6em, #fff .6em 1.2em) 0 0 / 100% .55em no-repeat; filter: drop-shadow(0 .1em .1em #5a1a4a44); }
+.cd-cane { position: absolute; inset: 0; border-radius: 4.5%/3.2%; border: 3.6cqw solid transparent; box-shadow: inset 0 0 0 .3cqw #fff8;
+  background: repeating-linear-gradient(-45deg, #ff5aa8 0 2cqw, #fff 2cqw 4cqw, #3ddc84 4cqw 6cqw, #fff 6cqw 8cqw) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); animation: cdCane 3s linear infinite; }
+@keyframes cdCane { to { background-position: 11.3cqw 0; } }
+.cd-fall { position: absolute; top: -4%; width: 2.6cqw; height: .8cqw; border-radius: 1cqw; box-shadow: 0 .2cqw .2cqw #0002; animation: cdFall linear infinite; }
+@keyframes cdFall { from { transform: translateY(0) rotate(0); } to { transform: translateY(150cqw) rotate(var(--r)); } }
+.cd-sugar { background: radial-gradient(circle, #fff 0 .25cqw, transparent .4cqw) 0 0 / 3cqw 3cqw, radial-gradient(circle, #fff9 0 .2cqw, transparent .35cqw) 1.5cqw 1.5cqw / 3cqw 3cqw;
+  mix-blend-mode: screen; opacity: .35; animation: vmPulseC 2s ease-in-out infinite; }
+@keyframes vmPulseC { 50% { opacity: .2; } }
+.cd-twinkle { position: absolute; z-index: 2; width: 5%; aspect-ratio: 1; background: #fff; filter: drop-shadow(0 0 .6cqw #fff);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: cdTwinkle 2.4s ease-in-out infinite; }
+@keyframes cdTwinkle { 0%, 60%, 100% { transform: scale(0) rotate(0); } 75% { transform: scale(1) rotate(45deg); } }
+.cd-stripes, .cd-fall, .cd-twinkle { will-change: transform; }
+.r-secret.v-candy .sc-border { background: repeating-linear-gradient(-45deg, #ff5aa8 0 8px, #fff 8px 16px, #3ddc84 16px 24px, #fff 24px 32px); animation: none; }
+.pick.v-candy img { filter: saturate(1.15) brightness(1.04); }
+.pick.v-candy { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #ff5aa8, inset 0 -26px 26px -18px var(--rc); }
+
+/* Hollywood '69 - seans o zmierzchu w LA 1969 („Pewnego razu… w Hollywood”): niebo od granatu do pomarańczu, nieruchome snopy
+   reflektorów słabnące ku górze, palmy wyrastające zza dolnej krawędzi (po prawej lustrzane odbicie), zdjęcie jak malowany
+   plakat (filtr #hyPoster w index.html), prosta złoto-pomarańczowa ramka, migotanie projektora, kurz i ziarno.
+   VX_BG / VX_DECO hollywood, napis nad nazwą - variantTop, podpis - variantSub. */
+.card.v-hollywood .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-hollywood :is(.card-sub, .card-attack, .card-stats) { background: #1a0c24bb; border: none; border-radius: .3em; }
+.card.v-hollywood .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-hollywood, .ph.vt-hollywood { background: #f2c14e; color: #5a1a0a; border: 1px solid #5a1a0a; font-family: Shrikhand, cursive; font-weight: 400; letter-spacing: .02em; text-shadow: none; }
+.vdot.vt-hollywood { background: linear-gradient(180deg, #1a2048, #8a3a5a 50%, #ffb35a); box-shadow: 0 0 0 1px #ffd08a; }
+.odd.odd-v.vt-hollywood { border-left-color: #e0683a; }
+.card.v-hollywood { --frame: linear-gradient(180deg, #1a2048, #3a2a5e 40%, #8a3a5a 70%, #e0683a); --spin: initial; box-shadow: 0 6px 18px #0009; }
+.card.v-hollywood .card-inner { background: linear-gradient(180deg, #1a2048 0%, #3a2a5e 25%, #8a3a5a 48%, #e0683a 66%, #ffb35a 85%, #ffd890); color: #fff0d8; }
+.card.v-hollywood :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #fff0d8; }
+.card.v-hollywood .card-name { font-family: Shrikhand, Yellowtail, cursive; font-weight: 400; color: #ffe6b0; letter-spacing: .01em; text-shadow: .06em .06em 0 #c8402a, .12em .12em 0 #2a0a08; }
+.card.v-hollywood .card-photo { border: none; border-image: none; border-radius: .25em; box-shadow: 0 0 0 .14em #ffe6b0, 0 .3em .7em #0008; }
+.card.v-hollywood .card-photo > img, .r-secret.v-hollywood .sc-art img { filter: url(#hyPoster); }
+.card.v-hollywood .card-sub { font-family: Shrikhand, cursive; font-weight: 400; font-style: normal; letter-spacing: .04em; }
+.hy-presents { position: relative; text-align: center; font: 700 .42em/1 Rubik, sans-serif; letter-spacing: .4em; color: #ffe6b0; text-shadow: 0 0 .4em #2a0a08; margin: 2% 0 1%; }
+.hy-beam { position: absolute; bottom: -6%; height: 130%; translate: -50% 0; transform-origin: 50% 100%; rotate: var(--a); mix-blend-mode: screen; opacity: .85;
+  clip-path: polygon(47% 100%, 53% 100%, 100% 0, 0 0); background: linear-gradient(0deg, #fff3d0 0%, #ffe6b0b0 30%, #ffd08a55 65%, #ffd08a14 88%, transparent);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 38%, #000 62%, transparent); mask: linear-gradient(90deg, transparent, #000 38%, #000 62%, transparent); }
+.hy-palms { opacity: .75; }
+.hy-frame { position: absolute; inset: 2.2%; border: .45cqw solid #ffd08a; border-radius: 3.4%/2.4%; box-shadow: 0 0 .8cqw #ffd08a55, inset 0 0 0 1cqw transparent, inset 0 0 0 1.25cqw #e0683acc; }
+.hy-flick { position: absolute; inset: 0; background: #fff3d0; opacity: 0; mix-blend-mode: overlay; animation: hyFlick .25s steps(3) infinite; }
+@keyframes hyFlick { 33% { opacity: .1; } 66% { opacity: .04; } }
+.hy-dust { position: absolute; inset: 0; opacity: .5; animation: hyDust .4s steps(2) infinite;
+  background: radial-gradient(circle, #1a0a04 0 .25cqw, transparent .35cqw) 12% 30% / 40% 37%, radial-gradient(circle, #fff3d0 0 .2cqw, transparent .3cqw) 70% 60% / 33% 45%; }
+@keyframes hyDust { 50% { background-position: 60% 10%, 20% 80%; } }
+.hy-grain { position: absolute; inset: 0; background: var(--tx-grain) 0 0 / 120px; opacity: .3; mix-blend-mode: multiply; animation: vpGrain .5s steps(3) infinite; }
+.r-secret.v-hollywood .sc-border { background: linear-gradient(180deg, #ffd08a, #e0683a 40%, #8a3a5a 70%, #1a2048); animation: none; }
+.pick.v-hollywood img { filter: sepia(.35) saturate(1.4) contrast(1.05); }
+.pick.v-hollywood { box-shadow: inset 0 0 0 2px #ffd08a, inset 0 0 0 4px #8a3a5a, inset 0 -26px 26px -18px var(--rc); }
+
+/* Kobaltowa - kobalt-60 w basenie reaktora: ciemna woda, z dołu pulsuje niebieska poświata Czerenkowa, po karcie faluje
+   światło odbite od wody (VX_BG / VX_PHOTO cobalt, podpis w variantSub) */
+.card.v-cobalt .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-cobalt :is(.card-sub, .card-attack, .card-stats) { background: #020a24c8; border: none; border-radius: .3em; }
+.card.v-cobalt .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-cobalt, .ph.vt-cobalt { background: linear-gradient(180deg, #2a5ae8, #0a2a8a); color: #fff; border: 1px solid #c8d4ff; font-family: Cinzel, serif; text-shadow: none; box-shadow: 0 0 .6em #3ab0ff88; }
+.vdot.vt-cobalt { background: radial-gradient(circle at 50% 100%, #bfe6ff, #3ab0ff 40%, #04163a 75%); box-shadow: 0 0 5px #3ab0ff; }
+.odd.odd-v.vt-cobalt { border-left-color: #3ab0ff; }
+.card.v-cobalt { --frame: linear-gradient(135deg, #3a4a5a, #1a2430 50%, #4a5a6a); --spin: initial; box-shadow: 0 6px 18px #000a, 0 0 22px #3ab0ff66; }
+.card.v-cobalt .card-inner { background: linear-gradient(180deg, #020818, #04163a 50%, #0a2a6a); color: #e2eaff; }
+.card.v-cobalt :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #e2eaff; }
+.card.v-cobalt .card-name { font-family: Cinzel, serif; font-weight: 900; color: #bfe6ff; text-shadow: 0 0 .3em #3ab0ff, 0 0 .7em #1e6aff; }
+.card.v-cobalt .card-photo { border-image: none; border: .16em solid #3ab0ffaa; border-radius: .3em; box-shadow: 0 0 .9em #3ab0ff88; }
+.cb-glow { left: -20%; right: -20%; bottom: -30%; height: 80%; border-radius: 50%; background: radial-gradient(closest-side, #bfe6ff, #3ab0ff 35%, #1e4fd8aa 60%, transparent);
+  mix-blend-mode: screen; animation: cbPulse 2.6s ease-in-out infinite; }
+@keyframes cbPulse { 50% { opacity: .7; transform: scale(.95); } }
+.cb-ripple { inset: -10%; opacity: .25; mix-blend-mode: screen; animation: cbDrift 7s ease-in-out infinite alternate;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='w'><feTurbulence type='turbulence' baseFrequency='.02 .05' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .7  0 0 0 0 .9  0 0 0 0 1  -10 0 0 0 1.2'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>") 0 0 / 50cqw; }
+.cb-ripple.b { animation-duration: 11s; animation-direction: alternate-reverse; background-size: 70cqw; }
+@keyframes cbDrift { to { transform: translate(6%, 4%); } }
+.cb-blue { background: linear-gradient(0deg, #3ab0ff33, transparent 60%); mix-blend-mode: screen; }
+.cb-glow, .cb-ripple { will-change: transform, opacity; }
+.r-secret.v-cobalt .sc-border { background: linear-gradient(180deg, #4a5a6a, #1a2430 40%, #3ab0ff 80%, #bfe6ff); animation: none; }
+.pick.v-cobalt img { filter: saturate(.9) hue-rotate(-8deg) brightness(1.02); }
+.pick.v-cobalt { box-shadow: inset 0 0 0 2px #3ab0ff, 0 0 8px #3ab0ff88, inset 0 -26px 26px -18px var(--rc); }
+
+/* ============================================================ BANANOWA, URANOWA, RTĘCIOWA, KALIFORNOWA (szósta partia makiet z /variants;
+   domyślnie wyłączone). Elementy: VX_BG / VX_PHOTO / VX_DECO w app.js, podpisy w variantSub, filtr zdjęcia Uranowej #urUv w index.html. */
+.card:is(.v-banana, .v-uranium, .v-mercury, .v-californium) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card:is(.v-banana, .v-uranium, .v-mercury, .v-californium) :is(.card-sub, .card-attack, .card-stats) { background: var(--panel); border: none; border-radius: .3em; }
+.card:is(.v-banana, .v-uranium, .v-mercury, .v-californium) .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card:is(.v-banana, .v-uranium, .v-mercury, .v-californium) :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: var(--ink); }
+.card:is(.v-banana, .v-uranium, .v-mercury, .v-californium) .card-photo { border-image: none; border-radius: .3em; }
+.var-tag.vt-banana, .ph.vt-banana { background: #ffd93a; color: #4a3608; border: 1px solid #4a3608; font-family: Bangers, sans-serif; font-weight: 400; letter-spacing: .05em; text-shadow: none; }
+.var-tag.vt-uranium, .ph.vt-uranium { background: #0a1a04; color: #b6ff5a; border: 1px solid #5dff1f; box-shadow: 0 0 .6em #5dff1f; font-family: Orbitron, sans-serif; text-shadow: none; }
+.var-tag.vt-mercury, .ph.vt-mercury { background: linear-gradient(180deg, #ffffff, #9aa4b0 50%, #e8ecf0); color: #1a2028; border: 1px solid #4a5260; font-family: Orbitron, sans-serif; text-shadow: none; }
+.var-tag.vt-californium, .ph.vt-californium { background: linear-gradient(180deg, #ffffff, #b8c0cc); color: #1a1e26; border: 1px solid #7a8290; font-family: Orbitron, sans-serif; box-shadow: 0 0 .6em #fff; text-shadow: none; }
+.vdot.vt-banana { background: linear-gradient(135deg, #9ab82a, #ffe14a 40%, #ffe14a 70%, #7a5414); }
+.vdot.vt-uranium { background: radial-gradient(circle, #d8ff8a, #5dff1f 45%, #0a3a04); box-shadow: 0 0 5px #5dff1f; }
+.vdot.vt-mercury { background: radial-gradient(circle at 35% 30%, #fff 0 15%, #c8d0d8 35%, #4a5260 80%); }
+.vdot.vt-californium { background: radial-gradient(circle, #fff 0 25%, #c8d4ff 45%, #1a1e26 75%); box-shadow: 0 0 5px #fff; }
+.odd.odd-v.vt-banana { border-left-color: #ffd93a; } .odd.odd-v.vt-uranium { border-left-color: #5dff1f; }
+.odd.odd-v.vt-mercury { border-left-color: #c8d0d8; } .odd.odd-v.vt-californium { border-left-color: #f4f6fa; }
+
+/* Bananowa - banan dojrzewa w pętli 30 s: zielony -> żółty -> plamki -> brązowy; tło, ramka i podpis zmieniają się razem
+   (wszystkie animacje startują razem z kartą, więc idą równo) */
+.card.v-banana { --panel: #fff8d0c8; --ink: #4a3608; --spin: initial; box-shadow: 0 6px 18px #0009;
+  --frame: linear-gradient(180deg, #3a2a10 0 2.5%, #9ab82a 5%, #e8c820 14%, #ffe14a 50%, #f0c818 88%, #8a6a14 96%, #3a2a10); }
+.card.v-banana::before { animation: bnFrame 30s ease-in-out infinite; }
+@keyframes bnFrame { 0%, 12% { filter: hue-rotate(38deg) saturate(.9) brightness(.92); } 28%, 70% { filter: none; } 82%, 90% { filter: sepia(.7) brightness(.62) saturate(1.2); } 100% { filter: hue-rotate(38deg) saturate(.9) brightness(.92); } }
+.card.v-banana .card-inner { background: linear-gradient(180deg, #c8dc4a 0%, #f2dc38 12%, #ffe14a 45%, #f5cf20 85%, #d8a818); color: #4a3608; }
+.card.v-banana .card-name { font-family: Bangers, Shrikhand, sans-serif; font-weight: 400; font-size: 1.12em; letter-spacing: .04em; color: #4a3608; text-shadow: .05em .05em 0 #fff6b0; }
+.card.v-banana .card-photo { border: .2em solid #fff3a0; box-shadow: 0 .2em .5em #6a4a0855; }
+.bn-fibers { inset: 0; background: repeating-linear-gradient(90deg, transparent 0 4.5cqw, #b8901830 4.5cqw 4.8cqw, transparent 4.8cqw 9.5cqw, #ffffff30 9.5cqw 9.8cqw); }
+.bn-green { inset: 0; background: linear-gradient(180deg, #7ab82a, #a8cc3a 50%, #8ab82a); animation: bnGreen 30s ease-in-out infinite; }
+@keyframes bnGreen { 0%, 12% { opacity: .95; } 28%, 92% { opacity: 0; } 100% { opacity: .95; } }
+.bn-spot { width: calc(3cqw * var(--s)); aspect-ratio: 1.3; border-radius: 50% 45% 55% 50%; background: radial-gradient(circle at 40% 40%, #5a3a10, #7a5414 60%, #7a541400 75%);
+  opacity: 0; animation: bnSpot 30s ease-in-out infinite; }
+@keyframes bnSpot { 0%, 45% { opacity: 0; transform: scale(.3); } 62%, 88% { opacity: .9; transform: scale(1.2); } 96%, 100% { opacity: 0; transform: scale(.3); } }
+.bn-brown { inset: 0; background: radial-gradient(120% 90% at 50% 40%, #8a5a1a, #5a3a10 70%); mix-blend-mode: multiply; opacity: 0; animation: bnBrown 30s ease-in-out infinite; }
+@keyframes bnBrown { 0%, 70% { opacity: 0; } 82%, 90% { opacity: .6; } 98%, 100% { opacity: 0; } }
+.bn-warm { background: linear-gradient(180deg, #ffe14a30, #ffb02a22); mix-blend-mode: soft-light; }
+.bn-sticker { position: absolute; z-index: 2; left: 4%; bottom: 5%; width: 26%; aspect-ratio: 1.45; rotate: -14deg; display: grid; place-content: center; text-align: center;
+  border-radius: 50%; background: radial-gradient(circle at 40% 30%, #3a7ae8, #1a4ab8); border: .35cqw solid #ffd93a; box-shadow: 0 .4cqw .6cqw #0006;
+  font: 400 2.6cqw/1 Bangers, sans-serif; color: #ffd93a; letter-spacing: .06em; }
+.bn-sticker small { font: 700 1.4cqw/1.2 Rubik, sans-serif; color: #fff; letter-spacing: .12em; }
+.bn-stages { display: inline-grid; }
+.bn-stages b { grid-area: 1 / 1; opacity: 0; animation: bnStage 30s infinite; }
+.bn-stages b:nth-child(2) { animation-delay: 7.5s; } .bn-stages b:nth-child(3) { animation-delay: 15s; } .bn-stages b:nth-child(4) { animation-delay: 22.5s; }
+@keyframes bnStage { 0%, 24% { opacity: 1; } 26%, 100% { opacity: 0; } }
+.r-secret.v-banana .sc-border { background: linear-gradient(180deg, #9ab82a, #ffe14a 40%, #f0c818 70%, #7a5414); animation: none; }
+.pick.v-banana img { filter: sepia(.2) saturate(1.3) brightness(1.05); }
+.pick.v-banana { box-shadow: inset 0 0 0 2px #ffd93a, inset 0 0 0 4px #7a5414, inset 0 -26px 26px -18px var(--rc); }
+
+/* Uranowa - zielone szkło uranowe świecące w UV: pęcherzyki, pulsująca poświata, zdjęcie zamienione w zielone światło (#urUv) */
+.card.v-uranium { --panel: #031a03c8; --ink: #d8ffc8; --spin: initial; box-shadow: 0 6px 18px #0009, 0 0 20px #5dff1f88;
+  --frame: linear-gradient(135deg, #8aff4a, #2a9a10 40%, #c8ff7a 60%, #3aa818); }
+.card.v-uranium .card-inner { background: radial-gradient(90% 70% at 50% 40%, #6ad82a, #2a8a10 55%, #0a3a04); color: #d8ffc8; }
+.card.v-uranium .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; letter-spacing: .03em; color: #b6ff5a; text-shadow: 0 0 .25em #5dff1f, 0 0 .6em #2a8a10; }
+.card.v-uranium .card-photo { border: .2em solid #b6ff5aaa; box-shadow: 0 0 .8em #5dff1f88; }
+.card.v-uranium .card-photo > img, .r-secret.v-uranium .sc-art img { filter: url(#urUv); }
+.ur-uv { inset: 0; background: radial-gradient(70% 50% at 50% 45%, #d8ff8a, transparent 70%); mix-blend-mode: screen; animation: urUv 3s ease-in-out infinite; }
+@keyframes urUv { 0%, 100% { opacity: .2; } 50% { opacity: .6; } }
+.ur-streak { inset: 0; background: linear-gradient(100deg, transparent 12%, #ffffff30 16%, transparent 22%, transparent 70%, #ffffff22 74%, transparent 78%); }
+.ur-bubble { width: calc(1.6cqw * var(--s)); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffffcc 0 15%, transparent 30%), radial-gradient(circle, transparent 55%, #e8ffc888 70%, transparent 75%); }
+.ur-pulse { background: radial-gradient(80% 70% at 50% 40%, #b6ff5a55, transparent 70%); mix-blend-mode: screen; box-shadow: inset 0 0 1.4em #5dff1f88; animation: urUv 3s ease-in-out infinite; }
+/* mocniejsza poświata dookoła karty pulsuje (przezroczystość, nie animowany cień - taniej przy wielu kartach) */
+.ur-halo { position: absolute; inset: 0; border-radius: 4.5%/3.2%; box-shadow: 0 0 30px #8aff4a; opacity: 0; animation: urUv 3s ease-in-out infinite; }
+.r-secret.v-uranium .sc-border { background: linear-gradient(135deg, #8aff4a, #2a9a10 40%, #c8ff7a 60%, #3aa818); animation: none; }
+.pick.v-uranium img { filter: url(#urUv); }
+.pick.v-uranium { box-shadow: inset 0 0 0 2px #5dff1f, 0 0 8px #5dff1f88, inset 0 -26px 26px -18px var(--rc); }
+
+/* Rtęciowa - płynne srebro: przelewające się lustrzane plamy, chromowe sople u góry, spadające krople, kałuża z kręgami */
+.card.v-mercury { --panel: #1a2028c0; --ink: #eef2f6; --spin: initial; box-shadow: 0 6px 18px #0009;
+  --frame: linear-gradient(135deg, #ffffff, #7a8490 25%, #f4f6f8 45%, #5a6470 65%, #e8ecf0 85%, #8a94a0); }
+.card.v-mercury .card-inner { background: linear-gradient(170deg, #c8d0d8, #6a7480 40%, #dfe4ea 60%, #4a5260); color: #eef2f6; }
+.card.v-mercury .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; color: #f4f7fa; text-shadow: 0 .06em 0 #4a5260, 0 0 .3em #0008; }
+.card.v-mercury .card-head { background: #1a2028c0; border-radius: .3em; padding: 0 .25em; z-index: 5; }
+.card.v-mercury .card-photo { border: .16em solid #e8ecf0; box-shadow: 0 0 0 .08em #4a5260; }
+.hg-blob { width: 50%; aspect-ratio: 1; border-radius: 50%; filter: blur(1.5cqw); animation: hgBlob 9s ease-in-out infinite alternate;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0 12%, #c8d0d8 30%, #5a6470 62%, transparent 70%); }
+.hg-blob.b0 { left: -10%; top: -6%; } .hg-blob.b1 { right: -14%; top: 14%; animation-delay: -3s; } .hg-blob.b2 { left: 20%; top: 38%; animation-delay: -5s; }
+.hg-blob.b3 { left: -16%; bottom: 4%; animation-delay: -2s; } .hg-blob.b4 { right: -8%; bottom: -10%; animation-delay: -7s; } .hg-blob.b5 { left: 36%; top: -16%; width: 40%; animation-delay: -4s; }
+@keyframes hgBlob { to { transform: translate(14%, 10%) scale(1.15, .9); } }
+.hg-shine { position: absolute; inset: -20% -70%; background: linear-gradient(110deg, transparent 42%, #ffffff66 50%, transparent 58%); mix-blend-mode: screen; animation: hgShine 5s ease-in-out infinite; }
+@keyframes hgShine { 0%, 20% { transform: translateX(-45%); } 80%, 100% { transform: translateX(45%); } }
+.hg-drip { overflow: hidden; border-radius: 4.5%/3.2%; }
+.hg-drip svg { filter: drop-shadow(0 .4px .6px #0008); transform-origin: 50% 0; animation: hgStretch 5s ease-in-out infinite; }
+@keyframes hgStretch { 50% { transform: scaleY(1.08); } }
+.hg-fall { position: absolute; top: 8%; width: calc(2cqw * var(--s)); aspect-ratio: 1; border-radius: 50%; opacity: 0; animation: hgFall ease-in infinite;
+  background: radial-gradient(circle at 35% 30%, #fff 0 14%, #dfe4ea 30%, #6a7480 68%, #2a3038); box-shadow: 0 .3cqw .4cqw #0006; }
+@keyframes hgFall { 0%, 35% { transform: translateY(0) scale(.4); opacity: 0; } 45% { transform: translateY(0) scale(1); opacity: 1; } 96% { opacity: 1; } 100% { transform: translateY(125cqw) scaleY(1.2); opacity: 0; } }
+.hg-pool { position: absolute; left: -5%; right: -5%; bottom: -1.5%; height: 4.5%; border-radius: 50% 50% 0 0 / 100% 100% 0 0; background: linear-gradient(180deg, #ffffff, #9aa4b0 40%, #4a5260); box-shadow: 0 -.2cqw .6cqw #0004; }
+.hg-ring { position: absolute; left: 50%; bottom: 0; width: 30%; height: 3%; translate: -50% 0; border: .3cqw solid #ffffffcc; border-radius: 50%; opacity: 0; animation: hgRing 2.4s ease-out infinite; }
+.hg-ring.b { left: 30%; animation-delay: -1.2s; }
+@keyframes hgRing { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.r-secret.v-mercury .sc-border { background: linear-gradient(135deg, #ffffff, #5a6470 40%, #f4f6f8 60%, #4a5260); animation: none; }
+.pick.v-mercury img { filter: grayscale(.6) contrast(1.1) brightness(1.05); }
+.pick.v-mercury { box-shadow: inset 0 0 0 2px #e8ecf0, inset 0 0 0 4px #5a6470, inset 0 -26px 26px -18px var(--rc); }
+
+/* Kalifornowa - źródło neutronów: grafitowe tło, za zdjęciem rozżarzony do białości rdzeń, srebrno-białe smugi neutronów (tylko w tle) */
+.card.v-californium { --panel: #1a1e26c0; --ink: #eef2f8; --spin: initial; box-shadow: 0 6px 18px #0009;
+  --frame: linear-gradient(135deg, #ffffff, #9aa2b0 25%, #f4f6fa 45%, #7a8290 65%, #e8ecf2 85%, #a8b0bc); }
+.card.v-californium .card-inner { background: radial-gradient(100% 80% at 50% 38%, #3a404c, #1a1e26 60%, #0c0e12); color: #eef2f8; }
+.card.v-californium .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; color: #f4f6fa; text-shadow: 0 0 .3em #ffffff88, 0 .06em 0 #000; }
+.card.v-californium .card-photo { border: .16em solid #f4f6fa; box-shadow: 0 0 0 .08em #7a8290, 0 0 1.2em #ffffffcc; }
+.cf-core { left: 50%; top: 38%; width: 120%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; animation: cfPulse 1.8s ease-in-out infinite;
+  background: radial-gradient(closest-side, #ffffff, #ffffff 30%, #e8f0ffcc 45%, #c8d4ff55 65%, transparent); }
+@keyframes cfPulse { 50% { opacity: .75; transform: scale(.94); } }
+.cf-n { left: 50%; top: 38%; width: 22%; height: .45cqw; transform-origin: 0 50%; border-radius: 1cqw; opacity: 0; animation: cfN linear infinite;
+  background: linear-gradient(90deg, transparent, #dfe6f2, #ffffff); box-shadow: 0 0 .6cqw #ffffffaa; }
+@keyframes cfN { 0% { transform: rotate(var(--r)) translateX(10cqw) scaleX(.3); opacity: 0; } 15% { opacity: 1; } 100% { transform: rotate(var(--r)) translateX(70cqw) scaleX(1); opacity: 0; } }
+.r-secret.v-californium .sc-border { background: linear-gradient(135deg, #ffffff, #7a8290 40%, #f4f6fa 60%, #3a404c); animation: none; }
+.pick.v-californium img { filter: grayscale(.4) contrast(1.1) brightness(1.08); }
+.pick.v-californium { box-shadow: inset 0 0 0 2px #f4f6fa, 0 0 8px #ffffff88, inset 0 -26px 26px -18px var(--rc); }
+.bn-green, .bn-spot, .bn-brown, .ur-uv, .ur-pulse, .ur-halo, .hg-blob, .hg-shine, .hg-fall, .hg-ring, .cf-core, .cf-n { will-change: transform, opacity; }
+
+/* ============================================================ WARIANTY Z KREATORA (panel admina, strona /designer)
+   Kolory i układ z projektu - CSS generuje customVariantCSS w app.js; tu wspólne efekty (cvBG / cvDeco, kolor --cvc). */
+.vx-bg > .cvx-pat { inset: 0; }
+.cvx-pat.drift { inset: calc(var(--ps) * -2); will-change: transform; animation: cvDrift 6s linear infinite; }
+@keyframes cvDrift { to { transform: translate(var(--ps), var(--ps)); } }
+.cvx-pat.pulse { animation: vmPulse 3s ease-in-out infinite; }
+.cvx { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; border-radius: 4.5%/3.2%; }
+.cvx > i { position: absolute; display: block; font-style: normal; }
+.cvx-sheen { inset: -20% -60%; background: linear-gradient(115deg, transparent 40%, color-mix(in srgb, var(--cvc) 45%, transparent) 50%, transparent 60%);
+  will-change: transform; animation: cvSheen 4s ease-in-out infinite; }
+@keyframes cvSheen { 0%, 20% { transform: translateX(-45%); } 80%, 100% { transform: translateX(45%); } }
+.cvx-spark { width: 5%; aspect-ratio: 1; opacity: 0; filter: drop-shadow(0 0 1cqw var(--cvc)); animation: glint 2.6s ease-in-out infinite;
+  background: radial-gradient(circle, var(--cvc) 0 12%, transparent 14%), linear-gradient(0deg, transparent 46%, var(--cvc) 50%, transparent 54%),
+    linear-gradient(90deg, transparent 46%, var(--cvc) 50%, transparent 54%); }
+.cvx-rain { left: 0; right: 0; top: -10cqw; bottom: 0; background: repeating-linear-gradient(100deg, transparent 0 2.2cqw, color-mix(in srgb, var(--cvc) 30%, transparent) 2.2cqw 2.35cqw) 0 0 / 100% 10cqw;
+  will-change: transform; animation: cvRain .45s linear infinite; }
+@keyframes cvRain { to { transform: translateY(10cqw); } }
+.cvx-snow { top: -4%; width: 2.2%; aspect-ratio: 1; border-radius: 50%; background: var(--cvc); opacity: .85; will-change: transform; animation: cvSnow linear infinite; }
+@keyframes cvSnow { from { transform: translate(0, 0) scale(var(--s)); } 50% { transform: translate(3cqw, 70cqw) scale(var(--s)); } to { transform: translate(-2cqw, 150cqw) scale(var(--s)); } }
+.cvx-bub { bottom: -8%; width: 6%; aspect-ratio: 1; border-radius: 50%; will-change: transform, opacity; animation: vxRise linear infinite;
+  background: radial-gradient(circle at 32% 28%, #fff 0 12%, transparent 30%), radial-gradient(circle, transparent 55%, color-mix(in srgb, var(--cvc) 70%, transparent) 68%, transparent 76%); }
+.cvx-heart { bottom: -8%; font-size: 6cqw; line-height: 1; color: var(--cvc); text-shadow: 0 0 1cqw var(--cvc); will-change: transform, opacity; animation: vxRise linear infinite; }
+.cvx-scan { inset: 0; background: repeating-linear-gradient(0deg, #0003 0 1px, transparent 1px 3px); }
+.cvx-vig { inset: 0; background: radial-gradient(90% 75% at 50% 45%, transparent 55%, #000a); }
+.cvx-grain { inset: 0; background: var(--tx-grain) 0 0 / 120px; opacity: .3; mix-blend-mode: overlay; animation: vpGrain .5s steps(3) infinite; }
+.cvx-glow { position: absolute; inset: -1.5%; z-index: -2; border-radius: 5.5%/4%; pointer-events: none; box-shadow: 0 0 6cqw var(--cvc), 0 0 2cqw var(--cvc);
+  animation: cvGlow 2.6s ease-in-out infinite; }
+@keyframes cvGlow { 50% { opacity: .35; } }
+
 /* ============================================================ WYDAJNOŚĆ
    Tajne i flagowe karty mają własne tło (czarne / flaga) - bez animowanej ramki w ::before (style.css). */
 .card:is(.r-secret, .v-flag)::before { content: none; }

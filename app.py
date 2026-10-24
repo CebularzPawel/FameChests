@@ -18,6 +18,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import arena
 import catalog
+import data as data_module
 import database
 import export_catalog
 import images
@@ -28,7 +29,7 @@ from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARE
                   VARIANTS, VARIANT_DEFAULTS, CRATE_VARIANTS, PATCH_NOTES, MARKET, ROULETTE, ROULETTE_BETS, ROULETTE_RED, ROULETTE_WHEEL,
                   JACKPOT, card_value, card_variants, combine_variant, SPECIAL_VARIANTS, SPECIAL_SOURCES, SPECIAL_CRATE,
                   CASINO_SPECIAL, CASINO_VARIANTS, CASINO_TOP, BLACKJACK, STICKER_VARIANTS, STICKER_LIBRARY,
-                  STICKER_ANIMS, UFO_VISIT, EASTER_EGG, CARD_TEXT_SLOTS)
+                  STICKER_ANIMS, UFO_VISIT, EASTER_EGG, CARD_TEXT_SLOTS, SLOTS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_MODE = "--test" in sys.argv  # osobny zapis do testów: python app.py --test
@@ -173,19 +174,23 @@ VARIANT_COLUMNS = [("items", "variant"), ("feed", "variant"), ("market_listings"
                    ("jackpot_items", "variant"), ("trade_lines", "variant"), ("users", "avatar_variant")]
 
 
+def drop_variant_everywhere(conn, v):
+    """Karty graczy, oferty, ikony itd. w wariancie v stają się zwykłe (z połączenia zostaje warstwa: flag+greek -> flag),
+    a wpisy w klaserze, Hall of Fame i ustawienia wariantu znikają."""
+    for table, col in VARIANT_COLUMNS:
+        conn.execute(f"UPDATE {table} SET {col} = 'normal' WHERE {col} = ?", (v,))
+        conn.execute(f"UPDATE {table} SET {col} = REPLACE({col}, ?, '') WHERE {col} LIKE ?", ("+" + v, "%+" + v))
+    conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal' "
+                 "FROM user_collected WHERE variant = ? ON CONFLICT DO NOTHING", (v,))
+    for table in ("user_collected", "hall_of_fame"):
+        conn.execute(f"DELETE FROM {table} WHERE variant = ? OR variant LIKE ?", (v, "%+" + v))
+    conn.execute("DELETE FROM catalog_variants WHERE id = ?", (v,))
+
+
 def drop_removed_variants(conn):
-    """Warianty usunięte z gry (REMOVED_VARIANTS): karty graczy, oferty, ikony itd. w nich stają się zwykłe (z połączenia
-    zostaje warstwa: flag+greek -> flag), a wpisy w klaserze, Hall of Fame i ustawienia wariantu znikają. Bezpieczne przy
-    każdym starcie (gdy nic nie zostało, nic się nie zmienia)."""
+    """Warianty usunięte z gry (REMOVED_VARIANTS) - drop_variant_everywhere. Bezpieczne przy każdym starcie."""
     for v in REMOVED_VARIANTS:
-        for table, col in VARIANT_COLUMNS:
-            conn.execute(f"UPDATE {table} SET {col} = 'normal' WHERE {col} = ?", (v,))
-            conn.execute(f"UPDATE {table} SET {col} = REPLACE({col}, ?, '') WHERE {col} LIKE ?", ("+" + v, "%+" + v))
-        conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal' "
-                     "FROM user_collected WHERE variant = ? ON CONFLICT DO NOTHING", (v,))
-        for table in ("user_collected", "hall_of_fame"):
-            conn.execute(f"DELETE FROM {table} WHERE variant = ? OR variant LIKE ?", (v, "%+" + v))
-        conn.execute("DELETE FROM catalog_variants WHERE id = ?", (v,))
+        drop_variant_everywhere(conn, v)
     conn.commit()
 
 
@@ -784,10 +789,11 @@ def public_person(p, found):
 @app.route("/mockups")         # makiety kart specjalnych - tylko dla adminów
 @app.route("/stickers")        # edytor naklejek wariantów (np. MLG) - tylko dla adminów
 @app.route("/variants")        # warianty: podgląd, włączanie, szanse, wydarzenia, propozycje nowych - tylko dla adminów
+@app.route("/designer")        # kreator własnych wariantów - tylko dla adminów
 @login_required
 def index(view=None, name=None, token=None):
-    # Arena, makiety, naklejki i warianty: tylko admini
-    if (view == "arena" or request.path in ("/mockups", "/stickers", "/variants")) and not current_user()["is_admin"]:
+    # Arena, makiety, naklejki, warianty i kreator: tylko admini
+    if (view == "arena" or request.path in ("/mockups", "/stickers", "/variants", "/designer")) and not current_user()["is_admin"]:
         return redirect("/")
     return render_template("index.html")
 
@@ -962,6 +968,11 @@ def config():
                          bets={k: {"name": n, "numbers": nums, "pays": pays} for k, (n, nums, pays) in ROULETTE_BETS.items()}),
         "jackpot": JACKPOT,
         "blackjack": BLACKJACK,
+        "slots": SLOTS,
+        # warianty z kreatora w panelu admina (/designer): projekt - wygląd rysuje przeglądarka (customVariantCSS w app.js)
+        "customVariants": catalog.CUSTOM_VARIANTS,
+        "cvOptions": {"fonts": catalog.CV_FONTS, "fx": catalog.CV_FX, "default": catalog.CV_DEFAULT,
+                      "enums": {f"{g}.{k}": v for (g, k), v in catalog.CV_ENUMS.items()}},
         "specialVariants": SPECIAL_VARIANTS, "specialSources": SPECIAL_SOURCES, "casinoSpecial": CASINO_SPECIAL,
         # naklejki od admina na wariantach (MLG...) i wbudowane grafiki (część z nich jest też w samym wyglądzie MLG)
         "variantStickers": {v: [sticker_json(v, s) for s in catalog.STICKERS.get(v, [])] for v in STICKER_VARIANTS},
@@ -2597,6 +2608,55 @@ def casino_roulette():
     return jsonify(out)
 
 
+# ---------------------------------------------------------------- kasyno: jednoręki bandyta
+
+def slots_spin():
+    """Trzy symbole (środkowy rząd) i mnożnik wygranej: trzy jednakowe = "pays", dokładnie dwie wiśnie = "pairPays",
+    inaczej 0 (przegrana)."""
+    syms = SLOTS["symbols"]
+    reels = [rng.choices(syms, weights=[s["weight"] for s in syms])[0] for _ in range(3)]
+    ids = [s["id"] for s in reels]
+    if ids[0] == ids[1] == ids[2]:
+        return ids, reels[0]["pays"]
+    if ids.count(SLOTS["pair"]) == 2:
+        return ids, SLOTS["pairPays"]
+    return ids, 0
+
+
+@app.post("/api/casino/slots")
+@login_required
+def casino_slots():
+    """Jednoręki bandyta: stawką są karty. Wygrana - karty zostają u gracza i dostaje karty o wartości stawka × mnożnik
+    (jak w ruletce, też szansa na kartę specjalną z kasyna), przegrana - postawione karty przepadają."""
+    lock_me()
+    try:
+        ids = [int(i) for i in request.get_json(force=True).get("ids") or []]
+    except (TypeError, ValueError):
+        ids = []
+    if not 1 <= len(ids) <= SLOTS["maxCards"]:
+        return bad(f"Postaw od 1 do {SLOTS['maxCards']} kart")
+    rows, err = take_my_items(ids, stake=True)
+    if err:
+        return bad(err)
+    stake = sum(row_value(r) for r in rows)
+    reels, pays = slots_spin()
+    out = {"reels": reels, "win": pays > 0, "pays": pays, "stake": stake}
+    if pays:
+        cards, money = house_cards(stake * pays)
+        out["items"] = [insert_item(p["id"], v, "casino") for p, v in cards]
+        out["money"] = money
+        out["payout"] = stake * pays
+        add_state("balance", money)
+        note_drops(out["items"], "casino")
+        out["special"] = casino_special_drop(out["payout"])   # karta specjalna z kasyna (Joker) albo None
+    else:
+        delete_items(ids)
+        out["consumed"] = ids
+    db().commit()
+    out["state"] = get_state()
+    return jsonify(out)
+
+
 # ---------------------------------------------------------------- kasyno: blackjack
 # Gracz przeciw krupierowi, stawką są karty (jak w ruletce), zasady w BLACKJACK (data.py). Rozdanie trwa kilka zapytań
 # (dobierz / stój / podwój), więc czeka w blackjack_games, a postawione karty są w ESCROW - w tym czasie nie da się ich
@@ -3805,6 +3865,45 @@ def admin_restore_card(pid):
 def variant_settings_row(variant):
     row = db().execute("SELECT data FROM catalog_variants WHERE id = ?", (variant,)).fetchone()
     return (json.loads(row[0] or "{}") if row else {}).get("settings") or {}
+
+
+# ---------------------------------------------------------------- kreator wariantów (strona /designer)
+
+@app.post("/api/admin/variant-designs")
+@admin_required
+def admin_variant_design_save():
+    """Nowy albo zmieniony wariant z kreatora: {key (pusty = nowy), design}. Nowy wariant jest wyłączony - włącza się
+    go w zakładce Warianty."""
+    body = request.get_json(force=True) or {}
+    design = catalog.clean_custom_variant(body.get("design"))
+    key = body.get("key") or ""
+    if key:
+        if key not in catalog.CUSTOM_VARIANTS:
+            return bad("Nie ma takiego wariantu")
+    else:
+        if len(catalog.CUSTOM_VARIANTS) >= data_module.CUSTOM_VARIANT_MAX:
+            return bad(f"Najwyżej {data_module.CUSTOM_VARIANT_MAX} wariantów z kreatora")
+        key = catalog.custom_variant_key(design["name"], set(VARIANTS) | set(REMOVED_VARIANTS))
+    catalog.save_override(db(), "catalog_variants", key, {"custom": design})
+    log_admin("variant_design", details=f"{design['name']} ({key})")
+    db().commit()
+    refresh_catalog()
+    return jsonify({"ok": True, "key": key, "design": catalog.CUSTOM_VARIANTS[key], "variant": VARIANTS[key]})
+
+
+@app.post("/api/admin/variant-designs/<key>/delete")
+@admin_required
+def admin_variant_design_delete(key):
+    """Usuwa wariant z kreatora. Karty graczy w nim stają się zwykłe (jak przy REMOVED_VARIANTS)."""
+    if key not in catalog.CUSTOM_VARIANTS:
+        return bad("Nie ma takiego wariantu")
+    name = catalog.CUSTOM_VARIANTS[key]["name"]
+    drop_variant_everywhere(db(), key)
+    db().execute("DELETE FROM catalog_variants WHERE id = ?", (key,))
+    log_admin("variant_design_delete", details=f"{name} ({key})")
+    db().commit()
+    refresh_catalog()
+    return jsonify({"ok": True})
 
 
 def save_variant_settings(variant, settings):

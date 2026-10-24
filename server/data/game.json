@@ -389,6 +389,69 @@
    "off": true,
    "desc": "Zdjęcie w środku obrotomierza: wskazówka wkręca się na czerwone pole i odbija od ogranicznika, miga lampka zmiany biegu, dookoła karbon."
   },
+  "chocolate": {
+   "name": "Czekoladowa",
+   "chance": 0.012,
+   "mult": 6.5,
+   "off": true,
+   "desc": "Tabliczka czekolady w złotku: wypukłe kostki z połyskiem, ramka z pogniecionej złotej folii, zdjęcie w ciepłym brązie."
+  },
+  "candy": {
+   "name": "Cukierkowa",
+   "chance": 0.01,
+   "mult": 7.0,
+   "off": true,
+   "desc": "Sklep ze słodyczami: przesuwające się paski markizy i falbanka nad nazwą, ramka w paski laski cukrowej, sypiąca się posypka i migoczący cukier."
+  },
+  "hollywood": {
+   "name": "Hollywood '69",
+   "chance": 0.005,
+   "mult": 11.5,
+   "off": true,
+   "desc": "Seans o zmierzchu w Los Angeles 1969: snopy reflektorów, palmy na tle nieba, zdjęcie jak malowany plakat filmowy i migotanie starej taśmy."
+  },
+  "cobalt": {
+   "name": "Kobaltowa",
+   "chance": 0.007,
+   "mult": 9.0,
+   "off": true,
+   "desc": "Kobalt-60 w basenie reaktora: ciemna woda, z dołu pulsuje niebieska poświata Czerenkowa, a po karcie faluje odbite światło."
+  },
+  "banana": {
+   "name": "Bananowa",
+   "chance": 0.013,
+   "mult": 6.0,
+   "off": true,
+   "desc": "Banan dojrzewa na oczach: karta i ramka przechodzą z zieleni przez żółć i brązowe plamki do brązu, a podpis zmienia się razem z nimi."
+  },
+  "uranium": {
+   "name": "Uranowa",
+   "chance": 0.006,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Zielone szkło uranowe świecące w UV: pęcherzyki, pulsująca poświata, a zdjęcie zamienia się w zielone światło."
+  },
+  "mercury": {
+   "name": "Rtęciowa",
+   "chance": 0.008,
+   "mult": 8.5,
+   "off": true,
+   "desc": "Płynne srebro: przelewające się lustrzane plamy, chromowe sople, z których kapią krople, i kałuża rtęci na dole."
+  },
+  "californium": {
+   "name": "Kalifornowa",
+   "chance": 0.003,
+   "mult": 16.0,
+   "off": true,
+   "desc": "Źródło neutronów: za zdjęciem rozżarzony do białości rdzeń, z którego na wszystkie strony lecą srebrne smugi neutronów."
+  },
+  "reflective": {
+   "name": "Odblaskowa",
+   "chance": 0.014,
+   "mult": 5.5,
+   "off": true,
+   "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."
+  },
   "rzulty": {
    "name": "Rzulty",
    "chance": 0.000999803501417597,
@@ -467,6 +530,49 @@
   10,
   20
  ],
+ "slots": {
+  "maxCards": 20,
+  "pair": "cherry",
+  "pairPays": 1,
+  "symbols": [
+   {
+    "id": "cherry",
+    "icon": "🍒",
+    "weight": 30,
+    "pays": 4
+   },
+   {
+    "id": "lemon",
+    "icon": "🍋",
+    "weight": 24,
+    "pays": 8
+   },
+   {
+    "id": "bell",
+    "icon": "🔔",
+    "weight": 18,
+    "pays": 14
+   },
+   {
+    "id": "star",
+    "icon": "⭐",
+    "weight": 12,
+    "pays": 25
+   },
+   {
+    "id": "diamond",
+    "icon": "💎",
+    "weight": 7,
+    "pays": 60
+   },
+   {
+    "id": "seven",
+    "icon": "7",
+    "weight": 4,
+    "pays": 150
+   }
+  ]
+ },
  "removedVariants": [
   "emo",
   "street",

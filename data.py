@@ -136,6 +136,26 @@ VARIANTS = {
                 "desc": "Obraz z kasety VHS: PLAY i licznik, pasy zakłóceń, rozjechane kolory zdjęcia, a na dole zachodzi słońce w paski."},
     "motor":   {"name": "Motoryzacyjna", "chance": 0.0045, "mult": 12.5, "off": True,
                 "desc": "Zdjęcie w środku obrotomierza: wskazówka wkręca się na czerwone pole i odbija od ogranicznika, miga lampka zmiany biegu, dookoła karbon."},
+    # piąta partia makiet z /variants
+    "chocolate": {"name": "Czekoladowa", "chance": 0.012, "mult": 6.5, "off": True,
+                "desc": "Tabliczka czekolady w złotku: wypukłe kostki z połyskiem, ramka z pogniecionej złotej folii, zdjęcie w ciepłym brązie."},
+    "candy":   {"name": "Cukierkowa",   "chance": 0.01, "mult": 7.0, "off": True,
+                "desc": "Sklep ze słodyczami: przesuwające się paski markizy i falbanka nad nazwą, ramka w paski laski cukrowej, sypiąca się posypka i migoczący cukier."},
+    "hollywood": {"name": "Hollywood '69", "chance": 0.005, "mult": 11.5, "off": True,
+                "desc": "Seans o zmierzchu w Los Angeles 1969: snopy reflektorów, palmy na tle nieba, zdjęcie jak malowany plakat filmowy i migotanie starej taśmy."},
+    "cobalt":  {"name": "Kobaltowa",    "chance": 0.007, "mult": 9.0, "off": True,
+                "desc": "Kobalt-60 w basenie reaktora: ciemna woda, z dołu pulsuje niebieska poświata Czerenkowa, a po karcie faluje odbite światło."},
+    # szósta partia makiet z /variants
+    "banana":  {"name": "Bananowa",     "chance": 0.013, "mult": 6.0, "off": True,
+                "desc": "Banan dojrzewa na oczach: karta i ramka przechodzą z zieleni przez żółć i brązowe plamki do brązu, a podpis zmienia się razem z nimi."},
+    "uranium": {"name": "Uranowa",      "chance": 0.006, "mult": 10.0, "off": True,
+                "desc": "Zielone szkło uranowe świecące w UV: pęcherzyki, pulsująca poświata, a zdjęcie zamienia się w zielone światło."},
+    "mercury": {"name": "Rtęciowa",     "chance": 0.008, "mult": 8.5, "off": True,
+                "desc": "Płynne srebro: przelewające się lustrzane plamy, chromowe sople, z których kapią krople, i kałuża rtęci na dole."},
+    "californium": {"name": "Kalifornowa", "chance": 0.003, "mult": 16.0, "off": True,
+                "desc": "Źródło neutronów: za zdjęciem rozżarzony do białości rdzeń, z którego na wszystkie strony lecą srebrne smugi neutronów."},
+    "reflective": {"name": "Odblaskowa", "chance": 0.014, "mult": 5.5, "off": True,
+                "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
     # 1 na 2 137 000 skrzynek - Rzulty ma być trochę rzadszy: 1 na 2 137 420 (szansa na wariant przy wypadnięciu JP2).
     # Może mieć własne zdjęcie (panel admina, edycja karty).
@@ -195,6 +215,38 @@ STICKER_LIBRARY = {
 STICKER_ANIMS = {"none": "Bez ruchu", "pulse": "Pulsowanie", "spin": "Obrót", "shake": "Trzęsienie", "float": "Unoszenie",
                  "drop": "Spada z góry (okulary)", "blink": "Miganie"}
 STICKER_MAX = 30   # najwięcej naklejek na jednym wariancie
+
+
+# Warianty z kreatora w panelu admina (strona /designer): klucz "cv_<nazwa>", projekt w tabeli catalog_variants (pole
+# "custom"). catalog.rebuild woła register_custom_variants - wariant trafia do VARIANTS (zawsze "off" - włącza się go
+# w zakładce Warianty, z naklejkami jak MLG), razem z połączeniami z warstwami (flag+cv_...), a listy wyliczane z VARIANTS
+# są przeliczane W MIEJSCU (app.py importuje je po nazwie).
+CUSTOM_PREFIX = "cv_"
+CUSTOM_VARIANT_MAX = 60   # najwięcej wariantów z kreatora
+
+
+def register_custom_variants(designs):
+    """designs: {klucz: oczyszczony projekt (catalog.clean_custom_variant)} - podmienia wszystkie warianty z kreatora."""
+    gone = [k for k, x in VARIANTS.items() if x.get("custom") or any(VARIANTS.get(p, {}).get("custom") for p in x.get("layers", []))]
+    for k in gone:
+        del VARIANTS[k]
+        VARIANT_DEFAULTS.pop(k, None)
+    for k, d in designs.items():
+        VARIANTS[k] = {"name": d["name"], "chance": d["chance"], "mult": d["mult"], "off": True, "custom": True,
+                       "stickers": True, "desc": d["desc"]}
+        VARIANT_DEFAULTS[k] = {"chance": d["chance"], "weight": None, "desc": d["desc"]}
+    for layer in [v for v, x in VARIANTS.items() if x.get("layer")]:
+        for base in designs:
+            VARIANTS[f"{layer}+{base}"] = {
+                "name": f"{VARIANTS[layer]['name']} + {VARIANTS[base]['name']}", "chance": 0.0,
+                "mult": round(VARIANTS[layer]["mult"] * VARIANTS[base]["mult"], 2), "exclusive": True, "combo": True,
+                "layers": [layer, base]}
+    VARIANT_ORDER[:] = sorted(VARIANTS, key=lambda v: VARIANTS[v]["mult"])
+    EXCLUSIVE_VARIANTS[:] = [v for v, x in VARIANTS.items() if x.get("exclusive")]
+    CRATE_VARIANTS[:] = [v for v in EXCLUSIVE_VARIANTS if not VARIANTS[v].get("cards") and not VARIANTS[v].get("combo")
+                         and not VARIANTS[v].get("special")]
+    STICKER_VARIANTS[:] = [v for v, x in VARIANTS.items() if x.get("stickers")]
+    CASINO_VARIANTS[:] = [v for v in VARIANT_ORDER if v == "normal" or (VARIANTS[v]["chance"] > 0 and not VARIANTS[v].get("exclusive"))]
 
 
 def combine_variant(layer, base):
@@ -676,6 +728,16 @@ ROULETTE_BETS.update({f"n{n}": (f"Liczba {n}", [n], 35) for n in range(1, 37)})
 # pierwszych kartach: gracz dokłada karty warte najwyżej tyle, co stawka, i dostaje dokładnie jedną kartę.
 # Bez rozdzielania par i ubezpieczenia. Rozdanie czeka na serwerze (postawione karty w ESCROW), aż gracz je dokończy.
 BLACKJACK = {"maxCards": 20, "decks": 6, "blackjackPays": 1.5}
+# Jednoręki bandyta: 3 bębny, jedna linia (środkowy rząd), stawką są karty (jak w ruletce). Każdy bęben losuje symbol
+# według "weight". Trzy jednakowe = wygrana stawka × "pays" (karty zostają + wygrana w kartach jak w ruletce), dokładnie
+# dwie wiśnie ("pair") = stawka × "pairPays", inaczej postawione karty przepadają. Zwrot dla graczy ok. 90%.
+SLOTS = {"maxCards": 20, "pair": "cherry", "pairPays": 1,
+         "symbols": [{"id": "cherry", "icon": "🍒", "weight": 30, "pays": 4},
+                     {"id": "lemon", "icon": "🍋", "weight": 24, "pays": 8},
+                     {"id": "bell", "icon": "🔔", "weight": 18, "pays": 14},
+                     {"id": "star", "icon": "⭐", "weight": 12, "pays": 25},
+                     {"id": "diamond", "icon": "💎", "weight": 7, "pays": 60},
+                     {"id": "seven", "icon": "7", "weight": 4, "pays": 150}]}
 # Jackpot: lobby dla 2 graczy (publiczne / prywatne z zaproszeniami), obaj wybierają karty i akceptują; szansa na wygraną
 # = wartość moich kart / wartość wszystkich, zwycięzca bierze wszystkie karty. Lobby bez ruchu przez expireHours się zamyka.
 JACKPOT = {"maxCards": 20, "expireHours": 24}

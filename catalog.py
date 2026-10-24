@@ -11,6 +11,7 @@ Karta może należeć do kilku skrzynek: pole "crates" (lista), "crate" to skrzy
 import json
 import re
 import time
+import unicodedata
 
 import data
 
@@ -355,10 +356,95 @@ def crate_weight(crate, rarity):
     return float(w) if w is not None else data.RARITIES[rarity]["weight"]
 
 
+# ---------------------------------------------------------------- warianty z kreatora (strona /designer)
+CUSTOM_VARIANTS = {}   # klucz -> projekt (clean_custom_variant), też w /api/config (customVariants)
+CV_FONTS = ["Rubik", "Bungee", "Cinzel", "Orbitron", "Yellowtail", "Permanent Marker", "Black Ops One", "Monoton", "Creepster",
+            "Special Elite", "Share Tech Mono", "Poiret One", "Racing Sans One", "Rye", "Shrikhand", "Caveat",
+            "IM Fell English", "Press Start 2P", "Bangers"]
+CV_ENUMS = {
+    ("frame", "anim"): ["none", "shimmer", "spin"],
+    ("bg", "pattern"): ["none", "dots", "stripes", "diagonal", "grid", "checker", "grain", "waves", "hearts", "stars"],
+    ("bg", "anim"): ["none", "drift", "pulse"],
+    ("photo", "filter"): ["none", "grayscale", "sepia", "invert", "duotone", "vivid", "faded"],
+    ("photo", "tintMode"): ["none", "color", "multiply", "screen", "overlay", "soft-light"],
+    ("photo", "shape"): ["rect", "rounded", "circle"],
+}
+CV_FX = ["sheen", "sparkles", "rain", "snow", "bubbles", "hearts", "scanlines", "vignette", "grain", "glow"]
+_CV_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
+CV_DEFAULT = {
+    "name": "Nowy wariant", "desc": "", "tag": "✨ NOWY", "chance": 0.005, "mult": 5.0,
+    "frame": {"c1": "#6a4cff", "c2": "#ffffff", "c3": "#ff4fd8", "angle": 135, "anim": "shimmer", "glow": "#9b7bff"},
+    "bg": {"c1": "#1a1430", "c2": "#3a2a6a", "angle": 160, "pattern": "dots", "pc": "#ffffff", "po": 0.15, "ps": 6, "anim": "none"},
+    "photo": {"filter": "none", "hue": 0, "tint": "#9b7bff", "tintMode": "none", "tintOp": 0.4, "border": "#ffffff",
+              "bw": 0.15, "shape": "rect"},
+    "text": {"font": "Rubik", "name1": "#ffffff", "name2": "#d6c8ff", "glow": "#9b7bff", "color": "#f2eeff",
+             "panel": "#000000", "panelOp": 0.35},
+    "tagStyle": {"bg": "#2a1a5a", "color": "#ffffff", "border": "#9b7bff"},
+    "fx": {"sheen": True, "color": "#ffffff"},
+}
+
+
+def clean_custom_variant(d):
+    """Projekt wariantu z kreatora (strona /designer) - tylko znane pola, kolory #rrggbb, liczby w granicach."""
+    d = d if isinstance(d, dict) else {}
+    out = json.loads(json.dumps(CV_DEFAULT))
+
+    def num(v, lo, hi, dflt):
+        try:
+            return max(lo, min(hi, float(v)))
+        except (TypeError, ValueError):
+            return dflt
+
+    def color(v, dflt):
+        return v if isinstance(v, str) and _CV_COLOR.match(v) else dflt
+
+    out["name"] = str(d.get("name") or out["name"]).strip()[:30] or "Nowy wariant"
+    out["desc"] = str(d.get("desc") or "").strip()[:300]
+    out["tag"] = str(d.get("tag") or "").strip()[:20] or out["name"][:12].upper()
+    out["chance"] = num(d.get("chance"), 0, data.VARIANT_CHANCE_MAX, out["chance"])
+    out["mult"] = round(num(d.get("mult"), 1.1, 50, out["mult"]), 2)
+    for group in ("frame", "bg", "photo", "text", "tagStyle"):
+        src = d.get(group) if isinstance(d.get(group), dict) else {}
+        for k, dflt in out[group].items():
+            v = src.get(k, dflt)
+            if (group, k) in CV_ENUMS:
+                out[group][k] = v if v in CV_ENUMS[(group, k)] else dflt
+            elif k == "font":
+                out[group][k] = v if v in CV_FONTS else dflt
+            elif isinstance(dflt, str):
+                out[group][k] = color(v, dflt) if dflt.startswith("#") or v == "" else dflt
+            else:
+                lim = {"angle": (0, 360), "po": (0, 1), "ps": (2, 30), "hue": (0, 360), "tintOp": (0, 1), "bw": (0, .5),
+                       "panelOp": (0, 1)}[k]
+                out[group][k] = round(num(v, *lim, dflt), 3)
+    out["frame"]["glow"] = color((d.get("frame") or {}).get("glow"), "") if isinstance(d.get("frame"), dict) else out["frame"]["glow"]
+    out["text"]["glow"] = color((d.get("text") or {}).get("glow"), "") if isinstance(d.get("text"), dict) else out["text"]["glow"]
+    fx = d.get("fx") if isinstance(d.get("fx"), dict) else {}
+    out["fx"] = {k: bool(fx.get(k)) for k in CV_FX if fx.get(k)}
+    out["fx"]["color"] = color(fx.get("color"), "#ffffff")
+    return out
+
+
+def custom_variant_key(name, taken):
+    """Klucz nowego wariantu z kreatora: cv_ + nazwa bez polskich znaków, unikalny."""
+    base = data.CUSTOM_PREFIX + (re.sub(r"[^a-z0-9]+", "_", unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()).strip("_")[:20] or "wariant")
+    key, n = base, 2
+    while key in taken:
+        key, n = f"{base}_{n}", n + 1
+    return key
+
+
 def rebuild(conn):
-    global CRATES, PEOPLE, HIDDEN_CRATES, HIDDEN_CARDS, STICKERS, STICKER_CARDS, VARIANT_CFG
+    global CRATES, PEOPLE, HIDDEN_CRATES, HIDDEN_CARDS, STICKERS, STICKER_CARDS, VARIANT_CFG, CUSTOM_VARIANTS
     crates, people, hidden_crates, hidden_cards = {}, {}, {}, {}
     STICKERS, STICKER_CARDS, variant_cfg = {}, {}, {}
+    # warianty z kreatora (/designer) - najpierw, bo ustawienia i naklejki niżej dotyczą też ich
+    CUSTOM_VARIANTS = {}
+    for row in conn.execute("SELECT id, data FROM catalog_variants WHERE deleted = 0"):
+        d = json.loads(row[1] or "{}")
+        if row[0].startswith(data.CUSTOM_PREFIX) and "custom" in d:
+            CUSTOM_VARIANTS[row[0]] = clean_custom_variant(d["custom"])
+    data.register_custom_variants(CUSTOM_VARIANTS)
     for v, d in data.VARIANT_DEFAULTS.items():   # ustawienia z panelu nakładamy zawsze na wartości z kodu
         data.VARIANTS[v]["chance"], data.VARIANTS[v]["desc"] = d["chance"], d["desc"]
         if d["weight"] is not None:

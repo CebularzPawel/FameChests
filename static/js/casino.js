@@ -11,7 +11,7 @@ const CS = {
   angle: 0,              // obrót koła ruletki (stopnie)
   history: [],           // ostatnie wylosowane liczby
   last: null,            // ostatni wynik (do pokazania pod kołem)
-  sorts: { rl: "value", jp: "value", bj: "value", bjd: "value" },   // sortowanie moich kart w ruletce / jackpocie / blackjacku
+  sorts: { rl: "value", jp: "value", bj: "value", bjd: "value", sl: "value" },   // sortowanie moich kart w ruletce / jackpocie / blackjacku
   // blackjack: rozdanie w trakcie (game, z serwera), karty na stole (view), wynik ostatniego rozdania (end),
   // karty do postawienia (sel) i do podwojenia (dsel)
   bj: { loaded: false, game: null, view: { player: [], dealer: [] }, end: null, sel: new Set(), dsel: new Set(), q: "", history: [] },
@@ -71,17 +71,18 @@ function csPickerHTML(set, q, max, zone, dupesTip = "Dodaj wszystkie karty, któ
 }
 
 function renderCasino() {
-  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["upgrade", "⬆️ Ulepszacz"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
+  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["slots", "🎰 Jednoręki bandyta"], ["upgrade", "⬆️ Ulepszacz"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
     `<button data-cstab="${t}" class="${CS.tab === t ? "active" : ""}">${n}</button>`).join("");
   const own = new Set(S.items.map(i => i.id));
-  [CS.sel, CS.bj.sel, CS.bj.dsel].forEach(set => [...set].forEach(id => { if (!own.has(id)) set.delete(id); }));
+  [CS.sel, CS.bj.sel, CS.bj.dsel, SL.sel].forEach(set => [...set].forEach(id => { if (!own.has(id)) set.delete(id); }));
   if (CS.tab === "roulette") { stopJackpotPolling(); drawRoulette(); }
   else if (CS.tab === "blackjack") { stopJackpotPolling(); renderBlackjack(); }
   else if (CS.tab === "upgrade") { stopJackpotPolling(); renderUpgrader(); }
+  else if (CS.tab === "slots") { stopJackpotPolling(); drawSlots(); }
   else renderJackpot();
 }
 
-function csRedraw(zone) { zone === "rl" ? drawRoulette() : zone === "jp" ? drawJackpot() : drawBlackjack(); }
+function csRedraw(zone) { zone === "rl" ? drawRoulette() : zone === "jp" ? drawJackpot() : zone === "sl" ? drawSlots() : drawBlackjack(); }
 
 // ================================================================ RULETKA
 
@@ -755,7 +756,7 @@ function bindCasino() {
     // ruletka
     const won = t.closest(".rl-won .pick, .bj-won .pick");
     if (won) {
-      const last = won.closest(".bj-won") ? CS.bj.end : CS.last;
+      const last = won.closest(".bj-won") ? CS.bj.end : CS.tab === "slots" ? SL.last : CS.last;
       const it = [last?.special, ...(last?.items || [])].find(i => i?.id === +won.dataset.id);
       if (it) openViewer(it.person, it.variant);
       return;
@@ -764,6 +765,13 @@ function bindCasino() {
     if (pick) {
       const zone = pick.closest(".cs-grid").dataset.zone, id = +pick.dataset.id;
       if (zone === "bj" || zone === "bjd") return bjPick(zone, id);
+      if (zone === "sl") {   // jednoręki bandyta
+        if (SL.sel.has(id)) SL.sel.delete(id);
+        else if (SL.sel.size >= S.cfg.slots.maxCards) { Sound.error(); return toast(`Najwyżej ${S.cfg.slots.maxCards} kart`, true); }
+        else SL.sel.add(id);
+        Sound.click();
+        return drawSlots();
+      }
       if (zone === "jp") {   // karta do lobby albo z lobby
         if (!L) return;
         const ids = L[L.side].map(c => c.id);
@@ -786,6 +794,11 @@ function bindCasino() {
         return ids && jpSetCards(ids);
       }
       if (zone === "bjd") return bjFillDouble();
+      if (zone === "sl") {
+        const ids = csAddDuplicates([...SL.sel], S.cfg.slots.maxCards, "sl");
+        if (ids) { SL.sel = new Set(ids); Sound.click(); drawSlots(); }
+        return;
+      }
       if (zone === "bj") {
         const ids = csAddDuplicates([...CS.bj.sel], S.cfg.blackjack.maxCards, "bj");
         if (ids) { CS.bj.sel = new Set(ids); Sound.click(); drawBlackjack(); }
@@ -799,7 +812,7 @@ function bindCasino() {
     if (clear) {
       const zone = clear.dataset.csclear;
       if (zone === "jp") return jpSetCards([]);
-      (zone === "bj" ? CS.bj.sel : zone === "bjd" ? CS.bj.dsel : CS.sel).clear();
+      (zone === "bj" ? CS.bj.sel : zone === "bjd" ? CS.bj.dsel : zone === "sl" ? SL.sel : CS.sel).clear();
       return csRedraw(zone);
     }
     const bet = t.closest("[data-rbet]");
@@ -844,7 +857,7 @@ function bindCasino() {
     if (t.dataset.csq) {
       const pos = t.selectionStart, zone = t.dataset.csq;
       resetKeep(zone);
-      if (zone === "rl") CS.q = t.value; else if (zone === "jp") CS.jp.q = t.value; else CS.bj.q = t.value;
+      if (zone === "rl") CS.q = t.value; else if (zone === "jp") CS.jp.q = t.value; else if (zone === "sl") SL.q = t.value; else CS.bj.q = t.value;
       csRedraw(zone);
       const again = $(`[data-csq=${zone}]`); again.focus(); again.setSelectionRange(pos, pos);
     }

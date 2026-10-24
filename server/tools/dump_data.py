@@ -34,6 +34,7 @@ out = {
     "upgradeMax": data.UPGRADE_MAX,
     "upgradeMaxItems": data.UPGRADE_MAX_ITEMS,
     "upgradeMults": data.UPGRADE_MULTS,
+    "slots": data.SLOTS,
     "removedVariants": data.REMOVED_VARIANTS,
     "maxDeposit": data.MAX_DEPOSIT,
     "moneyChests": data.MONEY_CHESTS,

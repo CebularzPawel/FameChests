@@ -13,7 +13,7 @@ const MAX_BULK_CONTRACTS = 50;  // tyle przyjmie serwer w jednym zapytaniu
 const PICK_LIMIT = 300;
 // ulubione karty (⭐) i karty specjalne nie trafiają do kuźni ani do ulepszacza
 const forgeItems = () => S.items.filter(i => !i.fav && !isSpecialCard(i.person));
-const PICK_TAGS = { bw: "B&W", reverse: "REV", bronze: "BRNZ", silver: "SILV", platinum: "PLAT", steel: "⚙️", sapphire: "💙", blackdiamond: "🖤", holo: "HOLO", pearl: "🦪", gold: "GOLD", vintage: "📷", marble: "🏛️", slime: "🟢", matte: "MAT", racing: "🏁", bismuth: "🌈", digital: "💻", cyber: "🌃", fade: "🎨", wanted: "🤠", artdeco: "DÉCO", cheese: "🧀", aero: "🫧", honey: "🍯", chinese: "🏮", moro: "🪖", beer: "🍺", neon: "💡", electric: "⚡", synthwave: "📼", motor: "🏎️", toxic: "☢️", pixel: "👾", popart: "💥", glass: "⛪", thermal: "🌡️", blueprint: "📐", glitch: "📺", mosaic: "🧱", noir: "🕵️", flag: "🏳️", halloween: "🎃", lantern: "🏮", devil: "😈", joker: "🃏", jeans: "👖", clear: "🫧", sketch: "✒️", emerald: "💚", amethyst: "💜", ruby: "❤️", mlg: "🎯", royal: "👑", diamond: "💎", galaxy: "🌌", negative: "◐", rzulty: "💛" };
+const PICK_TAGS = { bw: "B&W", reverse: "REV", bronze: "BRNZ", silver: "SILV", platinum: "PLAT", steel: "⚙️", sapphire: "💙", blackdiamond: "🖤", holo: "HOLO", pearl: "🦪", gold: "GOLD", vintage: "📷", marble: "🏛️", slime: "🟢", matte: "MAT", racing: "🏁", bismuth: "🌈", digital: "💻", cyber: "🌃", fade: "🎨", wanted: "🤠", artdeco: "DÉCO", cheese: "🧀", aero: "🫧", honey: "🍯", chinese: "🏮", moro: "🪖", beer: "🍺", neon: "💡", electric: "⚡", synthwave: "📼", motor: "🏎️", toxic: "☢️", pixel: "👾", popart: "💥", glass: "⛪", thermal: "🌡️", blueprint: "📐", glitch: "📺", mosaic: "🧱", noir: "🕵️", chocolate: "🍫", candy: "🍭", hollywood: "🎬", cobalt: "🔷", banana: "🍌", uranium: "☢️", mercury: "☿", californium: "⚛️", reflective: "🦺", flag: "🏳️", halloween: "🎃", lantern: "🏮", devil: "😈", joker: "🃏", jeans: "👖", clear: "🫧", sketch: "✒️", emerald: "💚", amethyst: "💜", ruby: "❤️", mlg: "🎯", royal: "👑", diamond: "💎", galaxy: "🌌", negative: "◐", rzulty: "💛" };
 
 function pickHTML(item, { sel = false, extra = "" } = {}) {
   const p = person(item.person);
@@ -21,7 +21,7 @@ function pickHTML(item, { sel = false, extra = "" } = {}) {
   const img = p.rarity === "secret" && p.masked ? `/img/${p.id}` : imgUrl(p.id, v, true);
   return `<div class="pick r-${p.rarity} ${vClass(v)}${sel ? " sel" : ""}" data-id="${item.id}" style="--rc:${S.cfg.rarities[p.rarity].color}">
     <img src="${img}" alt="" loading="lazy" draggable="false">
-    ${isSpecial(v) ? `<span class="ph ${vtClass(v)}">${isCombo(v) ? PICK_TAGS[variantParts(v)[0]] : ""}${PICK_TAGS[baseVariant(v)]}</span>` : ""}
+    ${isSpecial(v) ? `<span class="ph ${vtClass(v)}">${isCombo(v) ? PICK_TAGS[variantParts(v)[0]] : ""}${PICK_TAGS[baseVariant(v)] ?? esc((cvOf(baseVariant(v))?.tag || "✨").slice(0, 6))}</span>` : ""}
     <span class="pn">${esc(p.name)}</span>
     <span class="pv">${fmt(item.value)}</span>${extra}
   </div>`;

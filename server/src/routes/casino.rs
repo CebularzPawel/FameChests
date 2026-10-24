@@ -122,6 +122,72 @@ pub async fn casino_roulette(State(st): State<AppState>, Me(me): Me, JsonBody(re
     ok(RouletteResponse { number, win, bet: req.bet, stake, payout, consumed, state })
 }
 
+// ---------------------------------------------------------------- jednoręki bandyta
+// 3 bębny, jedna linia, stawką są karty (jak w ruletce). Trzy jednakowe symbole = stawka × "pays", dokładnie dwa
+// symbole "pair" (wiśnie) = stawka × "pair_pays", inaczej postawione karty przepadają.
+
+#[derive(Deserialize, Default)]
+#[serde(default)]
+pub struct SlotsRequest {
+    ids: Vec<i64>,
+}
+
+#[derive(Serialize)]
+struct SlotsResponse {
+    reels: Vec<String>,
+    win: bool,
+    pays: i64,
+    stake: i64,
+    #[serde(flatten)]
+    payout: Option<Payout>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    consumed: Option<Vec<i64>>,
+    state: GameState,
+}
+
+/// Trzy symbole (środkowy rząd) i mnożnik wygranej (0 = przegrana)
+fn slots_spin() -> (Vec<String>, i64) {
+    let cfg = &g().slots;
+    let mut rng = rand::thread_rng();
+    let reels: Vec<&crate::data::SlotSymbol> =
+        (0..3).map(|_| cfg.symbols.choose_weighted(&mut rng, |s| s.weight).expect("symbole bandyty")).collect();
+    let ids: Vec<String> = reels.iter().map(|s| s.id.clone()).collect();
+    let pays = if ids[0] == ids[1] && ids[1] == ids[2] {
+        reels[0].pays
+    } else if ids.iter().filter(|i| **i == cfg.pair).count() == 2 {
+        cfg.pair_pays
+    } else {
+        0
+    };
+    (ids, pays)
+}
+
+pub async fn casino_slots(State(st): State<AppState>, Me(me): Me, JsonBody(req): JsonBody<SlotsRequest>) -> Res {
+    let cx = Ctx::new(st, me);
+    let g = g();
+    let mut tx = cx.st.db.begin().await?;
+    lock_me(&mut tx, cx.uid()).await?;
+    if !(1..=g.slots.max_cards).contains(&req.ids.len()) {
+        return bad(format!("Postaw od 1 do {} kart", g.slots.max_cards));
+    }
+    let rows = take_my_items(&mut tx, &cx.cat, cx.uid(), &req.ids, Use::Stake).await?;
+    let stake: i64 = rows.iter().map(|r| row_value(&cx.cat, r)).sum();
+    let (reels, pays) = slots_spin();
+    let win = pays > 0;
+    let (payout, consumed) = if win {
+        // karty zostają u gracza + wygrana w kartach
+        (Some(pay_out(&mut tx, &cx, stake * pays, "casino").await?), None)
+    } else {
+        delete_items(&mut tx, cx.uid(), &req.ids).await?;
+        (None, Some(req.ids))
+    };
+    let state = get_state(&mut tx, cx.uid()).await?;
+    tx.commit().await?;
+    metrics::counter!("scambox_casino_games_total", "game" => "slots", "result" => if win { "win" } else { "lose" })
+        .increment(1);
+    ok(SlotsResponse { reels, win, pays, stake, payout, consumed, state })
+}
+
 // ---------------------------------------------------------------- blackjack
 // Gracz przeciw krupierowi, stawką są karty (jak w ruletce). Rozdanie trwa kilka zapytań (dobierz / stój / podwój),
 // więc czeka w blackjack_games, a postawione karty są w ESCROW - w tym czasie nie da się ich sprzedać ani zużyć.

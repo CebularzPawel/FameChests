@@ -124,6 +124,7 @@ pub fn router(st: AppState) -> Router {
         .route("/api/market/{lid}/cancel", post(market_cancel))
         // kasyno
         .route("/api/casino/roulette", post(casino_roulette))
+        .route("/api/casino/slots", post(casino_slots))
         .route("/api/casino/blackjack", get(casino_blackjack))
         .route("/api/casino/blackjack/deal", post(casino_blackjack_deal))
         .route("/api/casino/blackjack/hit", post(casino_blackjack_hit))

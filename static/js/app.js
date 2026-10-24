@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", reflective: "🦺 HI-VIS", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -48,6 +48,7 @@ async function api(path, body) {
 
 async function refreshConfig() {
   S.cfg = await api("/api/config");
+  applyCustomVariants();
   if (!S.cfg.crates[S.crate]) S.crate = S.cfg.crateOrder[0];
   if (!S.cfg.crates[S.binderCrate]) S.binderCrate = S.cfg.crateOrder[0];
 }
@@ -253,6 +254,7 @@ function variantLayers(v, p = null) {
     if (x === "toxic") html += toxicDeco();
     if (x === "blueprint" && p) html += `<div class="bpr-title">PROJ. ${esc(p.name.toUpperCase())}<br>SKALA 1:1 · ARK. ${p.number || 1}/${crateOf(p.crate)?.people.length || 96}</div>`;
     if (VX_DECO[x]) html += VX_DECO[x](p);
+    if (cvOf(x)) html += cvDeco(x);
     if (x === "holo") html += '<div class="holo-layer"></div>';
     if (x === "gold" || x === "silver" || x === "bronze" || x === "platinum") html += '<div class="gold-sheen"></div>';
     if (x === "clear") html += '<div class="clear-sheen"></div>';
@@ -269,7 +271,7 @@ function variantLayers(v, p = null) {
     const cls = `var-tag vt-${x}${i ? " vt-second" : ""}`;
     html += x === "flag" && p?.country
       ? `<div class="${cls}"><img src="${flagUrl(p.country)}" alt="">${esc(p.country.toUpperCase())}</div>`
-      : `<div class="${cls}">${VARIANT_TAGS[x]}</div>`;
+      : `<div class="${cls}">${VARIANT_TAGS[x] ?? esc(cvOf(x)?.tag || variantName(x))}</div>`;
   });
   return html;
 }
@@ -348,6 +350,7 @@ function variantBG(variant) {
   if (parts.includes("toxic")) html += `<i class="tx-glow"></i>${Array.from({ length: 7 }, () =>
     `<i class="tx-bub" style="left:${rand(10, 85).toFixed(0)}%;--s:${rand(.5, 1.5).toFixed(2)};animation-delay:-${rand(0, 9).toFixed(1)}s;animation-duration:${rand(5, 10).toFixed(1)}s"></i>`).join("")}`;
   for (const x of parts) if (VX_BG[x]) html += VX_BG[x]();
+  for (const x of parts) if (cvOf(x)) html += cvBG(x);
   return html ? `<div class="vx-bg">${html}</div>` : "";
 }
 function variantPhoto(variant, p) {
@@ -363,6 +366,10 @@ function variantPhoto(variant, p) {
   if (parts.includes("marble")) html += '<i class="vx-photo mr-statue"></i>';
   if (parts.includes("toxic")) html += '<i class="vx-photo tx-photo"></i>';
   for (const x of parts) if (VX_PHOTO[x]) html += typeof VX_PHOTO[x] === "function" ? VX_PHOTO[x]() : VX_PHOTO[x];
+  for (const x of parts) {   // wariant z kreatora: zabarwienie zdjęcia
+    const Ph = cvOf(x)?.photo;
+    if (Ph && Ph.tintMode !== "none") html += `<i class="vx-photo cvx-tint" style="background:${Ph.tint};mix-blend-mode:${Ph.tintMode};opacity:${Ph.tintOp}"></i>`;
+  }
   return html;
 }
 // Toksyczna: kałuża jarzącego się szlamu na dole karty
@@ -804,7 +811,51 @@ function mtGauge() {
 // Noir: pionowe rysy na taśmie filmowej, co chwilę w innym miejscu
 const nrScratches = n => Array.from({ length: n }, () =>
   `<i class="nr-scratch" style="left:${vxN(6, 94)}%;animation-delay:-${vxN(0, 3, 2)}s;animation-duration:${vxN(1.4, 3.2, 2)}s"></i>`).join("");
+// Czekoladowa: kostki tabliczki czekolady (siatka wypukłych prostokątów z jasną krawędzią) - jednostki karty 63 x 88
+function coBar(cols = 4, rows = 6) {
+  let s = "";
+  const w = 63 / cols, h = 88 / rows;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const x = c * w + 1, y = r * h + 1;
+    s += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(w - 2).toFixed(1)}" height="${(h - 2).toFixed(1)}" rx="1.2" class="co-sq"/>` +
+      `<path d="M${(x + 1).toFixed(1)} ${(y + h - 3).toFixed(1)} V${(y + 1).toFixed(1)} H${(x + w - 3).toFixed(1)}" class="co-hi"/>`;
+  }
+  return s;
+}
+// Cukierkowa: posypka sypiąca się z góry (obraca się w locie) i migoczące gwiazdki cukru na zdjęciu
+const CD_SPR = ["#ff3b5c", "#ffd23f", "#3ddc84", "#4fb8ff", "#ffffff", "#b04dff"];
+const cdFall = n => Array.from({ length: n }, () =>
+  `<i class="cd-fall" style="left:${vxN(2, 96)}%;background:${CD_SPR[Math.floor(rand(0, CD_SPR.length))]};--r:${vxN(-400, 400)}deg;animation-duration:${vxN(4, 8, 1)}s;animation-delay:-${vxN(0, 8, 1)}s"></i>`).join("");
+const cdTwinkles = n => Array.from({ length: n }, () =>
+  `<i class="cd-twinkle" style="left:${vxN(6, 90)}%;top:${vxN(6, 86)}%;animation-delay:-${vxN(0, 2.4, 1)}s"></i>`).join("");
+// Hollywood '69: palma (sylwetka, pień zaczyna się w (5, 30), flip = lustrzane odbicie) - jednostki karty 63 x 88
+const hyPalm = (x, y, s, c, flip = false) => `<g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})" fill="${c}"><path d="M4.4 30 C5 22 5.6 14 6.6 6 L7.6 6.2 C6.8 14 6.2 22 5.8 30 Z"/>
+  <path d="M7 6 C3 2 -1 4 -3 7 C0 5 3 5 6.6 6.6 Z M7 6 C4 1 0 1 -2 2 C1 2 4 4 6.6 6.2 Z M7 6 C10 2 14 2 16 4 C13 3.6 10 4.6 7.6 6.6 Z M7 6 C11 4 15 6 16 9 C13 7 10 6.6 7.6 7 Z M7 6 C7 2 9 0 11 -1 C9.4 1.4 8.4 3.6 7.6 6.2 Z"/></g>`;
+// palmy wyrastające zza dolnej krawędzi karty: dwie po lewej i ich lustrzane odbicie po prawej
+const hyPalms = (c = "#2a0c2a") => vxSvg(hyPalm(-2, 63, 1, c) + hyPalm(6, 70, .75, c) + hyPalm(65, 63, 1, c, true) + hyPalm(57, 70, .75, c, true), "0 0 63 88", "hy-palms");
+// nieruchome snopy reflektorów zza dolnej krawędzi: [x podstawy w %, kąt, szerokość u góry w %]
+const HY_BEAMS = [[31, -21, 30], [31, -7, 30], [69, 7, 30], [69, 21, 30]];
+// Bananowa: brązowe plamki pojawiające się w trzeciej ćwiartce cyklu dojrzewania (30 s, CSS bnSpot)
+const bnSpots = n => Array.from({ length: n }, () => `<i class="bn-spot" style="left:${vxN(2, 94)}%;top:${vxN(2, 96)}%;--s:${vxN(.5, 1.6, 2)}"></i>`).join("");
+// Rtęciowa: chromowe sople (gradient w pionowe pasy jasne/ciemne) i krople odrywające się od nich
+const hgDrips = () => `<defs><linearGradient id="hgChrome" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="5" y2="0" spreadMethod="reflect">
+  <stop offset="0" stop-color="#4a5260"/><stop offset=".45" stop-color="#e8ecf0"/><stop offset=".6" stop-color="#ffffff"/><stop offset="1" stop-color="#8a94a0"/></linearGradient></defs>${vxDrips("url(#hgChrome)", "#ffffff", [5, 10])}`;
+const hgFalls = n => Array.from({ length: n }, () =>
+  `<i class="hg-fall" style="left:${vxN(6, 92)}%;--s:${vxN(.7, 1.2, 2)};animation-delay:-${vxN(0, 5, 1)}s;animation-duration:${vxN(3, 5, 1)}s"></i>`).join("");
+// Kalifornowa: smugi neutronów z rdzenia za zdjęciem
+const cfNeutrons = n => Array.from({ length: n }, () =>
+  `<i class="cf-n" style="--r:${vxN(0, 360)}deg;animation-delay:-${vxN(0, 2, 2)}s;animation-duration:${vxN(1, 2.2, 2)}s"></i>`).join("");
 const VX_BG = {
+  banana: () => `<i class="bn-fibers"></i><i class="bn-green"></i>${bnSpots(22)}<i class="bn-brown"></i>`,
+  uranium: () => `${Array.from({ length: 12 }, () => `<i class="ur-bubble" style="left:${vxN(2, 96)}%;top:${vxN(2, 96)}%;--s:${vxN(.4, 1.4, 2)}"></i>`).join("")}<i class="ur-uv"></i><i class="ur-streak"></i>`,
+  mercury: () => Array.from({ length: 6 }, (_, k) => `<i class="hg-blob b${k}"></i>`).join(""),
+  californium: () => `<i class="cf-core"></i>${cfNeutrons(18)}`,
+  // Kobaltowa: poświata Czerenkowa z dołu i falujące światło odbite od wody
+  cobalt: () => '<i class="cb-glow"></i><i class="cb-ripple"></i><i class="cb-ripple b"></i>',
+  hollywood: () => HY_BEAMS.map(([x, a, w]) => `<i class="hy-beam" style="left:${x}%;--a:${a}deg;width:${w}%"></i>`).join("") + hyPalms(),
+  candy: () => '<i class="cd-stripes"></i>',
+  chocolate: () => vxSvg(coBar(), "0 0 63 88", "co-bar"),
+  reflective: () => '<i class="rf-fluo"></i><i class="rf-band a"></i><i class="rf-band b"></i><i class="rf-glow"></i>',
   steel: () => '<i class="stl-shine"></i>',
   noir: () => '<i class="nr-rain soft"></i>',
   beer: () => `<i class="br-body"></i>${brBubbles()}`,
@@ -824,6 +875,11 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  banana: '<i class="vx-photo bn-warm"></i><b class="bn-sticker"><small>DZIEŃ</small>1 → 7<small>SCAMBOX</small></b>',
+  uranium: '<i class="vx-photo ur-pulse"></i>',
+  cobalt: '<i class="vx-photo cb-blue"></i>',
+  chocolate: '<i class="vx-photo co-tint"></i>',
+  candy: () => `<i class="vx-photo cd-sugar"></i>${cdTwinkles(3)}`,
   steel: '<i class="vx-photo stl-cold"></i>',
   // ...i kilka łańcuszków bąbelków na zdjęciu (krótsza droga do góry)
   beer: () => `<i class="vx-photo br-amber"></i><i class="vx-photo br-bubs">${brBubbles(3, 4, 4)}</i><i class="vx-photo br-glass"></i>`,
@@ -837,6 +893,17 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  uranium: () => '<div class="vx-deco"><i class="ur-halo"></i></div>',
+  // Rtęciowa: połysk, krople spadające z sopli, sople u góry (nazwa nad nimi), kałuża z kręgami na dole
+  mercury: () => `<div class="vx-deco vx-clip"><i class="hg-shine"></i>${hgFalls(5)}</div><div class="vx-deco hg-drip">${vxSvg(hgDrips())}</div>` +
+    '<div class="vx-deco vx-clip"><i class="hg-pool"></i><i class="hg-ring"></i><i class="hg-ring b"></i></div>',
+  // Hollywood '69: prosta ramka, migotanie projektora, kurz i ziarno starej taśmy
+  hollywood: () => '<div class="vx-deco vx-clip"><i class="hy-frame"></i><i class="hy-flick"></i><i class="hy-dust"></i><i class="hy-grain"></i></div>',
+  // Czekoladowa: połysk przesuwający się po tabliczce; Odblaskowa: światło reflektora (pasy rozbłyskują, gdy przez nie przechodzi)
+  chocolate: () => '<div class="vx-deco vx-clip"><i class="co-shine"></i></div>',
+  // Cukierkowa: ramka w różowo-miętowe paski laski cukrowej, sypiąca się posypka
+  candy: () => `<div class="vx-deco vx-clip">${cdFall(8)}</div><div class="vx-deco vx-clip"><i class="cd-cane"></i></div>`,
+  reflective: () => '<div class="vx-deco vx-clip"><i class="rf-beam"></i></div>',
   // Neonowa: rurka neonu dookoła karty z uchwytami
   neon: () => '<div class="vx-deco"><i class="nn-tube"></i><i class="nn-clip a"></i><i class="nn-clip b"></i><i class="nn-clip c"></i><i class="nn-clip d"></i></div>',
   // Stalowa: śruby w rogach karty
@@ -869,11 +936,93 @@ const VX_DECO = {
   // roztopiony ser kapiący z górnej krawędzi (makieta 2.) - krótszy, żeby nie zasłaniał nazwy
   cheese: () => `<div class="vx-deco ch-melt">${vxSvg(vxDrips("#ffc23a", "#fff1a8", [5, 9]))}</div>`,
 };
+// ---------------------------------------------------------------- warianty z kreatora (panel admina, strona /designer)
+// Projekt (S.cfg.customVariants[klucz], clean_custom_variant na serwerze) -> CSS dla .v-<klucz> (applyCustomVariants wstawia
+// go do <style id="cvStyle">), tło-wzór w .vx-bg (cvBG), zabarwienie zdjęcia (variantPhoto) i efekty nad kartą (cvDeco).
+const cvOf = v => S.cfg.customVariants?.[v];
+const cvA = (c, a) => `color-mix(in srgb, ${c} ${Math.round(a * 100)}%, transparent)`;
+const cvSvg = (body, fill, op, s) => `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><g fill='${fill.replace("#", "%23")}' fill-opacity='${op}'>${body}</g></svg>") 0 0 / ${s}cqw ${s}cqw`;
+// wzór tła: kolor pc z przezroczystością po, wielkość ps (cqw)
+function cvPattern(b) {
+  const c = cvA(b.pc, b.po), s = b.ps;
+  return {
+    dots: `radial-gradient(circle, ${c} 0 ${(s * .17).toFixed(2)}cqw, transparent ${(s * .21).toFixed(2)}cqw) 0 0 / ${s}cqw ${s}cqw`,
+    stripes: `repeating-linear-gradient(90deg, ${c} 0 ${s / 2}cqw, transparent ${s / 2}cqw ${s}cqw)`,
+    diagonal: `repeating-linear-gradient(45deg, ${c} 0 ${(s / 3).toFixed(2)}cqw, transparent ${(s / 3).toFixed(2)}cqw ${s}cqw)`,
+    grid: `linear-gradient(${c} 0 .3cqw, transparent .3cqw) 0 0 / ${s}cqw ${s}cqw, linear-gradient(90deg, ${c} 0 .3cqw, transparent .3cqw) 0 0 / ${s}cqw ${s}cqw`,
+    checker: `repeating-conic-gradient(${c} 0 25%, transparent 0 50%) 0 0 / ${s * 2}cqw ${s * 2}cqw`,
+    grain: "var(--tx-grain) 0 0 / 120px",
+    waves: `radial-gradient(circle at 50% 100%, transparent 38%, ${c} 40% 47%, transparent 49%) 0 0 / ${s * 2}cqw ${s}cqw`,
+    hearts: cvSvg("<path d='M10 16 C4 12 2 9 3.5 6.5 C5 4 8 4.5 10 7 C12 4.5 15 4 16.5 6.5 C18 9 16 12 10 16 Z'/>", b.pc, b.po, s),
+    stars: cvSvg("<path d='M10 2 L12.2 7.6 L18 7.8 L13.4 11.4 L15 17 L10 13.7 L5 17 L6.6 11.4 L2 7.8 L7.8 7.6 Z'/>", b.pc, b.po, s),
+  }[b.pattern] || "none";
+}
+function cvPhotoFilter(p) {
+  const f = { grayscale: "grayscale(1)", sepia: "sepia(1)", invert: "invert(1)", duotone: "grayscale(1) contrast(1.2)",
+    vivid: "saturate(1.8) contrast(1.15)", faded: "saturate(.5) brightness(1.1) contrast(.9)" }[p.filter] || "";
+  return [f, p.hue ? `hue-rotate(${p.hue}deg)` : ""].filter(Boolean).join(" ") || "none";
+}
+const cvColors = v => { const d = cvOf(baseVariant(v)); return d && [d.frame.c1, d.frame.c2, d.frame.c3, d.fx.color]; };
+function customVariantCSS(k, d) {
+  const s = `.card.v-${k}`, F = d.frame, B = d.bg, Ph = d.photo, T = d.text, G = d.tagStyle;
+  const grad = `linear-gradient(${F.angle}deg, ${F.c1}, ${F.c2} 50%, ${F.c3})`;
+  const photoF = cvPhotoFilter(Ph);
+  const radius = { rect: "", rounded: "border-radius: 1em;", circle: "border-radius: 50%; aspect-ratio: 1; margin: 4% 14% 0;" }[Ph.shape];
+  return `
+${s} { --frame: ${grad}; --spin: initial; background: none; isolation: isolate; box-shadow: 0 6px 18px #000a${F.glow ? `, 0 0 22px ${cvA(F.glow, .75)}` : ""}; }
+${s}::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  ${F.anim === "spin" ? `background: conic-gradient(from var(--ang, 0deg), ${F.c1}, ${F.c2}, ${F.c3}, ${F.c1}); animation: ultraSpin 4s linear infinite;`
+    : F.anim === "shimmer" ? `background: ${grad}; background-size: 250% 250%; animation: goldShift 3s ease-in-out infinite;` : `background: ${grad};`} }
+${s} .card-inner { background: linear-gradient(${B.angle}deg, ${B.c1}, ${B.c2}); color: ${T.color}; }
+${s} .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+${s} :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: ${T.color}; }
+${s} .card-name { font-family: "${T.font}", Rubik, sans-serif; font-weight: ${["Rubik", "Cinzel", "Orbitron"].includes(T.font) ? 900 : 400};
+  background: linear-gradient(180deg, ${T.name1}, ${T.name2}); -webkit-background-clip: text; background-clip: text; color: transparent;
+  ${T.glow ? `filter: drop-shadow(0 0 .25em ${T.glow});` : ""} }
+${s} :is(.card-sub, .card-attack, .card-stats) { background: ${cvA(T.panel, T.panelOp)}; border: none; border-radius: .3em; }
+${s} .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+${s} .card-photo { border-image: none; border: ${Ph.bw}em solid ${Ph.border}; ${radius} }
+${s} .card-photo > img, .r-secret.v-${k} .sc-art img, .pick.v-${k} img, .avv-${k} img { filter: ${photoF}; }
+.r-secret.v-${k} .sc-border { background: ${grad}; animation: none; }
+:is(.var-tag, .ph).vt-${k} { background: ${G.bg}; color: ${G.color}; border: 1px solid ${G.border}; text-shadow: none; box-shadow: 0 0 .5em ${cvA(G.border, .6)}; }
+.vdot.vt-${k} { background: ${grad}; } .odd.odd-v.vt-${k} { border-left-color: ${F.c1}; }
+.pick.v-${k} { box-shadow: inset 0 0 0 2px ${F.c1}, inset 0 -26px 26px -18px var(--rc); }
+.avv-${k} img { box-shadow: 0 0 0 2px ${F.c1}, 0 0 10px ${F.glow || F.c2} !important; } .av-vname.vt-${k} { color: ${F.c2}; }`;
+}
+function applyCustomVariants() {
+  let el = document.getElementById("cvStyle");
+  if (!el) { el = document.createElement("style"); el.id = "cvStyle"; document.head.appendChild(el); }
+  el.textContent = Object.entries(S.cfg.customVariants || {}).map(([k, d]) => customVariantCSS(k, d)).join("\n");
+}
+// tło-wzór (pod napisami), może się przesuwać albo pulsować
+function cvBG(k) {
+  const B = cvOf(k).bg;
+  return B.pattern === "none" ? "" : `<i class="cvx-pat${B.anim !== "none" ? " " + B.anim : ""}" style="background:${esc(cvPattern(B))};--ps:${B.ps}cqw"></i>`;
+}
+// efekty nad kartą: połysk, iskierki, deszcz, śnieg, bańki, serca, linie obrazu, winieta, ziarno, pulsująca poświata
+function cvDeco(k) {
+  const X = cvOf(k).fx, n = (cnt, cls, extra = () => "") => Array.from({ length: cnt }, () =>
+    `<i class="${cls}" style="left:${rand(2, 94).toFixed(0)}%;animation-delay:-${rand(0, 8).toFixed(1)}s;${extra()}"></i>`).join("");
+  let html = "";
+  if (X.sheen) html += '<i class="cvx-sheen"></i>';
+  if (X.sparkles) html += n(9, "cvx-spark", () => `top:${rand(4, 92).toFixed(0)}%`);
+  if (X.rain) html += '<i class="cvx-rain"></i>';
+  if (X.snow) html += n(14, "cvx-snow", () => `--s:${rand(.5, 1.4).toFixed(2)};animation-duration:${rand(6, 11).toFixed(1)}s`);
+  if (X.bubbles) html += n(8, "cvx-bub", () => `--s:${rand(.5, 1.5).toFixed(2)};animation-duration:${rand(5, 10).toFixed(1)}s`);
+  if (X.hearts) html += n(6, "cvx-heart", () => `--s:${rand(.6, 1.3).toFixed(2)};animation-duration:${rand(6, 10).toFixed(1)}s`).replaceAll("></i>", ">♥</i>");
+  if (X.scanlines) html += '<i class="cvx-scan"></i>';
+  if (X.vignette) html += '<i class="cvx-vig"></i>';
+  if (X.grain) html += '<i class="cvx-grain"></i>';
+  return (X.glow ? `<div class="cvx-glow" style="--cvc:${X.color}"></div>` : "") + (html ? `<div class="cvx" style="--cvc:${X.color}">${html}</div>` : "");
+}
+
 // pasek nad nazwą: okno terminala (Cyfrowa), napis WANTED
 function variantTop(variant) {
   const parts = variantParts(variant);
   if (parts.includes("digital")) return '<div class="dg-bar"><i></i><i></i><i></i><span>root@scambox: ~/hack</span></div>';
   if (parts.includes("wanted")) return '<div class="ww-title">WANTED</div>';
+  if (parts.includes("candy")) return '<div class="cd-awning"></div>';   // falbanka markizy cukierni
+  if (parts.includes("hollywood")) return '<div class="hy-presents">A SCAMBOX PICTURE</div>';   // napis z czołówki filmu
   if (parts.includes("synthwave")) return '<div class="sw-osd"><span>▶ PLAY</span><span>SP 0:21:37</span></div>';
   return "";
 }
@@ -882,6 +1031,13 @@ function variantSub(variant, pid) {
   const parts = variantParts(variant);
   if (parts.includes("vintage")) return VINTAGE_STAMP;
   if (parts.includes("noir")) return "— Ta sprawa śmierdziała od początku.";
+  if (parts.includes("hollywood")) return "SEANS O ZMIERZCHU · 1969";
+  if (parts.includes("cobalt")) return "Co-60 · T½ 5,27 LAT";
+  // Bananowa: etap dojrzewania zmienia się razem z kolorem karty (CSS bnStage)
+  if (parts.includes("banana")) return '<span class="bn-stages"><b>ZIELONY · JESZCZE TWARDY</b><b>IDEALNY</b><b>SŁODZIUTKI</b><b>NA CHLEBEK BANANOWY</b></span>';
+  if (parts.includes("uranium")) return "U · 92 · 238,03";
+  if (parts.includes("mercury")) return "Hg · 80 · 200,59";
+  if (parts.includes("californium")) return "Cf-252 · 2,3 MLN NEUTRONÓW/s/µg";
   // Glitch: kod błędu
   if (parts.includes("glitch")) { const p = person(pid); return `${S.cfg.types[p.type].name} · ${esc(crateOf(p.crate).short)} <b>▓ERR 0x2137</b>`; }
   if (parts.includes("digital")) return "$ ./access --target <b>ACCESS GRANTED</b>";
@@ -1291,7 +1447,7 @@ function setupInstall() {
 // każda zakładka ma swój adres (/inventory...), profil gracza: /player/<nazwa>; "/" = skrzynki
 const VIEW_PATHS = { crates: "/crates", binder: "/binder", inventory: "/inventory", forge: "/forge", market: "/market", casino: "/casino",
                      friends: "/friends", ranking: "/ranking", arena: "/arena", mockups: "/mockups",
-                     stickers: "/stickers", variants: "/variants" };
+                     stickers: "/stickers", variants: "/variants", designer: "/designer" };
 
 function viewPath(view) {
   if (view === "inventory" && S.inv.mode === "hof") return "/inventory/hall-of-fame";
@@ -1319,7 +1475,7 @@ function showRoute(how = "none") {
 // how: "push" - nowy wpis w historii (kliknięcie), "replace" - podmiana (start), "none" - bez zmian (wstecz/dalej)
 function switchView(view, how = "push") {
   if (view === "arena" && !S.cfg.arena) view = "crates";  // Arena: na razie tylko dla adminów
-  if ((view === "mockups" || view === "stickers" || view === "variants") && !S.me?.isAdmin) view = "crates";
+  if ((view === "mockups" || view === "stickers" || view === "variants" || view === "designer") && !S.me?.isAdmin) view = "crates";
   const path = viewPath(view);
   const entering = view !== $(".view.active")?.id.replace("view-", "");
   if (view === "inventory" && entering) ufoArrive();
@@ -1343,6 +1499,7 @@ function switchView(view, how = "push") {
   if (view === "arena") renderArena();
   if (view === "mockups") renderMockups();
   if (view === "stickers") renderStickers();
+  if (view === "designer") renderDesigner();
   if (view === "variants") renderVariants();
   else document.body.classList.remove("hs-open");  // walka w Arenie zajmuje cały ekran tylko w jej zakładce
   updateSellbar();
@@ -1863,12 +2020,14 @@ function showResults(afterEpic = false) {
       chinese: ["#d81e1e", "#e2b13c", "#fff2b0"], moro: ["#4a4f2e", "#6a5a3a", "#1c1f14", "#a89a6a"], beer: ["#f7bf3a", "#fffdf6", "#cf7a0c"],
       electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
+      chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8", "#3a1a08"], candy: ["#ff5aa8", "#3ddc84", "#ffffff", "#ffd23f", "#4fb8ff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a", "#1a2048"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8", "#ffffff"], banana: ["#ffe14a", "#9ab82a", "#7a5414", "#fff6b0"],
+      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],
       lantern: ["#ffb347", "#ff7a00", "#fff1c1", "#3a1a06"], devil: ["#ff1a1a", "#b3001b", "#ffcf5a", "#120002"],
       sketch: ["#1b1712", "#f4ecd8", "#6b5d4a"], galaxy: ["#7b4dff", "#1fb6ff", "#ff4fd8", "#ffffff"],
       mlg: ["#9cff00", "#ffe100", "#ff7a00", "#ff2bd6", "#00e5ff"],
-    }[topBase] || GOLDS;
+    }[topBase] || cvColors(topBase) || GOLDS;
     if (topBase === "mlg") setTimeout(() => Sound.airhorn(), 250);
     const rare = varRank(top.variant) >= varRank("gold");
     setTimeout(() => confetti(colors, topBase === "negative" ? 360 : varRank(top.variant) > varRank("gold") ? 260 : rare ? 140 : 60), 300);
@@ -2567,6 +2726,8 @@ function bind() {
   bindMarket();
   bindCasino();
   bindUpgrader();
+  bindSlots();
+  bindDesigner();
   bindSocial();
   bindArena();
   bindHallOfFame();
@@ -2616,6 +2777,7 @@ function bind() {
   }
   S.me = me.user;
   S.cfg = cfg;
+  applyCustomVariants();
   S.state = st.state;
   S.items = st.items;
   S.showcase = st.showcase || [];

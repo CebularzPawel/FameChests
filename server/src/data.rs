@@ -89,6 +89,24 @@ pub struct BlackjackCfg {
     pub blackjack_pays: f64,
 }
 
+/// Symbol jednorękiego bandyty: waga losowania i mnożnik za trzy jednakowe
+#[derive(Debug, Clone, Deserialize)]
+pub struct SlotSymbol {
+    pub id: String,
+    pub weight: f64,
+    pub pays: i64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SlotsCfg {
+    pub max_cards: usize,
+    /// symbol, którego dokładnie dwa dają wygraną "pair_pays"
+    pub pair: String,
+    pub pair_pays: i64,
+    pub symbols: Vec<SlotSymbol>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JackpotCfg {
@@ -186,6 +204,8 @@ pub struct GameData {
     pub roulette_bets: IndexMap<String, RouletteBet>,
     pub blackjack: BlackjackCfg,
     pub blackjack_json: Value,
+    pub slots: SlotsCfg,
+    pub slots_json: Value,
     pub jackpot: JackpotCfg,
     pub jackpot_json: Value,
     pub patch_notes: Vec<Value>,
@@ -383,6 +403,8 @@ impl GameData {
             roulette_bets: get(&raw, "rouletteBets")?,
             blackjack: get(&raw, "blackjack")?,
             blackjack_json: v("blackjack"),
+            slots: get(&raw, "slots")?,
+            slots_json: v("slots"),
             jackpot: get(&raw, "jackpot")?,
             jackpot_json: v("jackpot"),
             patch_notes: get(&raw, "patchNotes")?,

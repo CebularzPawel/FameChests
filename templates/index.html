@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="{{ asset('css/market.css') }}">
   <link rel="stylesheet" href="{{ asset('css/casino.css') }}">
   <link rel="stylesheet" href="{{ asset('css/stickers.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/designer.css') }}">
   <link rel="stylesheet" href="{{ asset('css/variants.css') }}">
   <link rel="stylesheet" href="{{ asset('css/variant-mockups.css') }}">
 </head>
@@ -57,6 +58,20 @@
       <feColorMatrix in="l" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="lr"/><feColorMatrix in="SourceGraphic" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
       <feColorMatrix in="r" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="rb"/>
       <feComposite in="lr" in2="g" operator="arithmetic" k2="1" k3="1" result="rg"/><feComposite in="rg" in2="rb" operator="arithmetic" k2="1" k3="1"/></filter>
+    <!-- wariant Hollywood '69: zdjęcie jak malowany plakat - pędzlowe krawędzie, ciepłe nasycone kolory zmieszane z mapą tonów
+         (cienie w morskim granacie, średnie tony w pomarańczu, światła w kremie), zredukowane tony jak plamy farby -->
+    <filter id="hyPoster" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" result="src"/>
+      <feColorMatrix in="src" type="saturate" values="1.3" result="sat"/>
+      <feComponentTransfer in="sat" result="warm"><feFuncR type="linear" slope="1.08" intercept=".03"/><feFuncG type="linear" slope="1"/><feFuncB type="linear" slope=".82"/></feComponentTransfer>
+      <feColorMatrix in="src" type="matrix" values=".3 .55 .15 0 0  .3 .55 .15 0 0  .3 .55 .15 0 0  0 0 0 1 0" result="lum"/>
+      <feComponentTransfer in="lum" result="map"><feFuncR type="table" tableValues=".1 .5 .93 1"/><feFuncG type="table" tableValues=".2 .27 .6 .94"/><feFuncB type="table" tableValues=".26 .2 .27 .8"/></feComponentTransfer>
+      <feComposite in="warm" in2="map" operator="arithmetic" k2=".5" k3=".55" result="mix"/>
+      <feComponentTransfer in="mix"><feFuncR type="discrete" tableValues="0 .2 .4 .6 .8 1"/><feFuncG type="discrete" tableValues="0 .2 .4 .6 .8 1"/><feFuncB type="discrete" tableValues="0 .2 .4 .6 .8 1"/></feComponentTransfer></filter>
+    <!-- wariant Uranowy: zdjęcie zamienione w zielone światło jak w lampie UV (ciemne czarno-zielone, jasne prawie białe) z rozmytą poświatą -->
+    <filter id="urUv" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values=".3 .55 .15 0 0  .3 .55 .15 0 0  .3 .55 .15 0 0  0 0 0 1 0" result="l"/>
+      <feComponentTransfer in="l" result="g"><feFuncR type="table" tableValues="0 .03 .2 .6 .92"/><feFuncG type="table" tableValues="0 .22 .78 1 1"/><feFuncB type="table" tableValues="0 .02 .08 .35 .85"/></feComponentTransfer>
+      <feGaussianBlur in="g" stdDeviation="5" result="b"/><feComposite in="g" in2="b" operator="arithmetic" k2=".9" k3=".5"/></filter>
     <!-- wariant Halloweenowy: nietoperz, dynia (lampion), czaszka, pajęczyna, pająk, cukierek -->
     <!-- Jokerowa (karty specjalne): czapka błazna w indeksach na marginesach - kolory ze zmiennych CSS (joker-talia.css) -->
     <clipPath id="jkHalfR"><rect x="100" y="0" width="100" height="120"/></clipPath>
@@ -283,6 +298,9 @@
     <!-- EDYTOR NAKLEJEK WARIANTÓW (tylko admini, /stickers) -->
     <section class="view" id="view-stickers"><div id="stickersBody"></div></section>
 
+    <!-- KREATOR WARIANTÓW (tylko admini, /designer) -->
+    <section class="view" id="view-designer"><div id="designerBody"></div></section>
+
     <!-- WARIANTY: podgląd, włączanie, szanse, wydarzenia, propozycje nowych (tylko admini, /variants) -->
     <section class="view" id="view-variants"><div id="variantsBody"></div></section>
 
@@ -337,10 +355,12 @@
   <script src="{{ asset('js/market.js') }}"></script>
   <script src="{{ asset('js/casino.js') }}"></script>
   <script src="{{ asset('js/upgrade.js') }}"></script>
+  <script src="{{ asset('js/slots.js') }}"></script>
   <script src="{{ asset('js/social.js') }}"></script>
   <script src="{{ asset('js/arena.js') }}"></script>
   <script src="{{ asset('js/hof.js') }}"></script>
   <script src="{{ asset('js/stickers.js') }}"></script>
+  <script src="{{ asset('js/designer.js') }}"></script>
   <script src="{{ asset('js/variant-mockups.js') }}"></script>
   <script src="{{ asset('js/variants.js') }}"></script>
   <script src="{{ asset('js/app.js') }}"></script>
