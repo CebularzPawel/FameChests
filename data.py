@@ -738,6 +738,40 @@ SLOTS = {"maxCards": 20, "pair": "cherry", "pairPays": 1,
                      {"id": "star", "icon": "⭐", "weight": 12, "pays": 25},
                      {"id": "diamond", "icon": "💎", "weight": 7, "pays": 60},
                      {"id": "seven", "icon": "7", "weight": 4, "pays": 150}]}
+# Wyścigi konne: wspólny wyścig co "period" s (ten sam dla wszystkich graczy; zakłady przyjmujemy od "betOpen" s przed startem,
+# czyli od startu poprzedniego wyścigu, do "betClose" s przed startem), albo wyścig solo na żądanie. Przebieg liczy serwer (horses.py) - przeglądarka go odtwarza.
+# Zakład: karta/y na jednego konia; wygrana = stawka × "pays" (jak w ruletce - karty zostają + wygrana w kartach),
+# przegrana (koń zdechł, uciekł, nie wygrał) - karty przepadają, gdy nikt nie wygra (samochód na torze) - stawki wracają.
+# "speed": siła konia (wpływa na szansę); "pays" wyliczone symulacją (python horses.py odds: 0,85 / szansa - 1), zwrot dla graczy ok. 91%.
+HORSE_RACE = {"period": 300, "betOpen": 300, "betClose": 8, "maxCards": 20, "maxBets": 3,
+              "laps": 4, "dt": 0.25, "duration": (70, 170), "tail": 6,
+              "formSpread": 0.45, "strength": 0.022, "noise": 0.06, "noiseTau": 8,
+              "turboChance": 0.3, "turboMult": 9, "turboLaps": (1.3, 2.0), "turboAgain": 0.06,
+              "turnChance": 0.2, "dieChance": 0.12, "carChance": 0.06, "tripChance": 0.002, "tripGap": 0.006,
+              "boxRows": (0.3, 0.75), "boxRespawn": 0.3, "itemDelay": (1.0, 4.0)}
+# Skrzynki z przedmiotami jak w Mario Kart: rzędy "boxRows" (ułamek okrążenia) na każdym torze; koń, który przez nie przejedzie,
+# dostaje przedmiot (jeśli nie ma już innego), a po "itemDelay" s go używa. Pierwsze okrążenie: każdy rząd jest dla każdego konia,
+# kolejne: rząd wraca tylko dla niektórych koni (szansa "boxRespawn"). "w" = wagi losowania (koń z przodu, ze środka, z tyłu stawki).
+HORSE_ITEMS = {
+    "banana":    {"icon": "🍌", "name": "Skórka od banana", "w": (40, 24, 8)},    # leży za koniem, ślizga tego, kto za nim jedzie
+    "rocket":    {"icon": "🚀", "name": "Rakieta", "w": (4, 20, 32)},             # leci w konia przed sobą i go przewraca
+    "mushroom":  {"icon": "🍄", "name": "Grzyb", "w": (18, 24, 24)},              # chwilowe przyspieszenie
+    "snail":     {"icon": "🐌", "name": "Ślimak", "w": (14, 14, 4)},              # zwalnia konia przed sobą
+    "lightning": {"icon": "⚡", "name": "Piorun", "w": (0, 5, 14)},               # zwalnia wszystkich innych
+    "star":      {"icon": "⭐", "name": "Gwiazda", "w": (0, 6, 14)},              # szybciej i nie do ruszenia
+}
+HORSES = [
+    {"id": 0, "name": "Rączy Bolek", "color": "#e53935", "speed": 1.4, "pitch": 1.0, "pays": 3.5},
+    {"id": 1, "name": "Kasztanka z Allegro", "color": "#fb8c00", "speed": 1.0, "pitch": 1.25, "pays": 5.0},
+    {"id": 2, "name": "Pan Kuleczka", "color": "#fdd835", "speed": 0.7, "pitch": 0.85, "pays": 6.5},
+    {"id": 3, "name": "Dżordż Klonik", "color": "#43a047", "speed": 0.4, "pitch": 1.1, "pays": 8.5},
+    {"id": 4, "name": "Siwy Dym", "color": "#00acc1", "speed": 0.2, "pitch": 0.95, "pays": 7.5},
+    {"id": 5, "name": "Koń Trojański", "color": "#1e88e5", "speed": 0.0, "pitch": 0.75, "pays": 9.0},
+    {"id": 6, "name": "Galopujący Ziemniak", "color": "#5e35b1", "speed": -0.3, "pitch": 1.4, "pays": 11.0},
+    {"id": 7, "name": "Wojtek Kopyto", "color": "#d81b60", "speed": -0.6, "pitch": 0.9, "pays": 13.5},
+    {"id": 8, "name": "Madame Kłusak", "color": "#6d4c41", "speed": -1.0, "pitch": 1.3, "pays": 14.0},
+    {"id": 9, "name": "Lord Siano", "color": "#b0bec5", "speed": -1.5, "pitch": 0.8, "pays": 20.5},
+]
 # Jackpot: lobby dla 2 graczy (publiczne / prywatne z zaproszeniami), obaj wybierają karty i akceptują; szansa na wygraną
 # = wartość moich kart / wartość wszystkich, zwycięzca bierze wszystkie karty. Lobby bez ruchu przez expireHours się zamyka.
 JACKPOT = {"maxCards": 20, "expireHours": 24}
@@ -745,6 +779,14 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 14, "date": "2026-10-24", "title": "Wyścigi konne w kasynie",
+     "items": [
+         "🐎 Nowa gra w 🎰 <b>Kasynie</b>: <b>Wyścigi konne</b>. 10 koni na okrągłym torze, każdy z innym mnożnikiem wygranej.",
+         "🕔 Wspólny wyścig startuje <b>co 5 minut</b> dla wszystkich graczy (trwa 1–3 min) - postaw karty na konia i kibicuj razem z innymi. Możesz też zagrać <b>solo</b>, od razu.",
+         "📦 Na torze są skrzynki „?” jak w Mario Kart: konie rzucają skórki od banana 🍌, strzelają rakietami 🚀, jedzą grzyby 🍄, zwalniają się ślimakiem 🐌 i piorunem ⚡, łapią gwiazdę ⭐.",
+         "🌈 W wyścigu dzieje się dużo: konie dostają <b>turbo</b>, zawracają i uciekają z toru, potykają się o siebie i padają… a czasem wjedzie samochód 🚗 - wtedy nikt nie wygrywa i stawki wracają.",
+         "🔔 Przed wyjściem z kasyna po przegranej gra zapyta, czy na pewno chcesz wyjść.",
+     ]},
     {"v": 13, "date": "2026-10-24", "title": "Ulepszacz w kasynie - w ciemno",
      "items": [
          "⬆️ <b>Ulepszacz</b> przeniósł się z ⚒️ Kuźni do 🎰 <b>Kasyna</b>.",

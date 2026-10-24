@@ -91,6 +91,7 @@ function startPolling() {
       if (me.market && currentView() === "market" && !S.opening && !dialogOpen()) renderMarket(true);
       S.jpLobby = me.jackpotLobby;
       await syncInventory(me);                          // karty / pieniądze zmienione przez innych graczy
+      if (me.horseNews?.length) hrNews(me.horseNews);   // rozliczone zakłady na wyścigi konne
       if (me.jackpot) showJackpotResult(me.jackpot);    // wynik gry w jackpot, którego jeszcze nie widziałem
       else if (me.messages?.length && !S.opening) showAdminMessages(me.messages);   // zaczął się czas wiadomości od adminów
     } catch (_) { /* serwer chwilowo niedostępny */ }

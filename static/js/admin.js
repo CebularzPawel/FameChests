@@ -44,6 +44,7 @@ async function load() {
   A.cat = await api("/api/admin/catalog");
   loadLinks();
   loadMessages();
+  loadHorses();
   renderEgg();
   if (!A.crate || !A.cat.crates.some(c => c.id === A.crate)) A.crate = A.cat.crates.find(c => !c.hidden)?.id || null;
   render();
@@ -486,6 +487,23 @@ async function loadMessages() {
   }).join("") || '<div class="muted small">Brak wiadomości.</div>';
 }
 
+// ================================================================ WYŚCIGI KONNE: nazwy i mnożniki koni
+
+async function loadHorses() {
+  let d;
+  try { d = await api("/api/admin/horses"); } catch (e) { return toast(e.message, true); }
+  A.horses = d;
+  $("#horseRows").innerHTML = d.horses.map((h, i) => {
+    const def = d.defaults[i];
+    return `<div class="a-horse" data-horse="${h.id}">
+      <i class="a-horse-dot" style="background:${esc(h.color)}">${h.id + 1}</i>
+      <input type="text" name="name" maxlength="${d.nameMax}" value="${esc(h.name)}" placeholder="${esc(def.name)}" title="Nazwa konia">
+      <label>×<input type="number" name="pays" min="0.5" max="1000" step="0.5" value="${h.pays}" title="Mnożnik wygranej"></label>
+      <button class="btn tiny" type="button" data-hreset title="Przywróć domyślne">↺ ${esc(def.name)} ×${def.pays}</button>
+    </div>`;
+  }).join("");
+}
+
 function resetMessageForm() {
   const f = $("#msgForm"), start = Date.now();
   f.reset();
@@ -722,6 +740,21 @@ function bind() {
       await api(`/api/admin/links/${l.id}`, { method: "POST", json: { active: !l.active } });
       toast(l.active ? "⛔ Link wyłączony" : "✅ Link włączony");
       loadLinks(); loadLog();
+    } catch (err) { toast(err.message, true); }
+  });
+  $("#horseRows").addEventListener("click", e => {
+    const b = e.target.closest("[data-hreset]"); if (!b) return;
+    const row = b.closest("[data-horse]"), def = A.horses.defaults[+row.dataset.horse];
+    row.querySelector("[name=name]").value = def.name;
+    row.querySelector("[name=pays]").value = def.pays;
+  });
+  $("#horseForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const horses = [...$$("#horseRows [data-horse]")].map(r => ({ id: +r.dataset.horse, name: r.querySelector("[name=name]").value, pays: r.querySelector("[name=pays]").value }));
+    try {
+      await api("/api/admin/horses", { method: "POST", json: { horses } });
+      toast("🐎 Konie zapisane");
+      loadHorses(); loadLog();
     } catch (err) { toast(err.message, true); }
   });
   $("#msgForm").addEventListener("submit", async e => {

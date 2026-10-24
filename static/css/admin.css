@@ -159,6 +159,12 @@ fieldset.a-special { border-color: #19e6ff66; }
 .a-link-url { font-size: 12px; color: #19e6ff; word-break: break-all; user-select: all; }
 .a-link-actions { display: flex; gap: 6px; flex: none; }
 /* wiadomości do graczy */
+.a-horse-rows { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 12px; }
+.a-horse { display: grid; grid-template-columns: 30px minmax(160px, 1fr) 110px auto; gap: 8px; align-items: center; }
+.a-horse input { width: 100%; }
+.a-horse label { display: flex; align-items: center; gap: 4px; font-weight: 700; }
+.a-horse-dot { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 12px Rubik, sans-serif; color: #fff; text-shadow: 0 1px 2px #000a; box-shadow: 0 0 0 2px #0008; font-style: normal; }
+@media (max-width: 700px) { .a-horse { grid-template-columns: 30px minmax(0, 1fr) 100px; } .a-horse .btn { grid-column: 1 / -1; } }
 .a-msg-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 12px; align-items: end; margin: 6px 0 14px; }
 .a-msg-form label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); }
 .a-msg-form .wide { grid-column: 1 / -1; }

@@ -1,6 +1,7 @@
 import datetime
 import functools
 import gzip
+import hashlib
 import json
 import os
 import random
@@ -21,6 +22,7 @@ import catalog
 import data as data_module
 import database
 import export_catalog
+import horses
 import images
 from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARENA_TARGETS, ARENA_VISUALS,
                   MAX_ABILITY_EFFECTS, MAX_EXTRA_ABILITIES, CONTRACT_SIZE, CONTRACT_VARIANT_BONUS, CRATE_PRICE, DAILY_STREAK, MAX_DEPOSIT,
@@ -29,7 +31,7 @@ from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARE
                   VARIANTS, VARIANT_DEFAULTS, CRATE_VARIANTS, PATCH_NOTES, MARKET, ROULETTE, ROULETTE_BETS, ROULETTE_RED, ROULETTE_WHEEL,
                   JACKPOT, card_value, card_variants, combine_variant, SPECIAL_VARIANTS, SPECIAL_SOURCES, SPECIAL_CRATE,
                   CASINO_SPECIAL, CASINO_VARIANTS, CASINO_TOP, BLACKJACK, STICKER_VARIANTS, STICKER_LIBRARY,
-                  STICKER_ANIMS, UFO_VISIT, EASTER_EGG, CARD_TEXT_SLOTS, SLOTS)
+                  STICKER_ANIMS, UFO_VISIT, EASTER_EGG, CARD_TEXT_SLOTS, SLOTS, HORSE_RACE, HORSES, HORSE_ITEMS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_MODE = "--test" in sys.argv  # osobny zapis do testów: python app.py --test
@@ -353,7 +355,24 @@ def init_sqlite(conn):
             double_ids TEXT NOT NULL DEFAULT '[]', double_stake INTEGER NOT NULL DEFAULT 0,
             deck TEXT NOT NULL, player TEXT NOT NULL, dealer TEXT NOT NULL, created_at REAL NOT NULL
         );
+        -- zakłady na wspólne wyścigi konne (race = numer wyścigu = start / okres); karty w ESCROW do rozliczenia.
+        -- status: open / won / lost / refund (nikt nie wygrał) / cancelled
+        CREATE TABLE IF NOT EXISTS horse_bets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            race INTEGER NOT NULL, user_id INTEGER NOT NULL, horse INTEGER NOT NULL,
+            item_ids TEXT NOT NULL, stake INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'open',
+            payout INTEGER NOT NULL DEFAULT 0, result TEXT NOT NULL DEFAULT '{}',
+            seen INTEGER NOT NULL DEFAULT 0, created_at REAL NOT NULL, pays REAL NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS horse_bets_race ON horse_bets (race);
+        CREATE INDEX IF NOT EXISTS horse_bets_user ON horse_bets (user_id);
+        -- nazwy i mnożniki koni zmienione w panelu admina (puste / 0 = wartość z data.py)
+        CREATE TABLE IF NOT EXISTS horse_settings (
+            horse INTEGER PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pays REAL NOT NULL DEFAULT 0
+        );
     """)
+    if "pays" not in [r[1] for r in conn.execute("PRAGMA table_info(horse_bets)")]:   # migracja: mnożnik z chwili zakładu
+        conn.execute("ALTER TABLE horse_bets ADD COLUMN pays REAL NOT NULL DEFAULT 0")
     cols = [r[1] for r in conn.execute("PRAGMA table_info(items)")]
     if "variant" not in cols:  # migracja: holo (0/1) -> variant
         conn.execute("ALTER TABLE items ADD COLUMN variant TEXT NOT NULL DEFAULT 'normal'")
@@ -969,6 +988,7 @@ def config():
         "jackpot": JACKPOT,
         "blackjack": BLACKJACK,
         "slots": SLOTS,
+        "horses": {"race": HORSE_RACE, "list": horse_list(), "items": HORSE_ITEMS},
         # warianty z kreatora w panelu admina (/designer): projekt - wygląd rysuje przeglądarka (customVariantCSS w app.js)
         "customVariants": catalog.CUSTOM_VARIANTS,
         "cvOptions": {"fonts": catalog.CV_FONTS, "fx": catalog.CV_FX, "default": catalog.CV_DEFAULT,
@@ -1920,6 +1940,7 @@ def ranking():
 @login_required
 def me():
     settle_market()   # sprawdzane co 30 s przez każdego gracza w grze - licytacje kończą się na czas
+    settle_my_horses()
     u = current_user()
     me_id = u["id"]
     incoming = db().execute("SELECT COUNT(*) FROM friendships WHERE addressee_id = ? AND status = 'pending'",
@@ -1941,6 +1962,7 @@ def me():
                     "incoming": incoming, "unread": unread, "trades": trades_in, "market": market_badge(me_id),
                     "inv": [inv[0], inv[1]], "balance": st["balance"],
                     "jackpot": jackpot_news(me_id, st["jackpot_seen"]),   # wynik gry w jackpot, którego jeszcze nie widział
+                    "horseNews": horse_news(),   # rozliczone zakłady na wyścigi konne, których jeszcze nie widział
                     "jackpotLobby": lobby["id"] if lobby else None, "jackpotInvites": invites,
                     "patchNotes": [n for n in PATCH_NOTES if n["v"] > seen][:3],  # nowości od ostatniej wizyty
                     "messages": active_messages(me_id)})   # wiadomości od adminów, których jeszcze nie widział
@@ -2655,6 +2677,261 @@ def casino_slots():
     db().commit()
     out["state"] = get_state()
     return jsonify(out)
+
+
+# ---------------------------------------------------------------- kasyno: wyścigi konne
+# Wspólny wyścig co HORSE_RACE["period"] s (numer wyścigu = start / okres, przebieg z ziarna z tajnego klucza - horses.py),
+# zakłady przyjmujemy od betOpen do betClose s przed startem. Postawione karty czekają w ESCROW; rozlicza je (przy
+# zapytaniach, jak settle_market) właściciel zakładu: koń wygrał - karty wracają + wygrana w kartach (stawka × pays),
+# przegrał albo zdechł / uciekł - przepadają, nikt nie wygrał (samochód na torze) - wracają.
+# Wyścig solo: wynik od razu, ziarno losowe.
+
+HORSE_CACHE = {}
+HORSE_NAME_MAX, HORSE_PAYS_MAX = 30, 1000
+
+
+def horse_list():
+    """Konie z data.py z nazwami i mnożnikami zmienionymi w panelu admina (tabela horse_settings)."""
+    over = {r["horse"]: r for r in db().execute("SELECT * FROM horse_settings")}
+    out = []
+    for h in HORSES:
+        o = over.get(h["id"])
+        out.append(dict(h, name=(o and o["name"]) or h["name"], pays=(o and o["pays"]) or h["pays"]))
+    return out
+
+
+def horse_start(race):
+    return race * HORSE_RACE["period"]
+
+
+def horse_data(race):
+    """Przebieg wspólnego wyścigu o tym numerze (z pamięci podręcznej - liczenie trwa kilka ms)."""
+    if race not in HORSE_CACHE:
+        digest = hashlib.sha256(f"{app.config['SECRET_KEY']}:horses:{race}".encode()).digest()
+        if len(HORSE_CACHE) > 16:
+            HORSE_CACHE.clear()
+        HORSE_CACHE[race] = horses.simulate(int.from_bytes(digest[:8], "big"))
+    return HORSE_CACHE[race]
+
+
+def horse_end(race):
+    return horse_start(race) + horse_data(race)["dur"]
+
+
+def horse_payout(pays, stake):
+    """Wygrana w kartach za zakład z tym mnożnikiem: (karty, pieniądze, wartość). Karty trafiają do aktualnego gracza."""
+    value = round(stake * pays)
+    cards, money = house_cards(value)
+    items = [insert_item(p["id"], v, "casino") for p, v in cards]
+    add_state("balance", money)
+    note_drops(items, "casino")
+    return items, money, value
+
+
+def settle_my_horses():
+    """Rozlicza moje zakłady na wyścigach, które się skończyły."""
+    now = time.time()
+    rows = db().execute("SELECT * FROM horse_bets WHERE user_id = ? AND status = 'open' AND race <= ?",
+                        (uid(), int(now // HORSE_RACE["period"]))).fetchall()
+    done = False
+    for B in rows:
+        race = horse_data(B["race"])
+        if now < horse_start(B["race"]) + race["dur"]:
+            continue
+        if not db().execute("UPDATE horse_bets SET status = 'settling' WHERE id = ? AND status = 'open'", (B["id"],)).rowcount:
+            continue
+        ids, result = json.loads(B["item_ids"]), {}
+        if race["winner"] < 0 or race["winner"] == B["horse"]:
+            give_items(ids, uid())
+            if race["winner"] < 0:
+                status, payout = "refund", 0
+            else:
+                items, money, payout = horse_payout(B["pays"] or horse_list()[B["horse"]]["pays"], B["stake"])
+                status = "won"
+                result = {"items": items, "money": money, "special": casino_special_drop(payout)}
+        else:
+            marks = ",".join("?" * len(ids))
+            db().execute(f"DELETE FROM items WHERE user_id = ? AND id IN ({marks})", [ESCROW, *ids])
+            status, payout = "lost", 0
+        db().execute("UPDATE horse_bets SET status = ?, payout = ?, result = ? WHERE id = ?",
+                     (status, payout, json.dumps(result), B["id"]))
+        done = True
+    if done:
+        db().commit()
+
+
+def horse_news():
+    """Rozliczone zakłady, których wyniku gracz jeszcze nie widział."""
+    return [{"id": B["id"], "race": B["race"], "horse": B["horse"], "status": B["status"], "stake": B["stake"],
+             "payout": B["payout"], "result": json.loads(B["result"])}
+            for B in db().execute("SELECT * FROM horse_bets WHERE user_id = ? AND seen = 0 AND status IN "
+                                  "('won', 'lost', 'refund') ORDER BY id LIMIT 10", (uid(),))]
+
+
+def horse_bet_json(B):
+    return {"id": B["id"], "race": B["race"], "horse": B["horse"], "stake": B["stake"], "status": B["status"],
+            "cards": len(json.loads(B["item_ids"]))}
+
+
+@app.get("/api/casino/horses")
+@login_required
+def casino_horses():
+    settle_my_horses()
+    now = time.time()
+    cur = int(now // HORSE_RACE["period"])
+    live = None
+    for k in (cur, cur - 1):    # wyścig trwa dłużej niż okres tylko wyjątkowo
+        if k >= 0 and now < horse_end(k) + 20:
+            live = dict(horse_data(k), id=k, start=horse_start(k))
+            break
+    ids = [cur + 1] + ([live["id"]] if live else [])
+    marks = ",".join("?" * len(ids))
+    mine = db().execute(f"SELECT * FROM horse_bets WHERE user_id = ? AND race IN ({marks}) AND status != 'cancelled' "
+                        "ORDER BY id", [uid(), *ids]).fetchall()
+    others = db().execute(f"SELECT b.race, b.horse, b.stake, u.username FROM horse_bets b JOIN users u ON u.id = b.user_id "
+                          f"WHERE b.race IN ({marks}) AND b.user_id != ? AND b.status != 'cancelled' ORDER BY b.id",
+                          [*ids, uid()]).fetchall()
+    last = [{"id": k, "start": horse_start(k), "winner": horse_data(k)["winner"]}
+            for k in range(cur, cur - 8, -1) if k >= 0 and now >= horse_end(k)]
+    return jsonify({"now": now, "horses": horse_list(), "live": live, "next": {"id": cur + 1, "start": horse_start(cur + 1)},
+                    "mine": [horse_bet_json(B) for B in mine],
+                    "others": [{"race": r["race"], "horse": r["horse"], "stake": r["stake"], "user": r["username"]} for r in others],
+                    "last": last, "news": horse_news()})
+
+
+def horse_pick(body):
+    """(koń, id kart) z zapytania albo (None, None)."""
+    try:
+        horse = int(body.get("horse"))
+    except (TypeError, ValueError):
+        return None, None
+    return (horse, int_ids(body.get("ids"))) if 0 <= horse < len(HORSES) else (None, None)
+
+
+@app.post("/api/casino/horses/bet")
+@login_required
+def casino_horses_bet():
+    lock_me()
+    horse, ids = horse_pick(request.get_json(force=True))
+    if horse is None:
+        return bad("Wybierz konia")
+    if not 1 <= len(ids) <= HORSE_RACE["maxCards"]:
+        return bad(f"Postaw od 1 do {HORSE_RACE['maxCards']} kart")
+    now = time.time()
+    race = int(now // HORSE_RACE["period"]) + 1
+    left = horse_start(race) - now
+    if left > HORSE_RACE["betOpen"]:
+        return bad("Zakłady na ten wyścig jeszcze się nie zaczęły")
+    if left < HORSE_RACE["betClose"]:
+        return bad("Zakłady na ten wyścig są już zamknięte")
+    if db().execute("SELECT COUNT(*) FROM horse_bets WHERE user_id = ? AND race = ? AND status = 'open'",
+                    (uid(), race)).fetchone()[0] >= HORSE_RACE["maxBets"]:
+        return bad(f"Najwyżej {HORSE_RACE['maxBets']} zakłady na jeden wyścig")
+    rows, err = take_my_items(ids, stake=True)
+    if err:
+        return bad(err)
+    escrow_items(ids)
+    db().execute("INSERT INTO horse_bets (race, user_id, horse, item_ids, stake, pays, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                 (race, uid(), horse, json.dumps(ids), sum(row_value(r) for r in rows), horse_list()[horse]["pays"], now))
+    db().commit()
+    return jsonify({"ok": True, "consumed": ids, "state": get_state()})
+
+
+@app.post("/api/casino/horses/bet/<int:bid>/cancel")
+@login_required
+def casino_horses_cancel(bid):
+    lock_me()
+    B = db().execute("SELECT * FROM horse_bets WHERE id = ? AND user_id = ? AND status = 'open'", (bid, uid())).fetchone()
+    if B is None:
+        return bad("Nie ma takiego zakładu")
+    if horse_start(B["race"]) - time.time() < HORSE_RACE["betClose"]:
+        return bad("Zakłady na ten wyścig są już zamknięte")
+    if not db().execute("UPDATE horse_bets SET status = 'cancelled' WHERE id = ? AND status = 'open'", (bid,)).rowcount:
+        return bad("Nie ma takiego zakładu")
+    give_items(json.loads(B["item_ids"]), uid())
+    db().commit()
+    return jsonify({"ok": True, "items": my_items(), "state": get_state()})
+
+
+@app.post("/api/casino/horses/seen")
+@login_required
+def casino_horses_seen():
+    ids = int_ids(request.get_json(force=True).get("ids"))
+    if ids:
+        marks = ",".join("?" * len(ids))
+        db().execute(f"UPDATE horse_bets SET seen = 1 WHERE user_id = ? AND id IN ({marks})", [uid(), *ids])
+        db().commit()
+    return jsonify({"ok": True})
+
+
+@app.post("/api/casino/horses/solo")
+@login_required
+def casino_horses_solo():
+    """Wyścig tylko dla mnie: ziarno losowe, wynik od razu (jak w ruletce) - przeglądarka odtwarza przebieg."""
+    lock_me()
+    horse, ids = horse_pick(request.get_json(force=True))
+    if horse is None:
+        return bad("Wybierz konia")
+    if not 1 <= len(ids) <= HORSE_RACE["maxCards"]:
+        return bad(f"Postaw od 1 do {HORSE_RACE['maxCards']} kart")
+    rows, err = take_my_items(ids, stake=True)
+    if err:
+        return bad(err)
+    stake = sum(row_value(r) for r in rows)
+    race = horses.simulate(secrets.randbits(63))
+    out = {"race": race, "horse": horse, "stake": stake, "win": race["winner"] == horse, "refund": race["winner"] < 0}
+    if out["win"]:
+        out["items"], out["money"], out["payout"] = horse_payout(horse_list()[horse]["pays"], stake)
+        out["special"] = casino_special_drop(out["payout"])
+    elif not out["refund"]:
+        delete_items(ids)
+        out["consumed"] = ids
+    db().commit()
+    out["state"] = get_state()
+    return jsonify(out)
+
+
+@app.get("/api/admin/horses")
+@admin_required
+def admin_horses():
+    return jsonify({"horses": horse_list(), "defaults": [{"id": h["id"], "name": h["name"], "pays": h["pays"]} for h in HORSES],
+                    "nameMax": HORSE_NAME_MAX})
+
+
+@app.post("/api/admin/horses")
+@admin_required
+def admin_horses_save():
+    """Zapis nazw i mnożników koni: [{id, name, pays}] - puste pole / zero = wartość domyślna."""
+    rows = (request.get_json(force=True) or {}).get("horses")
+    if not isinstance(rows, list):
+        return jsonify({"error": "Brak listy koni"}), 400
+    clean = []
+    for r in rows:
+        try:
+            hid = int(r.get("id"))
+            pays = float(str(r.get("pays") or 0).replace(",", ".") or 0)
+        except (TypeError, ValueError, AttributeError):
+            return jsonify({"error": "Mnożnik musi być liczbą"}), 400
+        name = " ".join(str(r.get("name") or "").split())[:HORSE_NAME_MAX]
+        if not 0 <= hid < len(HORSES):
+            return jsonify({"error": "Nie ma takiego konia"}), 400
+        if pays and not 0.5 <= pays <= HORSE_PAYS_MAX:
+            return jsonify({"error": f"Mnożnik: od 0,5 do {HORSE_PAYS_MAX} (puste = domyślny)"}), 400
+        clean.append((hid, "" if name == HORSES[hid]["name"] else name, 0 if pays == HORSES[hid]["pays"] else round(pays, 2)))
+    for hid, name, pays in clean:
+        db().execute("INSERT INTO horse_settings (horse, name, pays) VALUES (?, ?, ?) "
+                     "ON CONFLICT (horse) DO UPDATE SET name = excluded.name, pays = excluded.pays", (hid, name, pays))
+    log_admin("horses_save", details=", ".join(f"{h['name']} ×{h['pays']}" for h in horse_list()))
+    db().commit()
+    return jsonify({"ok": True, "horses": horse_list()})
+
+
+def horse_forget_user(user_id):
+    """Usuwany gracz: jego otwarte zakłady znikają razem z postawionymi kartami (są w ESCROW)."""
+    for B in db().execute("SELECT * FROM horse_bets WHERE user_id = ? AND status IN ('open', 'settling')", (user_id,)).fetchall():
+        ids = json.loads(B["item_ids"])
+        db().execute(f"DELETE FROM items WHERE user_id = ? AND id IN ({','.join('?' * len(ids))})", [ESCROW, *ids])
+    db().execute("DELETE FROM horse_bets WHERE user_id = ?", (user_id,))
 
 
 # ---------------------------------------------------------------- kasyno: blackjack
@@ -4362,6 +4639,7 @@ def admin_delete_user(user_id):
     log_admin("user_delete", user_id)  # przed usunięciem - żeby zapisać nazwę gracza
     market_forget_user(user_id)        # jego oferty na rynku i stół jackpota (pieniądze innych graczy wracają)
     blackjack_forget_user(user_id)     # rozdanie w trakcie i postawione w nim karty
+    horse_forget_user(user_id)         # zakłady na wyścigi konne i postawione w nich karty
     for sql in ("DELETE FROM items WHERE user_id = ?", "DELETE FROM user_state WHERE user_id = ?",
                 "DELETE FROM user_discovered WHERE user_id = ?", "DELETE FROM daily_claims WHERE user_id = ?",
                 "DELETE FROM user_collected WHERE user_id = ?",

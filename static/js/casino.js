@@ -20,6 +20,29 @@ const CS = {
 };
 const CS_PICK_LIMIT = 240;
 
+// wyjście z gry po przegranej: pytamy, czy na pewno (CS.lost = ostatnia runda w kasynie była przegrana)
+function csLeaveGuard(proceed) {
+  if (!CS.lost) return false;
+  if ($(".cs-leave")) return true;
+  const el = document.createElement("div");
+  el.className = "cs-leave";
+  el.innerHTML = `<div class="cs-leave-box">
+    <img src="/static/img/casino_leave.png" alt="">
+    <h2>Na pewno wychodzisz?</h2>
+    <div class="daily-actions"><button class="btn primary" data-csstay>🎰 Zostaję</button><button class="btn" data-csgo>Wychodzę</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  Sound.fail();
+  const close = () => { el.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  el.addEventListener("click", e => {
+    if (e.target.closest("[data-csgo]")) { CS.lost = false; close(); proceed(); }
+    else if (e.target.closest("[data-csstay]") || e.target === el) close();
+  });
+  return true;
+}
+
 function csItems() { return S.items.filter(i => !i.fav && !isSpecialCard(i.person)); }   // bez ⭐ i kart specjalnych
 // szansa na kartę specjalną z kasyna (Joker) przy wygranej - jak na serwerze (casino_special_drop); 0, gdy nie ma takich kart
 function csSpecialChance(payout) {
@@ -71,7 +94,7 @@ function csPickerHTML(set, q, max, zone, dupesTip = "Dodaj wszystkie karty, któ
 }
 
 function renderCasino() {
-  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["slots", "🎰 Jednoręki bandyta"], ["upgrade", "⬆️ Ulepszacz"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
+  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["slots", "🎰 Jednoręki bandyta"], ["horses", "🐎 Wyścigi konne"], ["upgrade", "⬆️ Ulepszacz"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
     `<button data-cstab="${t}" class="${CS.tab === t ? "active" : ""}">${n}</button>`).join("");
   const own = new Set(S.items.map(i => i.id));
   [CS.sel, CS.bj.sel, CS.bj.dsel, SL.sel].forEach(set => [...set].forEach(id => { if (!own.has(id)) set.delete(id); }));
@@ -79,10 +102,11 @@ function renderCasino() {
   else if (CS.tab === "blackjack") { stopJackpotPolling(); renderBlackjack(); }
   else if (CS.tab === "upgrade") { stopJackpotPolling(); renderUpgrader(); }
   else if (CS.tab === "slots") { stopJackpotPolling(); drawSlots(); }
+  else if (CS.tab === "horses") { stopJackpotPolling(); drawHorses(); }
   else renderJackpot();
 }
 
-function csRedraw(zone) { zone === "rl" ? drawRoulette() : zone === "jp" ? drawJackpot() : zone === "sl" ? drawSlots() : drawBlackjack(); }
+function csRedraw(zone) { zone === "rl" ? drawRoulette() : zone === "jp" ? drawJackpot() : zone === "sl" ? drawSlots() : zone === "hr" ? hrRenderPanel() : drawBlackjack(); }
 
 // ================================================================ RULETKA
 
@@ -211,6 +235,7 @@ async function spinRoulette() {
   CS.angle = end % 360;
   CS.history = [res.number, ...CS.history].slice(0, 14);
   CS.last = res;
+  CS.lost = !res.win;
   if (res.win) {
     S.items = [...res.items.slice().reverse(), ...S.items];
     noteCollected(res.items);
@@ -433,6 +458,7 @@ async function bjAction(kind) {
     else if (E.result === "win") { Sound.win(); confetti(["#0f9d58", "#ffcf3f", "#c62828", "#fff"], 110); }
     else if (E.result === "lose") Sound.fail();
     else Sound.click();
+    CS.lost = E.result === "lose";
   }
   applyState(res.state);
   if (E?.special) {   // karta specjalna z kasyna (Joker) - wielkie odsłonięcie
@@ -730,6 +756,7 @@ function jackpotAnim(t) {
       grid.innerHTML = cards.map(c => withRevealMap(c.reveal ? { [c.person]: c.reveal } : {}, `jackpot=${t.id}`,
         () => pickHTML({ id: 0, person: c.person, variant: c.variant, value: c.value }))).join("");
       el.querySelector("[data-jclose]").hidden = false;
+      CS.lost = !iWon;
       if (iWon) { Sound.win(); confetti(GOLDS.concat(RAINBOW), 240); } else Sound.fail();
     };
     requestAnimationFrame(frame);
@@ -746,7 +773,9 @@ function jackpotAnim(t) {
 function bindCasino() {
   $("#casinoSeg").addEventListener("click", e => {
     const b = e.target.closest("[data-cstab]"); if (!b || CS.spinning) return;
-    CS.tab = b.dataset.cstab; Sound.click(); renderCasino();
+    if (b.dataset.cstab === CS.tab) return;
+    const go = () => { CS.tab = b.dataset.cstab; Sound.click(); renderCasino(); };
+    if (!csLeaveGuard(go)) go();
   });
   const body = $("#casinoBody");
   body.addEventListener("click", e => {
@@ -765,6 +794,13 @@ function bindCasino() {
     if (pick) {
       const zone = pick.closest(".cs-grid").dataset.zone, id = +pick.dataset.id;
       if (zone === "bj" || zone === "bjd") return bjPick(zone, id);
+      if (zone === "hr") {   // wyścigi konne
+        if (HR.sel.has(id)) HR.sel.delete(id);
+        else if (HR.sel.size >= S.cfg.horses.race.maxCards) { Sound.error(); return toast(`Najwyżej ${S.cfg.horses.race.maxCards} kart`, true); }
+        else HR.sel.add(id);
+        Sound.click();
+        return hrRenderPanel();
+      }
       if (zone === "sl") {   // jednoręki bandyta
         if (SL.sel.has(id)) SL.sel.delete(id);
         else if (SL.sel.size >= S.cfg.slots.maxCards) { Sound.error(); return toast(`Najwyżej ${S.cfg.slots.maxCards} kart`, true); }
@@ -794,6 +830,11 @@ function bindCasino() {
         return ids && jpSetCards(ids);
       }
       if (zone === "bjd") return bjFillDouble();
+      if (zone === "hr") {
+        const ids = csAddDuplicates([...HR.sel], S.cfg.horses.race.maxCards, "hr");
+        if (ids) { HR.sel = new Set(ids); Sound.click(); hrRenderPanel(); }
+        return;
+      }
       if (zone === "sl") {
         const ids = csAddDuplicates([...SL.sel], S.cfg.slots.maxCards, "sl");
         if (ids) { SL.sel = new Set(ids); Sound.click(); drawSlots(); }
@@ -812,7 +853,7 @@ function bindCasino() {
     if (clear) {
       const zone = clear.dataset.csclear;
       if (zone === "jp") return jpSetCards([]);
-      (zone === "bj" ? CS.bj.sel : zone === "bjd" ? CS.bj.dsel : zone === "sl" ? SL.sel : CS.sel).clear();
+      (zone === "bj" ? CS.bj.sel : zone === "bjd" ? CS.bj.dsel : zone === "sl" ? SL.sel : zone === "hr" ? HR.sel : CS.sel).clear();
       return csRedraw(zone);
     }
     const bet = t.closest("[data-rbet]");
@@ -857,7 +898,7 @@ function bindCasino() {
     if (t.dataset.csq) {
       const pos = t.selectionStart, zone = t.dataset.csq;
       resetKeep(zone);
-      if (zone === "rl") CS.q = t.value; else if (zone === "jp") CS.jp.q = t.value; else if (zone === "sl") SL.q = t.value; else CS.bj.q = t.value;
+      if (zone === "rl") CS.q = t.value; else if (zone === "jp") CS.jp.q = t.value; else if (zone === "sl") SL.q = t.value; else if (zone === "hr") HR.q = t.value; else CS.bj.q = t.value;
       csRedraw(zone);
       const again = $(`[data-csq=${zone}]`); again.focus(); again.setSelectionRange(pos, pos);
     }

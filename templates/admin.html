@@ -108,6 +108,17 @@
       </div>
 
       <div class="panel">
+        <h3>🐎 Wyścigi konne</h3>
+        <p class="muted small">Nazwy koni i mnożniki wygranej (wygrana = stawka × mnożnik). Puste pole albo wartość domyślna przywraca ustawienie z kodu.
+          Zakład, który już postawiono, zachowuje mnożnik z chwili zakładu. Domyślne mnożniki dają graczom ok. 91% zwrotu (symulacja: <code>python horses.py odds</code>)
+          — duże podwyżki szczególnie dla faworytów zrobią z kasyna hojnego sponsora.</p>
+        <form id="horseForm" autocomplete="off">
+          <div id="horseRows" class="a-horse-rows"></div>
+          <button class="btn primary" type="submit">💾 Zapisz konie</button>
+        </form>
+      </div>
+
+      <div class="panel">
         <h3>👥 Gracze</h3>
         <div id="userList" class="a-users"></div>
       </div>

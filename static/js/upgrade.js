@@ -159,6 +159,7 @@ async function runUpgrade() {
   }
   applyState(res.state);
   UPG.last = res;
+  CS.lost = !res.win;
 
   const b = wheel.getBoundingClientRect();
   const cx = b.left + b.width / 2, cy = b.top + b.height / 2;

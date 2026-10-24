@@ -1474,6 +1474,10 @@ function showRoute(how = "none") {
 
 // how: "push" - nowy wpis w historii (kliknięcie), "replace" - podmiana (start), "none" - bez zmian (wstecz/dalej)
 function switchView(view, how = "push") {
+  if (view !== "casino" && currentView() === "casino" && csLeaveGuard(() => switchView(view, how))) {
+    if (how === "none") history.pushState(null, "", viewPath("casino"));   // wstecz w przeglądarce: zostajemy na adresie kasyna
+    return;
+  }
   if (view === "arena" && !S.cfg.arena) view = "crates";  // Arena: na razie tylko dla adminów
   if ((view === "mockups" || view === "stickers" || view === "variants" || view === "designer") && !S.me?.isAdmin) view = "crates";
   const path = viewPath(view);
@@ -2727,6 +2731,7 @@ function bind() {
   bindCasino();
   bindUpgrader();
   bindSlots();
+  bindHorses();
   bindDesigner();
   bindSocial();
   bindArena();

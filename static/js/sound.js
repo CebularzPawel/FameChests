@@ -370,6 +370,135 @@ const Sound = (() => {
       });
       noise(t, 3, { vol: 0.08, freq: 9000, q: 0.4, type: "highpass" });
     },
+    // ---- wyścigi konne
+    // rżenie: piłokształtny głos z wysokim "iiiih", drżeniem i opadaniem na końcu; pitch - wysokość głosu konia
+    neigh(pitch = 1, vol = 0.1, len = 1) {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime + 0.01, d = (0.75 + Math.random() * 0.45) * len;
+      const o = c.createOscillator(), g = c.createGain(), f1 = c.createBiquadFilter(), f2 = c.createBiquadFilter();
+      const lfo = c.createOscillator(), lg = c.createGain(), trem = c.createOscillator(), tg = c.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(420 * pitch, t);
+      o.frequency.linearRampToValueAtTime(1350 * pitch, t + 0.13 * len);
+      o.frequency.exponentialRampToValueAtTime(900 * pitch, t + d * 0.4);
+      o.frequency.exponentialRampToValueAtTime(1100 * pitch, t + d * 0.55);
+      o.frequency.exponentialRampToValueAtTime(280 * pitch, t + d);
+      lfo.frequency.value = 24; lg.gain.value = 55 * pitch;      // drżenie wysokości
+      lfo.connect(lg).connect(o.frequency);
+      f1.type = "bandpass"; f1.frequency.value = 1000 * pitch; f1.Q.value = 3;
+      f2.type = "bandpass"; f2.frequency.value = 2600; f2.Q.value = 2;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.05);
+      g.gain.setValueAtTime(vol, t + d * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      trem.frequency.value = 13; tg.gain.value = vol * 0.4;       // "hihihi"
+      trem.connect(tg).connect(g.gain);
+      o.connect(f1).connect(g); o.connect(f2).connect(g);
+      g.connect(master);
+      o.start(t); lfo.start(t); trem.start(t);
+      o.stop(t + d + 0.05); lfo.stop(t + d + 0.05); trem.stop(t + d + 0.05);
+      noise(t, d * 0.5, { vol: vol * 0.5, freq: 3200, q: 0.8 });   // parskanie
+    },
+    // tętent: kilka głuchych uderzeń kopyt
+    gallop(vol = 0.06) {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      [0, 0.1, 0.2, 0.32].forEach((d, i) => noise(t + d, 0.09, { vol: vol * (i === 3 ? 1 : 0.7), freq: 220, q: 2, type: "lowpass" }));
+    },
+    // turbo: tęczowe, wznoszące się arpeggio
+    rainbow() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      [0, 2, 4, 7, 9, 12, 14, 16, 19, 24].forEach((st, i) => tone(392 * Math.pow(2, st / 12), t + i * 0.055, 0.28,
+        { type: i % 2 ? "square" : "triangle", vol: 0.07 }));
+      tone(180, t, 0.8, { type: "sawtooth", vol: 0.07, slideTo: 1400 });
+    },
+    // upadek / kraksa
+    crash() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      noise(t, 0.35, { vol: 0.25, freq: 900, q: 0.7, slideTo: 120 });
+      tone(160, t, 0.3, { type: "square", vol: 0.12, slideTo: 40 });
+    },
+    // smutny puzon: koń zdechł
+    sadTrombone() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      [[233, 0, 0.35], [220, 0.4, 0.35], [208, 0.8, 0.35], [196, 1.2, 0.9]].forEach(([hz, d, len], i) =>
+        tone(hz, t + d, len, { type: "sawtooth", vol: 0.09, slideTo: i === 3 ? hz * 0.8 : null }));
+    },
+    // klakson samochodu (i silnik)
+    carHorn() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      tone(440, t, 0.6, { type: "square", vol: 0.1 }); tone(554, t, 0.6, { type: "square", vol: 0.1 });
+      tone(440, t + 0.75, 0.6, { type: "square", vol: 0.1 }); tone(554, t + 0.75, 0.6, { type: "square", vol: 0.1 });
+      noise(t, 3, { vol: 0.12, freq: 160, q: 2, type: "lowpass", slideTo: 400 });
+    },
+    // skrzynka z przedmiotem: dwa wesołe dźwięki
+    pickup() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      tone(784, t, 0.12, { type: "triangle", vol: 0.08 }); tone(1175, t + 0.08, 0.2, { type: "triangle", vol: 0.08 });
+    },
+    // położenie skórki od banana
+    pop() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      tone(300, t, 0.1, { type: "sine", vol: 0.12, slideTo: 700 });
+    },
+    // rakieta: świst
+    whoosh() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      noise(t, 0.8, { vol: 0.14, freq: 500, q: 1.5, slideTo: 3500 });
+    },
+    // trafienie rakietą: wybuch
+    boom() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      noise(t, 0.6, { vol: 0.35, freq: 1200, q: 0.6, slideTo: 80, type: "lowpass" });
+      tone(90, t, 0.5, { type: "sawtooth", vol: 0.2, slideTo: 30 });
+    },
+    // grzyb: wznoszące "bip-bip-biiip"
+    boost() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      [0, 0.07, 0.14].forEach((d, i) => tone(500 * (1 + i * 0.35), t + d, 0.12, { type: "square", vol: 0.06 }));
+      tone(400, t + 0.2, 0.4, { type: "sawtooth", vol: 0.06, slideTo: 1600 });
+    },
+    // ślimak: opadające "uuuu"
+    slowdown() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      tone(500, t, 0.7, { type: "sawtooth", vol: 0.07, slideTo: 90 });
+    },
+    // piorun
+    zap() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      noise(t, 0.4, { vol: 0.3, freq: 6000, q: 0.5, type: "highpass", slideTo: 800 });
+      tone(1800, t, 0.25, { type: "square", vol: 0.08, slideTo: 200 });
+    },
+    // gwiazda: błyszczące arpeggio
+    starup() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      [0, 4, 7, 12, 16, 19, 24].forEach((st, i) => tone(523 * Math.pow(2, st / 12), t + i * 0.05, 0.18, { type: "triangle", vol: 0.07 }));
+    },
+    // poślizg na skórce od banana: gwizd w dół i bęc
+    slip() {
+      if (!enabled) return;
+      const t = ac().currentTime;
+      tone(1400, t, 0.45, { type: "sine", vol: 0.12, slideTo: 200 });
+      noise(t + 0.45, 0.15, { vol: 0.2, freq: 300, q: 1, type: "lowpass" });
+    },
+    // kogut / start: gwizdek sędziego
+    whistle() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      warble(t, 0.5, 2600, 2900, { rate: 28, depth: 120, vol: 0.09, type: "sine" });
+    },
   };
   return api;
 })();

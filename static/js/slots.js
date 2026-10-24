@@ -105,6 +105,7 @@ async function spinSlots() {
     requestAnimationFrame(frame);
   });
   SL.last = res;
+  CS.lost = !res.win;
   SL.history = [{ reels: res.reels, win: res.win }, ...SL.history].slice(0, 12);
   SL.reels = full.map(ids => ids.slice(-SL_ROWS));   // po przerysowaniu widać te same trzy symbole, na których stanął bęben
   if (res.win) {
