@@ -26,6 +26,8 @@ VARIANTS = {
     "bronze":  {"name": "Brązowa",      "chance": 0.04,  "mult": 2.0, "off": True,
                 "desc": "Karta z brązu - ciepły, ciemniejszy metal, najczęstszy z metalowych wariantów."},
     "silver":  {"name": "Srebrna",      "chance": 0.03,  "mult": 2.5},
+    "steel":   {"name": "Stalowa",      "chance": 0.02,  "mult": 4.5, "off": True,
+                "desc": "Szczotkowana stal: ramka z blachy ryflowanej, śruby w rogach, zimne stalowe zdjęcie i światło przesuwające się po metalu."},
     "holo":    {"name": "Holo",         "chance": 0.025, "mult": 3.0},
     "pearl":   {"name": "Perłowa",      "chance": 0.015, "mult": 5.0, "off": True,
                 "desc": "Cała karta z masy perłowej - mleczna biel z różowo-miętowo-błękitnymi refleksami, które przesuwają się po karcie."},
@@ -85,9 +87,13 @@ VARIANTS = {
     "toxic":   {"name": "Toksyczna",    "chance": 0.004, "mult": 13.0, "off": True,
                 "desc": "Radioaktywny szlam: ciemna karta, jarzący się zielony glut, bąbelki, kałuża i taśma ostrzegawcza."},
     "ruby":    {"name": "Rubinowa",     "chance": 0.004, "mult": 14.0},
+    "sapphire": {"name": "Szafirowa",   "chance": 0.0035, "mult": 16.0, "off": True,   # kamienie szlachetne: ciemny niebieski
+                "desc": "Głęboki, ciemny błękit szafiru: pryzmatyczna obracająca się ramka, fasety, niebieskie zdjęcie i błyski."},
     "royal":   {"name": "Królewska",    "chance": 0.004, "mult": 15.0, "exclusive": True,   # wyjątkowy (Skrzynia Królów)
                 "desc": "Ozdobna złota rama z ornamentami i złota korona na górze."},
     "diamond": {"name": "Diamentowa",   "chance": 0.003, "mult": 18.0},
+    "blackdiamond": {"name": "Czarny diament", "chance": 0.0015, "mult": 24.0, "off": True,
+                "desc": "Najrzadszy z kamieni: czarny diament - ciemne fasety, srebrno-czarna obracająca się ramka i białe błyski."},
     "galaxy":  {"name": "Galaktyczna",  "chance": 0.002, "mult": 20.0,
                 "desc": "Kosmiczna karta: mgławice, gwiazdy i świecąca ramka."},
     "negative": {"name": "Negatyw",     "chance": 0.001, "mult": 30.0},

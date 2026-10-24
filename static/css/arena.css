@@ -311,7 +311,7 @@ body.hs-open { overflow: hidden; }
 @keyframes arGlowGold { 0%, 100% { filter: none; } 50% { filter: drop-shadow(0 0 26px #ffc531) brightness(1.4); } }
 .ar-enter-holo, .ar-enter-reverse { animation-name: arEnter, arHue; animation-duration: .6s, 1s; }
 @keyframes arHue { 0% { filter: hue-rotate(0deg) saturate(2); } 100% { filter: hue-rotate(360deg) saturate(1); } }
-.ar-enter-diamond, .ar-enter-emerald, .ar-enter-ruby, .ar-enter-amethyst { animation-name: arEnter, arGem; animation-duration: .6s, 1s; }
+.ar-enter-diamond, .ar-enter-emerald, .ar-enter-ruby, .ar-enter-amethyst, .ar-enter-sapphire, .ar-enter-blackdiamond { animation-name: arEnter, arGem; animation-duration: .6s, 1s; }
 @keyframes arGem { 0%, 100% { filter: none; } 40% { filter: brightness(2.2) drop-shadow(0 0 30px #fff); } }
 .ar-enter-negative { animation-name: arEnter, arNeg; animation-duration: .6s, 1s; }
 @keyframes arNeg { 0%, 60% { filter: invert(1); } 30%, 100% { filter: none; } }

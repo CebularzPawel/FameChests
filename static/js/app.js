@@ -9,8 +9,8 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", greek: "🏺 GREEK", african: "🌍 AFRICA", honey: "🍯 HONEY", street: "🎨 STREET", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", emo: "🖤 EMO", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", dollar: "💵 $50", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
-const GEMS = ["emerald", "amethyst", "ruby", "diamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", greek: "🏺 GREEK", african: "🌍 AFRICA", honey: "🍯 HONEY", street: "🎨 STREET", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", emo: "🖤 EMO", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", dollar: "💵 $50", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
   cfg: null,
@@ -834,6 +834,7 @@ function mtGauge() {
 const nrScratches = n => Array.from({ length: n }, () =>
   `<i class="nr-scratch" style="left:${vxN(6, 94)}%;animation-delay:-${vxN(0, 3, 2)}s;animation-duration:${vxN(1.4, 3.2, 2)}s"></i>`).join("");
 const VX_BG = {
+  steel: () => '<i class="stl-shine"></i>',
   noir: () => '<i class="nr-rain soft"></i>',
   beer: () => `<i class="br-body"></i>${brBubbles()}`,
   electric: () => '<i class="el-clouds"></i><i class="el-rain"></i>',
@@ -859,6 +860,7 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  steel: '<i class="vx-photo stl-cold"></i>',
   // ...i kilka łańcuszków bąbelków na zdjęciu (krótsza droga do góry)
   beer: () => `<i class="vx-photo br-amber"></i><i class="vx-photo br-bubs">${brBubbles(3, 4, 4)}</i><i class="vx-photo br-glass"></i>`,
   electric: '<i class="vx-photo el-strike"></i>',
@@ -873,6 +875,8 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  // Stalowa: śruby w rogach karty
+  steel: () => `<div class="vx-deco">${["tl", "tr", "bl", "br"].map(c => `<i class="stl-screw ${c}"></i>`).join("")}</div>`,
   // Piwna: piana u góry (nazwa nad nią), oszronione szkło z kroplami rosy - część spływa
   beer: () => `<div class="vx-deco vx-clip">${vxSvg(brFoam(11), "0 0 63 88", "br-foam")}</div><div class="vx-deco vx-clip"><i class="br-frost"></i>${brDew(46, 6)}</div>`,
   moro: p => `<div class="vx-deco"><i class="mo-stitch"></i>${moTags(p)}</div>`,
@@ -1129,7 +1133,7 @@ function tiltMove(e) {
   const b = zone ? zone.getBoundingClientRect() : flatRect(card);
   const px = Math.min(1, Math.max(0, (e.clientX - b.left) / b.width));
   const py = Math.min(1, Math.max(0, (e.clientY - b.top) / b.height));
-  const fancy = card.matches(".r-secret, .v-holo, .v-reverse, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-vintage, .v-marble, .v-toxic, .v-pixel, .v-popart, .v-glass, .v-neon, .v-thermal, .v-blueprint, .v-glitch, .v-dollar, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-bw, .v-clear, .v-negative, .v-sketch, .v-galaxy, .v-mlg");
+  const fancy = card.matches(".r-secret, .v-holo, .v-reverse, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-vintage, .v-marble, .v-toxic, .v-pixel, .v-popart, .v-glass, .v-neon, .v-thermal, .v-blueprint, .v-glitch, .v-dollar, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-steel, .v-bw, .v-clear, .v-negative, .v-sketch, .v-galaxy, .v-mlg");
   const strength = card.closest(".viewer") ? 1.5 : fancy || card.closest(".modal") ? 1 : 0.6;
   card.classList.add("tilting");
   card.style.setProperty("--rx", ((0.5 - py) * 16 * strength).toFixed(2) + "deg");
@@ -1835,7 +1839,8 @@ function showResults(afterEpic = false) {
     const topBase = baseVariant(top.variant);
     const colors = {
       diamond: ["#e8fbff", "#9ff6ff", "#c9b8ff", "#ffffff"], emerald: ["#00c853", "#6dffb0", "#c6ffe0", "#ffffff"],
-      ruby: ["#ff1744", "#ff8a9c", "#ffd0d8", "#ffffff"], amethyst: ["#9b3dff", "#c99bff", "#ecdcff", "#ffffff"], clear: ["#ffffff", "#e0f7ff", "#bfefff"],
+      ruby: ["#ff1744", "#ff8a9c", "#ffd0d8", "#ffffff"], amethyst: ["#9b3dff", "#c99bff", "#ecdcff", "#ffffff"],
+      sapphire: ["#1c46d8", "#5a86ff", "#a8c0ff", "#ffffff"], blackdiamond: ["#0a0a0e", "#6a6a7c", "#c8c8d8", "#ffffff"], steel: ["#d2d9df", "#8c969f", "#3e464d"], clear: ["#ffffff", "#e0f7ff", "#bfefff"],
       negative: ["#000000", "#ffffff", "#7a7a7a", "#00e5ff"], gold: ["#ffc531", "#fff3b0", "#fff"], holo: ["#9ff6ff", "#ff9ff3", "#fff"],
       silver: ["#e6ebf2", "#b8c2d0", "#ffffff"], bronze: ["#cd7f32", "#f0b27a", "#ffe0c0"], pearl: ["#ffffff", "#ffd1e4", "#d3fff1", "#d3e2ff"],
       pixel: ["#3a5bd0", "#ffffff", "#7dff5a", "#ffe13b"], glass: ["#2f7fc0", "#3fa0a0", "#6a5aa8", "#e8a33a", "#ffffff"],

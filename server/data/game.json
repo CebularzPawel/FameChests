@@ -18,20 +18,48 @@
    "chance": 0.05,
    "mult": 1.8
   },
+  "bronze": {
+   "name": "Brązowa",
+   "chance": 0.04,
+   "mult": 2.0,
+   "off": true,
+   "desc": "Karta z brązu - ciepły, ciemniejszy metal, najczęstszy z metalowych wariantów."
+  },
   "silver": {
    "name": "Srebrna",
    "chance": 0.03,
    "mult": 2.5
+  },
+  "steel": {
+   "name": "Stalowa",
+   "chance": 0.02,
+   "mult": 4.5,
+   "off": true,
+   "desc": "Szczotkowana stal: ramka z blachy ryflowanej, śruby w rogach, zimne stalowe zdjęcie i światło przesuwające się po metalu."
   },
   "holo": {
    "name": "Holo",
    "chance": 0.025,
    "mult": 3.0
   },
+  "pearl": {
+   "name": "Perłowa",
+   "chance": 0.015,
+   "mult": 5.0,
+   "off": true,
+   "desc": "Cała karta z masy perłowej - mleczna biel z różowo-miętowo-błękitnymi refleksami, które przesuwają się po karcie."
+  },
   "gold": {
    "name": "Złota",
    "chance": 0.01,
    "mult": 7.5
+  },
+  "vintage": {
+   "name": "Vintage",
+   "chance": 0.008,
+   "mult": 8.5,
+   "off": true,
+   "desc": "Fotografia z XIX wieku: zdjęcie w sepii na kremowym kartonie ze złoconym brzegiem i pieczątką atelier."
   },
   "flag": {
    "name": "Flagowa",
@@ -79,10 +107,24 @@
    "noCombo": true,
    "desc": "Najrzadszy wariant halloweenowy - piekielny ogień, rogi i czerwona poświata."
   },
+  "popart": {
+   "name": "Pop-art",
+   "chance": 0.007,
+   "mult": 8.0,
+   "off": true,
+   "desc": "Jak sitodruk Warhola: zdjęcie cztery razy w jaskrawych kolorach, żółte tło w czerwone kropki i komiksowe okienka."
+  },
   "clear": {
    "name": "Przezroczysta",
    "chance": 0.006,
    "mult": 9.0
+  },
+  "pixel": {
+   "name": "Pikselowa",
+   "chance": 0.005,
+   "mult": 9.5,
+   "off": true,
+   "desc": "16-bitowa gra RPG: zdjęcie z dużych pikseli, niebieskie okienka z białą ramką, pasek HP i migająca strzałka."
   },
   "sketch": {
    "name": "Rysunkowa",
@@ -95,15 +137,100 @@
    "chance": 0.005,
    "mult": 11.0
   },
+  "mlg": {
+   "name": "MLG",
+   "chance": 0.005,
+   "mult": 12.0,
+   "exclusive": true,
+   "stickers": true,
+   "desc": "Jak montaże „MLG” z 2014: tęczowa ramka, hitmarkery, napisy WOW i 360 NO SCOPE, oko Illuminati."
+  },
+  "neon": {
+   "name": "Neonowa",
+   "chance": 0.005,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Kontury twarzy jak świecące neonowe rurki w różu, błękicie i żółci, które co chwilę brzęczą i przygasają."
+  },
+  "thermal": {
+   "name": "Termowizyjna",
+   "chance": 0.005,
+   "mult": 10.5,
+   "off": true,
+   "desc": "Obraz z kamery termowizyjnej: twarz świeci ciepłem, a po tle karty przesuwają się ciepłe plamy."
+  },
+  "blueprint": {
+   "name": "Blueprint",
+   "chance": 0.005,
+   "mult": 9.0,
+   "off": true,
+   "desc": "Plan inżynierski: kontur twarzy białą kreską na niebieskim papierze z siatką, linie wymiarowe i tabelka rysunkowa."
+  },
+  "glitch": {
+   "name": "Glitch",
+   "chance": 0.004,
+   "mult": 11.5,
+   "off": true,
+   "desc": "Uszkodzony plik: bloki pikseli w złych kolorach, przesunięte wiersze i obraz, który co chwilę się psuje na nowo."
+  },
+  "dollar": {
+   "name": "Dolarowa",
+   "chance": 0.004,
+   "mult": 12.0,
+   "off": true,
+   "desc": "Karta jak banknot: papier z giloszowanymi rozetami, portret wygrawerowany zielonym tuszem w owalu, pieczęcie i numer seryjny."
+  },
+  "mosaic": {
+   "name": "Mozaikowa",
+   "chance": 0.006,
+   "mult": 9.5,
+   "off": true,
+   "desc": "Portret z klocków z nopkami w kolorach klocków - czerwone, niebieskie, żółte - na zielonej płycie, w żółtej ramce."
+  },
+  "noir": {
+   "name": "Noir",
+   "chance": 0.006,
+   "mult": 8.0,
+   "off": true,
+   "desc": "Klatka starego czarno-białego filmu: perforacja taśmy, rysy i kurz, migotanie, deszcz w tle i napis jak z napisów do filmu."
+  },
+  "glass": {
+   "name": "Witrażowa",
+   "chance": 0.004,
+   "mult": 12.0,
+   "off": true,
+   "desc": "Lampa Tiffany: zdjęcie i całe tło z setek kawałków kolorowego szkła w chłodnych barwach, rozdzielonych ołowianymi liniami."
+  },
+  "marble": {
+   "name": "Marmurowa",
+   "chance": 0.005,
+   "mult": 11.5,
+   "off": true,
+   "desc": "Biały marmur z szarymi żyłkami i złotymi liniami, a zdjęcie zamienia się w marmurowy posąg."
+  },
   "amethyst": {
    "name": "Ametystowa",
    "chance": 0.0045,
    "mult": 12.5
   },
+  "toxic": {
+   "name": "Toksyczna",
+   "chance": 0.004,
+   "mult": 13.0,
+   "off": true,
+   "desc": "Radioaktywny szlam: ciemna karta, jarzący się zielony glut, bąbelki, kałuża i taśma ostrzegawcza."
+  },
   "ruby": {
    "name": "Rubinowa",
    "chance": 0.004,
    "mult": 14.0
+  },
+  "sapphire": {
+   "name": "Szafirowa",
+   "chance": 0.0035,
+   "mult": 16.0,
+   "off": true,
+   "desc": "Głęboki, ciemny błękit szafiru: pryzmatyczna obracająca się ramka, fasety, niebieskie zdjęcie i błyski."
   },
   "royal": {
    "name": "Królewska",
@@ -117,6 +244,13 @@
    "chance": 0.003,
    "mult": 18.0
   },
+  "blackdiamond": {
+   "name": "Czarny diament",
+   "chance": 0.0015,
+   "mult": 24.0,
+   "off": true,
+   "desc": "Najrzadszy z kamieni: czarny diament - ciemne fasety, srebrno-czarna obracająca się ramka i białe błyski."
+  },
   "galaxy": {
    "name": "Galaktyczna",
    "chance": 0.002,
@@ -127,6 +261,164 @@
    "name": "Negatyw",
    "chance": 0.001,
    "mult": 30.0
+  },
+  "cheese": {
+   "name": "Serowa",
+   "chance": 0.02,
+   "mult": 4.0,
+   "off": true,
+   "desc": "Żółty ser z dziurami, roztopiony ser kapiący z góry i trochę szlachetnej pleśni przy brzegach."
+  },
+  "matte": {
+   "name": "Matowa czerń",
+   "chance": 0.012,
+   "mult": 6.0,
+   "off": true,
+   "desc": "Ziarnista czarna skóra z przeszyciem wzdłuż brzegu, wytłoczone zdjęcie i błysk przesuwający się po nazwie."
+  },
+  "racing": {
+   "name": "Wyścigowa retro",
+   "chance": 0.01,
+   "mult": 7.0,
+   "off": true,
+   "desc": "Ramka w czerwono-kremową szachownicę, pas czerwony-biały-czerwony i białe koło z numerem jak na bolidzie z lat 50."
+  },
+  "fade": {
+   "name": "Gradient",
+   "chance": 0.007,
+   "mult": 9.0,
+   "off": true,
+   "desc": "Klasyczny fade: żółty, pomarańczowy, różowy, fiolet i błękit płynnie przechodzą przez całą metaliczną kartę."
+  },
+  "slime": {
+   "name": "Szlamowa",
+   "chance": 0.006,
+   "mult": 9.5,
+   "off": true,
+   "desc": "Dolna część karty pływa w szlamie z falującą powierzchnią i bąbelkami, z góry kapie glut, zdjęcie lekko zielone."
+  },
+  "wanted": {
+   "name": "Wanted",
+   "chance": 0.006,
+   "mult": 10.5,
+   "off": true,
+   "desc": "Przypalony list gończy z dziurami po kulach: WANTED, DEAD OR ALIVE i nagroda w wysokości wartości karty."
+  },
+  "digital": {
+   "name": "Cyfrowa",
+   "chance": 0.004,
+   "mult": 13.5,
+   "off": true,
+   "desc": "Okno terminala hakera: za kartą lecą zielone znaki, nazwa pisze się i kasuje, zdjęcie z pikseli w zielonym monitorze."
+  },
+  "artdeco": {
+   "name": "Art déco",
+   "chance": 0.004,
+   "mult": 14.5,
+   "off": true,
+   "desc": "Czerń ze złotymi wachlarzami art déco, podwójnymi złotymi liniami i nazwą jak ze złotej folii."
+  },
+  "cyber": {
+   "name": "Cyberpunk",
+   "chance": 0.0035,
+   "mult": 16.0,
+   "off": true,
+   "desc": "Nocne miasto z neonowymi oknami, deszcz w świetle różu i błękitu, zdjęcie w dwóch neonowych kolorach."
+  },
+  "bismuth": {
+   "name": "Bizmutowa",
+   "chance": 0.003,
+   "mult": 17.0,
+   "off": true,
+   "desc": "Trójwymiarowe schodki kryształu bizmutu na całym tle, mieniące się tęczowo, z obracającą się tęczową ramką."
+  },
+  "honey": {
+   "name": "Miodowa",
+   "chance": 0.015,
+   "mult": 5.5,
+   "off": true,
+   "desc": "Błyszczący plaster miodu, gęsty miód kapiący z góry karty i przelatujące pszczoły."
+  },
+  "aero": {
+   "name": "Frutiger Aero",
+   "chance": 0.008,
+   "mult": 8.0,
+   "off": true,
+   "desc": "Jak tapety z 2008: rybki pływają po niebie między chmurami i bańkami, na dole błyszcząca zielona łąka ze stokrotkami."
+  },
+  "street": {
+   "name": "Uliczna",
+   "chance": 0.007,
+   "mult": 9.0,
+   "off": true,
+   "stickers": "under",
+   "desc": "Graffiti: ciemna ściana z wielkim kolorowym napisem w stylu wildstyle po bokach i mgiełką farby."
+  },
+  "greek": {
+   "name": "Grecka",
+   "chance": 0.005,
+   "mult": 11.0,
+   "off": true,
+   "stickers": "under",
+   "desc": "Czarna waza czerwonofigurowa: terakotowe tondo ze zdjęciem, pasy meandra i fryz z palmet."
+  },
+  "african": {
+   "name": "Afrykańska",
+   "chance": 0.0045,
+   "mult": 12.0,
+   "off": true,
+   "stickers": "under",
+   "desc": "Ramka z tkaniny kente w pasy złota, zieleni, czerwieni i czerni, a w środku złote symbole adinkra na ciemnym brązie."
+  },
+  "chinese": {
+   "name": "Chińska",
+   "chance": 0.0035,
+   "mult": 15.5,
+   "off": true,
+   "stickers": "under",
+   "desc": "Czerwień ze złotem: kołyszące się czerwone lampiony ze złotymi frędzlami i złote chmurki."
+  },
+  "moro": {
+   "name": "Moro",
+   "chance": 0.016,
+   "mult": 5.0,
+   "off": true,
+   "desc": "Leśne moro, ramka z oliwkowego płótna z przeszyciem i nieśmiertelniki z nazwą karty na łańcuszku."
+  },
+  "beer": {
+   "name": "Piwna",
+   "chance": 0.012,
+   "mult": 6.5,
+   "off": true,
+   "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."
+  },
+  "emo": {
+   "name": "Emo",
+   "chance": 0.007,
+   "mult": 8.5,
+   "off": true,
+   "desc": "Czerń i ciemna czerwień, drut kolczasty wokół zdjęcia, bijące pęknięte serce i zacieki jak rozmazany eyeliner."
+  },
+  "electric": {
+   "name": "Elektryczna",
+   "chance": 0.006,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Burzowe niebo z deszczem: co chwilę uderza piorun z odgałęzieniami, a cała karta na moment się rozjaśnia."
+  },
+  "synthwave": {
+   "name": "Synthwave",
+   "chance": 0.005,
+   "mult": 11.5,
+   "off": true,
+   "desc": "Obraz z kasety VHS: PLAY i licznik, pasy zakłóceń, rozjechane kolory zdjęcia, a na dole zachodzi słońce w paski."
+  },
+  "motor": {
+   "name": "Motoryzacyjna",
+   "chance": 0.0045,
+   "mult": 12.5,
+   "off": true,
+   "desc": "Zdjęcie w środku obrotomierza: wskazówka wkręca się na czerwone pole i odbija od ogranicznika, miga lampka zmiany biegu, dookoła karbon."
   },
   "rzulty": {
    "name": "Rzulty",

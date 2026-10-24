@@ -41,6 +41,7 @@
 .avv-electric img { box-shadow: 0 0 0 2px #9fdcff, 0 0 12px #4fb8ff !important; }
 .avv-synthwave img { filter: url(#swRgb) saturate(1.3); box-shadow: 0 0 0 2px #ff2bd6, 0 0 12px #00e5ff !important; }
 .avv-motor img { box-shadow: 0 0 0 2px #f2f2f2, 0 0 0 4px #e8202f !important; }
+.avv-steel img { filter: grayscale(.85) contrast(1.15) sepia(.15) hue-rotate(170deg); box-shadow: 0 0 0 2px #a9b2ba, 0 0 0 4px #3e464d !important; }
 .avv-toxic img { filter: grayscale(1) contrast(1.3) sepia(1) hue-rotate(45deg) saturate(4) brightness(.9); box-shadow: 0 0 0 2px #5dff1f, 0 0 12px #5dff1f !important; }
 .avv-blueprint img { filter: grayscale(1) contrast(1.4) brightness(.9) sepia(1) hue-rotate(190deg) saturate(4); box-shadow: 0 0 0 2px #e8f4ff, 0 0 0 4px #1f3a7a !important; }
 .avv-glitch img { filter: contrast(1.2) saturate(1.6) hue-rotate(20deg); box-shadow: -2px 0 #ff2b5a, 2px 0 #00e5ff !important; }
@@ -59,12 +60,12 @@
 }
 .avv-gold img { filter: sepia(1) saturate(1.8) hue-rotate(-10deg) brightness(1.05) contrast(1.15); box-shadow: 0 0 0 2px #ffcf3f, 0 0 12px #ffcf3f !important; }
 .avv-gold::after { background: linear-gradient(115deg, transparent 35%, #fff8 48%, transparent 60%); background-size: 250% 100%; mix-blend-mode: overlay; animation: photoGlint 2.4s ease-in-out infinite; }
-:is(.avv-diamond, .avv-emerald, .avv-ruby, .avv-amethyst) img { filter: grayscale(.35) brightness(1.08) contrast(1.15); box-shadow: 0 0 0 2px var(--gem-2), 0 0 14px var(--gem-6) !important; }
-:is(.avv-diamond, .avv-emerald, .avv-ruby, .avv-amethyst)::after { background: linear-gradient(160deg, var(--gem-t1), var(--gem-t2) 45%, var(--gem-t3)); mix-blend-mode: color; opacity: .75; }
+:is(.avv-diamond, .avv-emerald, .avv-ruby, .avv-amethyst, .avv-sapphire, .avv-blackdiamond) img { filter: grayscale(.35) brightness(1.08) contrast(1.15); box-shadow: 0 0 0 2px var(--gem-2), 0 0 14px var(--gem-6) !important; }
+:is(.avv-diamond, .avv-emerald, .avv-ruby, .avv-amethyst, .avv-sapphire, .avv-blackdiamond)::after { background: linear-gradient(160deg, var(--gem-t1), var(--gem-t2) 45%, var(--gem-t3)); mix-blend-mode: color; opacity: .75; }
 .avv-clear img { opacity: .62; box-shadow: 0 0 0 2px #ffffffb0, 0 0 10px #bfefffaa !important; }
 .avv-negative img { filter: invert(1); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000, 0 0 12px #00e5ff !important; }
 .av-vname { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: #000a; }
-.av-vname.vt-gold { color: #ffcf3f; } .av-vname:is(.vt-diamond, .vt-emerald, .vt-ruby, .vt-amethyst) { color: var(--gem-3); } .av-vname.vt-silver { color: #dfe6f0; } .av-vname.vt-bronze { color: #e0985a; }
+.av-vname.vt-gold { color: #ffcf3f; } .av-vname:is(.vt-diamond, .vt-emerald, .vt-ruby, .vt-amethyst, .vt-sapphire, .vt-blackdiamond) { color: var(--gem-3); } .av-vname.vt-silver { color: #dfe6f0; } .av-vname.vt-steel { color: #b8c2ca; } .av-vname.vt-bronze { color: #e0985a; }
 .av-vname.vt-pearl { color: #f6dbe7; } .av-vname.vt-vintage { color: #efe2c2; } .av-vname.vt-marble { color: #f3efe6; } .av-vname.vt-toxic { color: #b6ff3a; }
 .av-vname.vt-slime { color: #7dff3a; } .av-vname.vt-matte { color: #8a8a8a; } .av-vname.vt-racing { color: #ff5a64; } .av-vname.vt-bismuth { color: #ff8ad0; }
 .av-vname.vt-digital { color: #3dff6e; } .av-vname.vt-cyber { color: #ff2bd6; } .av-vname.vt-fade { color: #f9a0d0; } .av-vname.vt-wanted { color: #ddc28a; }

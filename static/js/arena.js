@@ -427,7 +427,8 @@ const AR_ENTER_COLORS = {
   electric: ["#9fdcff", "#fff", "#4fb8ff"], synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
   marble: ["#fff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400"], holo: RAINBOW, gold: GOLDS, clear: ["#ffffff", "#e0f7ff", "#bfefff"], emerald: ["#00c853", "#6dffb0", "#fff"],
   pixel: ["#3a5bd0", "#fff", "#7dff5a", "#ffe13b"], glass: ["#2f7fc0", "#3fa0a0", "#6a5aa8", "#e8a33a"], neon: ["#ff3df0", "#3de0ff", "#ffe63c"], thermal: ["#d8303a", "#f07a1a", "#ffd23f"], blueprint: ["#1f3a7a", "#e8f4ff", "#4a8ad8"], glitch: ["#ff2b5a", "#00e5ff", "#fff"], dollar: ["#2a6a3a", "#eef3e2", "#b8d8a0"], mosaic: ["#c91a09", "#f2cd37", "#0055bf"], noir: ["#e8e8e8", "#2a2a2a", "#fff"], popart: ["#ffe100", "#e8202f", "#ff4fa0", "#2fd0ff"], holo: RAINBOW, gold: GOLDS, clear: ["#ffffff", "#e0f7ff", "#bfefff"], emerald: ["#00c853", "#6dffb0", "#fff"],
-  ruby: ["#ff1744", "#ff8a9c", "#fff"], amethyst: ["#9b3dff", "#c99bff", "#fff"], diamond: ["#e8fbff", "#9ff6ff", "#c9b8ff", "#fff"], negative: ["#000", "#fff", "#00e5ff"],
+  ruby: ["#ff1744", "#ff8a9c", "#fff"], amethyst: ["#9b3dff", "#c99bff", "#fff"], sapphire: ["#1c46d8", "#5a86ff", "#fff"],
+  blackdiamond: ["#0a0a0e", "#6a6a7c", "#c8c8d8", "#fff"], steel: ["#d2d9df", "#8c969f", "#3e464d"], diamond: ["#e8fbff", "#9ff6ff", "#c9b8ff", "#fff"], negative: ["#000", "#fff", "#00e5ff"],
   royal: ["#ffd75e", "#fff3c4", "#e0115f", "#1e5bff", "#12b85c", "#9b30ff"], flag: ["#ffffff", "#ff3b3b", "#3b6bff", "#ffd54a"],
   rzulty: ["#ffe600", "#fff59d", "#ffd000", "#ffffff"], mlg: ["#9cff00", "#ffe100", "#ff7a00", "#ff2bd6", "#00e5ff"],
 };
@@ -439,7 +440,7 @@ async function arEnterFx(unit) {
   const [x, y] = arCenter(el);
   const special = v !== "normal";
   fx().burst(x, y, special ? 130 : 30, AR_ENTER_COLORS[v] || AR_ENTER_COLORS.normal, { speed: special ? 13 : 6, stars: special ? 0.4 : 0.1 });
-  if (["gold", "diamond", "emerald", "ruby", "amethyst", "negative", "royal", "flag", "rzulty"].includes(v)) Sound.gold(); else Sound.land(person(unit.pid).rarity === "secret" ? "ultra" : person(unit.pid).rarity);
+  if (["gold", "diamond", "emerald", "ruby", "amethyst", "sapphire", "blackdiamond", "negative", "royal", "flag", "rzulty"].includes(v)) Sound.gold(); else Sound.land(person(unit.pid).rarity === "secret" ? "ultra" : person(unit.pid).rarity);
   await arWait(380);
   el.classList.remove("ar-enter", "ar-enter-" + v);
 }

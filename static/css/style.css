@@ -273,8 +273,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 24px 20px 120px; }
    i ULTRA karta na ekranie przerysowywała się w całości 60 razy na sekundę). Obracająca się ramka bierze kolory z --spin,
    bo kąt (--ang) musi się zmieniać w samym ::before; wariant ze stałą ramką (np. czarno-biała) ustawia --spin: initial.
    Tajne i flagowe karty mają własne tło - bez ::before (cards2.css). */
-.card:is(.r-gold, .r-ultra, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-royal, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-galaxy, .v-mlg, .v-slime, .v-bismuth, .v-fade, .v-artdeco) { background: none; isolation: isolate; }
-.card:is(.r-gold, .r-ultra, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-royal, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-galaxy, .v-mlg, .v-slime, .v-bismuth, .v-fade, .v-artdeco)::before {
+.card:is(.r-gold, .r-ultra, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-royal, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-galaxy, .v-mlg, .v-slime, .v-bismuth, .v-fade, .v-artdeco) { background: none; isolation: isolate; }
+.card:is(.r-gold, .r-ultra, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-royal, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-galaxy, .v-mlg, .v-slime, .v-bismuth, .v-fade, .v-artdeco)::before {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; will-change: transform;
   background: var(--frame);
 }
