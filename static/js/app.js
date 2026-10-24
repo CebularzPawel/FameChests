@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", greek: "🏺 GREEK", african: "🌍 AFRICA", honey: "🍯 HONEY", street: "🎨 STREET", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", emo: "🖤 EMO", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", dollar: "💵 $50", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -345,7 +345,6 @@ function variantBG(variant) {
   if (parts.includes("pearl")) html += '<i class="pl-nacre"></i>';
   if (parts.includes("glass")) html += `${glassShards()}<i class="gl-cool"></i>`;
   if (parts.includes("thermal")) html += '<i class="ht-blob h1"></i><i class="ht-blob h2"></i><i class="ht-blob h3"></i>';
-  if (parts.includes("dollar")) html += dollarBG();
   if (parts.includes("toxic")) html += `<i class="tx-glow"></i>${Array.from({ length: 7 }, () =>
     `<i class="tx-bub" style="left:${rand(10, 85).toFixed(0)}%;--s:${rand(.5, 1.5).toFixed(2)};animation-delay:-${rand(0, 9).toFixed(1)}s;animation-duration:${rand(5, 10).toFixed(1)}s"></i>`).join("")}`;
   for (const x of parts) if (VX_BG[x]) html += VX_BG[x]();
@@ -359,7 +358,6 @@ function variantPhoto(variant, p) {
   if (parts.includes("pearl")) html += '<i class="vx-photo pl-sheen"></i>';
   if (parts.includes("glass")) html += '<i class="vx-photo gl-shine"></i>';
   if (parts.includes("blueprint")) html += '<i class="vx-photo bp-dims"><b class="w">63 mm</b><b class="h">88 mm</b></i>';
-  if (parts.includes("dollar")) html += '<i class="vx-photo mn-oval"></i><b class="mn-num tl">50</b><b class="mn-num tr">50</b><i class="mn-seal">$</i><i class="mn-seal black">S</i>';
   if (parts.includes("glitch")) html += '<span class="gt-err">⚠ file_corrupted.jpg</span>';
   if (parts.includes("vintage")) html += '<i class="vx-photo vp-grain"></i><i class="vx-photo vp-scratch"></i><i class="vx-photo vp-vignette"></i>';
   if (parts.includes("marble")) html += '<i class="vx-photo mr-statue"></i>';
@@ -404,14 +402,13 @@ function fxCrop(img, ratio, W) {
 const FX_KINDS = {
   neon: img => neonCanvas(img, ...fxArgs(img)), thermal: img => heatCanvas(img, ...fxArgs(img)),
   blueprint: img => linesCanvas(img, fxArgs(img)[0], "#e8f4ff"),
-  dollar: img => engraveCanvas(img, ...fxArgs(img), "#1f4a2a"),
   mosaic: img => mosaicCanvas(img, fxArgs(img)[0]),
 };
 const fxArgs = img => [img.closest(".sc-art") ? 63 / 88 : 1 / .96, Math.max(120, Math.round((img.parentElement?.offsetWidth || 150) * (window.devicePixelRatio || 1)))];
 function fxPhoto(img, kind) {
   if (img.dataset.fx) return;
   img.dataset.fx = "1";
-  const [ratio, dw] = fxArgs(img), key = `${kind}|${img.src}|${ratio}|${kind === "dollar" ? dw : 0}`;
+  const [ratio] = fxArgs(img), key = `${kind}|${img.src}|${ratio}`;
   if (kind === "glitch") return glitchPhoto(img, ratio, key);
   if (FX_CACHE.has(key)) { img.src = FX_CACHE.get(key); return; }
   try {
@@ -441,19 +438,6 @@ function linesCanvas(img, ratio, color, keep = .13, W = 220) {
     const i = k * 4;
     if (m[k] <= t) { s[i + 3] = 0; continue; }
     s[i] = col[0]; s[i + 1] = col[1]; s[i + 2] = col[2]; s[i + 3] = Math.min(255, 110 + (m[k] - t) * 3);
-  }
-  ctx.putImageData(d, 0, 0);
-  return c;
-}
-// rycina jak portret na banknocie: ok. 55 linii na wysokość zdjęcia, grubsze w ciemnych miejscach, w najciemniejszych dodatkowe
-// ukośne kreski; reszta przezroczysta (pod spodem papier)
-function engraveCanvas(img, ratio, W, ink) {
-  const [c, ctx, , H] = fxCrop(img, ratio, W), d = ctx.getImageData(0, 0, W, H), s = d.data, col = [1, 3, 5].map(i => parseInt(ink.slice(i, i + 2), 16)), P = H / 55;
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const i = (y * W + x) * 4, lum = (.3 * s[i] + .59 * s[i + 1] + .11 * s[i + 2]) / 255, dk = Math.max(0, Math.min(1, (1 - lum) * 1.35 + .04));
-    const pos = ((y + Math.sin(x / W * 9) * P * .35) % P + P) % P, line = Math.abs(pos - P / 2) < dk * P * .5;
-    const hatch = dk > .6 && ((x + y) % Math.max(3, Math.round(P * 1.2))) < (dk - .6) * P * 1.5;
-    if (line || hatch) { s[i] = col[0]; s[i + 1] = col[1]; s[i + 2] = col[2]; s[i + 3] = 255; } else s[i + 3] = 0;
   }
   ctx.putImageData(d, 0, 0);
   return c;
@@ -508,19 +492,6 @@ function glitchPhoto(img, ratio, key) {
     img.src = frames[0];
     for (let k = 1; k < 4; k++) img.insertAdjacentHTML("afterend", `<img class="gt-fr" src="${frames[k]}" alt="" draggable="false" style="animation-delay:-${(k * 1.07).toFixed(2)}s">`);
   } catch (e) { /* nie udało się przerysować - zostaje zwykłe zdjęcie */ }
-}
-// giloszowana rozeta jak na banknocie (hipotrochoida), viewBox 0 0 100 100
-function rosetteSVG(color, R = 46, r = 13, dd = 30, turns = 13) {
-  let d = "";
-  for (let k = 0; k <= 1400; k++) {
-    const t = k / 1400 * Math.PI * 2 * turns, x = 50 + (R - r) * Math.cos(t) + dd * Math.cos((R - r) / r * t) * .5, y = 50 + (R - r) * Math.sin(t) - dd * Math.sin((R - r) / r * t) * .5;
-    d += (k ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
-  }
-  return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-width=".35"/></svg>`;
-}
-let DOLLAR_BG = null;   // jedno tło (giloszowane rozety) dla wszystkich kart Dolarowych
-function dollarBG() {
-  return DOLLAR_BG ||= `<i class="mn-guil"></i><i class="mn-ros big">${rosetteSVG("#1f4a2a55", 46, 11, 34, 11)}</i><i class="mn-ros a">${rosetteSVG("#1f4a2a88")}</i><i class="mn-ros b">${rosetteSVG("#1f4a2a88")}</i>`;
 }
 function neonCanvas(img, ratio) {
   const [c, ctx, W, H] = fxCrop(img, ratio, 210), d = ctx.getImageData(0, 0, W, H), s = d.data;
@@ -665,7 +636,6 @@ function glassShards() {
 }
 // pasek postaci nad nazwą (Pikselowa): poziom i pasek HP zależne od punktów życia karty
 function pxStatus(p, variant) {
-  if (variantParts(variant).includes("dollar")) return '<div class="mn-head">THE UNITED STATES OF SCAMBOX</div>';   // nagłówek banknotu
   if (!variantParts(variant).includes("pixel")) return "";
   return `<div class="px-status"><span>LV ${Math.min(99, Math.max(1, Math.round(p.hp / 3)))}</span><span class="px-bar"><i style="width:${Math.min(100, Math.max(12, p.hp / 2.5)).toFixed(0)}%"></i></span></div>`;
 }
@@ -841,15 +811,8 @@ const VX_BG = {
   electric: () => '<i class="el-clouds"></i><i class="el-rain"></i>',
   // Synthwave: na dole tła zachodzi słońce w paski (spod paneli z napisami)
   synthwave: () => '<i class="sw-sun"></i><i class="sw-glow"></i>',
-  emo: () => `<span class="em-drips">${vxSvg(Array.from({ length: 9 }, () => {
-    const x = rand(2, 61), l = rand(4, 13);
-    return `<path d="M${(x - .6).toFixed(1)} 0 V${l.toFixed(1)} a.6 .6 0 0 0 1.2 0 V0 Z" fill="#0a0a0a"/>`;
-  }).join(""))}</span>`,
   aero: () => `${vxSvg(vxRainbow(10, 40, 26, 1.8, .45), "0 0 63 88", "ae-rainbow")}<i class="ae-cloud c1"></i><i class="ae-cloud c2"></i>${vxSvg(aeMeadow(vxId("aeHill")))}`,
-  greek: () => '<i class="gr-meander t"></i><i class="gr-palm"></i><i class="gr-meander b"></i>',
-  african: () => '<i class="af-kente"></i>',
   honey: () => '<i class="hn-shine"></i>',
-  street: () => '<b class="st-wild w1">SCAM</b><b class="st-wild w2">BOX</b><i class="st-mist"></i>',
   chinese: () => vxSvg(cnCloud(6, 40, 1) + cnCloud(42, 60, .9) + cnCloud(10, 78, .8)),
   racing: () => '<i class="rc-band"></i><i class="rc-grain"></i>',
   bismuth: () => '<i class="bi-iso"></i><i class="bi-iso-tint"></i>',
@@ -866,9 +829,7 @@ const VX_PHOTO = {
   beer: () => `<i class="vx-photo br-amber"></i><i class="vx-photo br-bubs">${brBubbles(3, 4, 4)}</i><i class="vx-photo br-glass"></i>`,
   electric: '<i class="vx-photo el-strike"></i>',
   aero: '<i class="vx-photo ae-glass"></i>',
-  greek: '<i class="vx-photo gr-figure"></i>',
   honey: '<i class="vx-photo hn-amber"></i>',
-  street: '<i class="vx-photo st-pop"></i>',
   slime: '<i class="vx-photo sl-tint"></i>',
   bismuth: '<i class="vx-photo bi-oxide"></i>',
   digital: '<i class="vx-photo dg-crt"></i>',
@@ -876,6 +837,8 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  // Neonowa: rurka neonu dookoła karty z uchwytami
+  neon: () => '<div class="vx-deco"><i class="nn-tube"></i><i class="nn-clip a"></i><i class="nn-clip b"></i><i class="nn-clip c"></i><i class="nn-clip d"></i></div>',
   // Stalowa: śruby w rogach karty
   steel: () => `<div class="vx-deco">${["tl", "tr", "bl", "br"].map(c => `<i class="stl-screw ${c}"></i>`).join("")}</div>`,
   // Piwna: piana u góry (nazwa nad nią), oszronione szkło z kroplami rosy - część spływa
@@ -887,7 +850,6 @@ const VX_DECO = {
   synthwave: () => '<div class="vx-deco vx-clip"><i class="sw-track"></i><i class="sw-lines"></i></div>',
   // Noir: klatka starego filmu - perforacja, rysy, kurz, winieta, ziarno i lekkie migotanie
   noir: () => `<div class="vx-deco vx-clip nr-flick"><i class="nr-perf l"></i><i class="nr-perf r"></i>${nrScratches(3)}<i class="nr-dust"></i><i class="nr-vignette"></i><i class="nr-grain"></i></div>`,
-  emo: () => '<div class="vx-deco"><i class="em-wire"></i><i class="em-heart"></i></div>',
   motor: () => `<div class="vx-deco"><i class="mt-gauge">${mtGauge()}</i><i class="mt-shift"></i></div>`,
   // Frutiger Aero: szklany połysk na górnej połowie karty, rybki pływające po niebie i bańki
   aero: () => `<div class="vx-deco"><i class="ae-gloss"></i></div><div class="vx-deco vx-clip">${AERO_FISH.map(([a, b, s], k) =>
@@ -920,8 +882,7 @@ function variantSub(variant, pid) {
   const parts = variantParts(variant);
   if (parts.includes("vintage")) return VINTAGE_STAMP;
   if (parts.includes("noir")) return "— Ta sprawa śmierdziała od początku.";
-  // Dolarowa: nominał i numer seryjny z numeru i wartości karty; Glitch: kod błędu
-  if (parts.includes("dollar")) return `FIFTY · <b>C ${String(person(pid).number || 1).padStart(4, "0")} ${String(cardValue(pid, variant)).slice(0, 4).padStart(4, "0")} D</b>`;
+  // Glitch: kod błędu
   if (parts.includes("glitch")) { const p = person(pid); return `${S.cfg.types[p.type].name} · ${esc(crateOf(p.crate).short)} <b>▓ERR 0x2137</b>`; }
   if (parts.includes("digital")) return "$ ./access --target <b>ACCESS GRANTED</b>";
   if (parts.includes("moro")) return "ODDZIAŁ 2137 · LAS";
@@ -1153,7 +1114,7 @@ function tiltMove(e) {
   const b = zone ? zone.getBoundingClientRect() : flatRect(card);
   const px = Math.min(1, Math.max(0, (e.clientX - b.left) / b.width));
   const py = Math.min(1, Math.max(0, (e.clientY - b.top) / b.height));
-  const fancy = card.matches(".r-secret, .v-holo, .v-reverse, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-vintage, .v-marble, .v-toxic, .v-pixel, .v-popart, .v-glass, .v-neon, .v-thermal, .v-blueprint, .v-glitch, .v-dollar, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-steel, .v-bw, .v-clear, .v-negative, .v-sketch, .v-galaxy, .v-mlg");
+  const fancy = card.matches(".r-secret, .v-holo, .v-reverse, .v-gold, .v-silver, .v-bronze, .v-pearl, .v-vintage, .v-marble, .v-toxic, .v-pixel, .v-popart, .v-glass, .v-neon, .v-thermal, .v-blueprint, .v-glitch, .v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-steel, .v-bw, .v-clear, .v-negative, .v-sketch, .v-galaxy, .v-mlg");
   const strength = card.closest(".viewer") ? 1.5 : fancy || card.closest(".modal") ? 1 : 0.6;
   card.classList.add("tilting");
   card.style.setProperty("--rx", ((0.5 - py) * 16 * strength).toFixed(2) + "deg");
@@ -1882,15 +1843,15 @@ function showResults(afterEpic = false) {
       silver: ["#e6ebf2", "#b8c2d0", "#ffffff"], bronze: ["#cd7f32", "#f0b27a", "#ffe0c0"], pearl: ["#ffffff", "#ffd1e4", "#d3fff1", "#d3e2ff"],
       pixel: ["#3a5bd0", "#ffffff", "#7dff5a", "#ffe13b"], glass: ["#2f7fc0", "#3fa0a0", "#6a5aa8", "#e8a33a", "#ffffff"],
       neon: ["#ff3df0", "#3de0ff", "#ffe63c", "#ffffff"], thermal: ["#2a0a6a", "#d8303a", "#f07a1a", "#ffd23f", "#fffbe8"],
-      blueprint: ["#1f3a7a", "#e8f4ff", "#4a8ad8"], glitch: ["#ff2b5a", "#00e5ff", "#ffffff", "#7a2bff"], dollar: ["#2a6a3a", "#eef3e2", "#1f4a2a", "#b8d8a0"], mosaic: ["#c91a09", "#f2cd37", "#0055bf", "#237841"],
+      blueprint: ["#1f3a7a", "#e8f4ff", "#4a8ad8"], glitch: ["#ff2b5a", "#00e5ff", "#ffffff", "#7a2bff"], mosaic: ["#c91a09", "#f2cd37", "#0055bf", "#237841"],
       popart: ["#ffe100", "#e8202f", "#ff4fa0", "#2fd0ff", "#7cff4a"], noir: ["#e8e8e8", "#2a2a2a", "#ffffff"],
       slime: ["#7dff3a", "#c6ff6c", "#3fbf1a"], matte: ["#2a2a2a", "#5c5c5c", "#111"], racing: ["#c8202f", "#f2e6cf", "#161210"],
       bismuth: ["#ff4fb5", "#ffd23f", "#3fe0ff", "#7a5cff"], digital: ["#3dff6e", "#0f6a26", "#eaffea"], cyber: ["#ff2bd6", "#00e5ff", "#fcee0a"],
       fade: ["#f9e45b", "#f7a23b", "#f05ba5", "#a86bf0", "#5aa8f5"], wanted: ["#f2e2b8", "#b8955a", "#2a1608"], artdeco: ["#d4af37", "#fff3c4", "#0a0908"],
-      cheese: ["#ffd34a", "#ffe680", "#b88512"], aero: ["#4cc2ff", "#ffffff", "#7ef03a", "#ffd23f"], greek: ["#d9773a", "#140c08", "#f09a5a"],
-      african: ["#f2b705", "#0a7d3b", "#c8102e", "#1a1a1a"], honey: ["#ffd75e", "#f2a20f", "#b86a08"], street: ["#ff2bd6", "#00e5ff", "#ffe13b", "#7dff3a"],
+      cheese: ["#ffd34a", "#ffe680", "#b88512"], aero: ["#4cc2ff", "#ffffff", "#7ef03a", "#ffd23f"],
+      honey: ["#ffd75e", "#f2a20f", "#b86a08"],
       chinese: ["#d81e1e", "#e2b13c", "#fff2b0"], moro: ["#4a4f2e", "#6a5a3a", "#1c1f14", "#a89a6a"], beer: ["#f7bf3a", "#fffdf6", "#cf7a0c"],
-      emo: ["#111111", "#8a0a1a", "#ff4fb0"], electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
+      electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],

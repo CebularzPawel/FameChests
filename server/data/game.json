@@ -150,7 +150,7 @@
    "chance": 0.005,
    "mult": 10.0,
    "off": true,
-   "desc": "Kontury twarzy jak świecące neonowe rurki w różu, błękicie i żółci, które co chwilę brzęczą i przygasają."
+   "desc": "Kontury twarzy jak świecące neonowe rurki, neonowa rurka dookoła karty i wszystkie napisy w neonowym stylu - co chwilę brzęczą i przygasają."
   },
   "thermal": {
    "name": "Termowizyjna",
@@ -172,13 +172,6 @@
    "mult": 11.5,
    "off": true,
    "desc": "Uszkodzony plik: bloki pikseli w złych kolorach, przesunięte wiersze i obraz, który co chwilę się psuje na nowo."
-  },
-  "dollar": {
-   "name": "Dolarowa",
-   "chance": 0.004,
-   "mult": 12.0,
-   "off": true,
-   "desc": "Karta jak banknot: papier z giloszowanymi rozetami, portret wygrawerowany zielonym tuszem w owalu, pieczęcie i numer seryjny."
   },
   "mosaic": {
    "name": "Mozaikowa",
@@ -346,30 +339,6 @@
    "off": true,
    "desc": "Jak tapety z 2008: rybki pływają po niebie między chmurami i bańkami, na dole błyszcząca zielona łąka ze stokrotkami."
   },
-  "street": {
-   "name": "Uliczna",
-   "chance": 0.007,
-   "mult": 9.0,
-   "off": true,
-   "stickers": "under",
-   "desc": "Graffiti: ciemna ściana z wielkim kolorowym napisem w stylu wildstyle po bokach i mgiełką farby."
-  },
-  "greek": {
-   "name": "Grecka",
-   "chance": 0.005,
-   "mult": 11.0,
-   "off": true,
-   "stickers": "under",
-   "desc": "Czarna waza czerwonofigurowa: terakotowe tondo ze zdjęciem, pasy meandra i fryz z palmet."
-  },
-  "african": {
-   "name": "Afrykańska",
-   "chance": 0.0045,
-   "mult": 12.0,
-   "off": true,
-   "stickers": "under",
-   "desc": "Ramka z tkaniny kente w pasy złota, zieleni, czerwieni i czerni, a w środku złote symbole adinkra na ciemnym brązie."
-  },
   "chinese": {
    "name": "Chińska",
    "chance": 0.0035,
@@ -391,13 +360,6 @@
    "mult": 6.5,
    "off": true,
    "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."
-  },
-  "emo": {
-   "name": "Emo",
-   "chance": 0.007,
-   "mult": 8.5,
-   "off": true,
-   "desc": "Czerń i ciemna czerwień, drut kolczasty wokół zdjęcia, bijące pęknięte serce i zacieki jak rozmazany eyeliner."
   },
   "electric": {
    "name": "Elektryczna",
@@ -451,6 +413,18 @@
     "Klasyczny dżins"
    ],
    "desc": "Karta z dżinsu - pomarańczowe przeszycia i miedziane nity."
+  },
+  "ufo": {
+   "name": "⎍⎎⍜⌰⎍⎅",
+   "chance": 0.0,
+   "mult": 1.0,
+   "exclusive": true,
+   "special": true,
+   "rarityName": "⌇⌿⟒☊⟊⏃⌰⋏⏃",
+   "styles": [
+    "Pustka"
+   ],
+   "desc": "Karta nie z tej planety - szary nieregularny ośmiokąt, plaster heksagonów i znak obcych."
   }
  },
  "defaultCrateVariants": {
@@ -485,6 +459,13 @@
   5,
   10,
   20
+ ],
+ "removedVariants": [
+  "emo",
+  "street",
+  "greek",
+  "dollar",
+  "african"
  ],
  "maxDeposit": 1000000,
  "moneyChests": {
@@ -2408,13 +2389,31 @@
    "restricted": false,
    "special": true,
    "desc": "tylko z kasyna albo z linku od admina",
-   "people": []
+   "people": [
+    {
+     "id": "sp_placeholder",
+     "name": "placeholder",
+     "wiki": [
+      "pl",
+      "Donald Tusk"
+     ],
+     "rarity": "special",
+     "type": "polityka",
+     "hp": 120,
+     "attack": "Sonda",
+     "dmg": 90,
+     "source": "ufo",
+     "fixedVariant": "ufo",
+     "style": 1
+    }
+   ]
   }
  },
  "specialCrate": "specjalne",
  "specialSources": {
   "casino": "🎰 Kasyno — wygrane w grach, które dają nowe karty (ruletka, blackjack)",
-  "link": "🔗 Link od admina — każdy gracz może go użyć raz"
+  "link": "🔗 Link od admina — każdy gracz może go użyć raz",
+  "ufo": "🛸 UFO — na razie nie do zdobycia: czasem sama pojawia się w ekwipunku i zabiera ją UFO"
  },
  "casinoSpecial": {
   "per": 50000,

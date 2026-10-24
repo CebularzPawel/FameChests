@@ -66,15 +66,13 @@ VARIANTS = {
     "mlg":     {"name": "MLG",          "chance": 0.005, "mult": 12.0, "exclusive": True, "stickers": True,
                 "desc": "Jak montaże „MLG” z 2014: tęczowa ramka, hitmarkery, napisy WOW i 360 NO SCOPE, oko Illuminati."},
     "neon":    {"name": "Neonowa",      "chance": 0.005, "mult": 10.0, "off": True,
-                "desc": "Kontury twarzy jak świecące neonowe rurki w różu, błękicie i żółci, które co chwilę brzęczą i przygasają."},
+                "desc": "Kontury twarzy jak świecące neonowe rurki, neonowa rurka dookoła karty i wszystkie napisy w neonowym stylu - co chwilę brzęczą i przygasają."},
     "thermal": {"name": "Termowizyjna", "chance": 0.005, "mult": 10.5, "off": True,
                 "desc": "Obraz z kamery termowizyjnej: twarz świeci ciepłem, a po tle karty przesuwają się ciepłe plamy."},
     "blueprint": {"name": "Blueprint", "chance": 0.005, "mult": 9.0, "off": True,
                 "desc": "Plan inżynierski: kontur twarzy białą kreską na niebieskim papierze z siatką, linie wymiarowe i tabelka rysunkowa."},
     "glitch":  {"name": "Glitch",       "chance": 0.004, "mult": 11.5, "off": True,
                 "desc": "Uszkodzony plik: bloki pikseli w złych kolorach, przesunięte wiersze i obraz, który co chwilę się psuje na nowo."},
-    "dollar":  {"name": "Dolarowa",     "chance": 0.004, "mult": 12.0, "off": True,
-                "desc": "Karta jak banknot: papier z giloszowanymi rozetami, portret wygrawerowany zielonym tuszem w owalu, pieczęcie i numer seryjny."},
     "mosaic":  {"name": "Mozaikowa",    "chance": 0.006, "mult": 9.5, "off": True,
                 "desc": "Portret z klocków z nopkami w kolorach klocków - czerwone, niebieskie, żółte - na zielonej płycie, w żółtej ramce."},
     "noir":    {"name": "Noir",         "chance": 0.006, "mult": 8.0, "off": True,
@@ -123,12 +121,6 @@ VARIANTS = {
                 "desc": "Błyszczący plaster miodu, gęsty miód kapiący z góry karty i przelatujące pszczoły."},
     "aero":    {"name": "Frutiger Aero", "chance": 0.008, "mult": 8.0, "off": True,
                 "desc": "Jak tapety z 2008: rybki pływają po niebie między chmurami i bańkami, na dole błyszcząca zielona łąka ze stokrotkami."},
-    "street":  {"name": "Uliczna",      "chance": 0.007, "mult": 9.0, "off": True, "stickers": "under",
-                "desc": "Graffiti: ciemna ściana z wielkim kolorowym napisem w stylu wildstyle po bokach i mgiełką farby."},
-    "greek":   {"name": "Grecka",       "chance": 0.005, "mult": 11.0, "off": True, "stickers": "under",
-                "desc": "Czarna waza czerwonofigurowa: terakotowe tondo ze zdjęciem, pasy meandra i fryz z palmet."},
-    "african": {"name": "Afrykańska",   "chance": 0.0045, "mult": 12.0, "off": True, "stickers": "under",
-                "desc": "Ramka z tkaniny kente w pasy złota, zieleni, czerwieni i czerni, a w środku złote symbole adinkra na ciemnym brązie."},
     "chinese": {"name": "Chińska",      "chance": 0.0035, "mult": 15.5, "off": True, "stickers": "under",
                 "desc": "Czerwień ze złotem: kołyszące się czerwone lampiony ze złotymi frędzlami i złote chmurki."},
     # trzecia partia makiet z /variants
@@ -136,8 +128,6 @@ VARIANTS = {
                 "desc": "Leśne moro, ramka z oliwkowego płótna z przeszyciem i nieśmiertelniki z nazwą karty na łańcuszku."},
     "beer":    {"name": "Piwna",        "chance": 0.012, "mult": 6.5, "off": True,
                 "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."},
-    "emo":     {"name": "Emo",          "chance": 0.007, "mult": 8.5, "off": True,
-                "desc": "Czerń i ciemna czerwień, drut kolczasty wokół zdjęcia, bijące pęknięte serce i zacieki jak rozmazany eyeliner."},
     "electric": {"name": "Elektryczna", "chance": 0.006, "mult": 10.0, "off": True,
                 "desc": "Burzowe niebo z deszczem: co chwilę uderza piorun z odgałęzieniami, a cała karta na moment się rozjaśnia."},
     "synthwave": {"name": "Synthwave",  "chance": 0.005, "mult": 11.5, "off": True,
@@ -232,6 +222,10 @@ UPGRADE_EDGE = 0.9
 UPGRADE_MAX = 0.8
 UPGRADE_MAX_ITEMS = 10
 UPGRADE_MULTS = [1.5, 2, 3, 5, 10, 20]
+
+# Warianty usunięte z gry: przy starcie serwera karty graczy w nich stają się zwykłe (z połączenia zostaje warstwa,
+# np. "flag+greek" -> "flag"), a wpisy w klaserze i Hall of Fame znikają - drop_removed_variants w app.py / startup.rs
+REMOVED_VARIANTS = ["emo", "street", "greek", "dollar", "african"]
 MAX_DEPOSIT = 1_000_000
 
 # Skrzynki z pieniędzmi (codzienna nagroda za logowanie).

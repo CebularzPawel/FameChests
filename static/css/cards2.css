@@ -506,7 +506,6 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .sc-attack.heal b { color: #7dffb0; } .sc-attack.eco b { color: #ffd54a; }
 .sc-attack + .sc-attack { margin-top: .3em; padding-top: .3em; border-top: 1px solid #f3e3b033; }
 
-
 /* ============================================================ PRZEZROCZYSTA - szklana karta: przez ramkę i tło widać podłoże */
 .card.v-clear {
   --frame: linear-gradient(135deg, #ffffff66, #ffffff14 38%, #ffffff40 62%, #ffffff10); --spin: initial;
@@ -1091,7 +1090,7 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .vx-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
 .vx-bg > i, .vx-photo { position: absolute; display: block; pointer-events: none; }
 .vx-photo { inset: 0; z-index: 1; }
-.card:is(.v-pearl, .v-toxic, .v-glass, .v-dollar) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg)) { position: relative; z-index: 1; }
+.card:is(.v-pearl, .v-toxic, .v-glass) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg)) { position: relative; z-index: 1; }
 .r-secret .vx-bg { z-index: 1; mix-blend-mode: screen; opacity: .55; }
 
 /* tagi, kropki, zawartość skrzynki */
@@ -1464,25 +1463,20 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
    (druga partia makiet z /variants; domyślnie wyłączone). Grecka, Afrykańska, Uliczna i Chińska: naklejki pod zdjęciem
    ("stickers": "under"). Elementy: VX_BG / VX_PHOTO / VX_DECO w app.js. */
 :root {
-  --tx-meander: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12'><rect width='12' height='12' fill='%23140c08'/><path d='M0 10.5H10.5V1.5H3V7.5H7.5V4.5H5.5' fill='none' stroke='%23d9773a' stroke-width='1.3'/></svg>");
-  --tx-palmette: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 12' width='24' height='12'><g fill='%23d9773a'><path d='M6 11 C3.6 8 3.4 4 4.4 1.6 C5 4 5.4 7 6 11 Z M6 11 C5 7.6 5.4 3.4 6 .6 C6.6 3.4 7 7.6 6 11 Z M6 11 C6.6 7 7 4 7.6 1.6 C8.6 4 8.4 8 6 11 Z M6 11 C3.6 9.6 2 7 1.6 4.6 C3 6.6 4.6 8.6 6 11 Z M6 11 C8.4 9.6 10 7 10.4 4.6 C9 6.6 7.4 8.6 6 11 Z'/><circle cx='6' cy='11' r='1'/></g><g fill='none' stroke='%23d9773a' stroke-width='.6'><path d='M6 11.4 C9 11.4 12 11 13 9 C13.6 7.6 15.4 7.6 16 9 C16.4 10 15.4 10.6 14.8 10'/><path d='M18 11.4 C15 11.4 12 11 11 9'/></g><g fill='%23d9773a'><path d='M18 11 C17 8.6 17.4 5.6 18 3.6 C18.6 5.6 19 8.6 18 11 Z M18 11 C16.4 9.4 15.6 7.4 15.8 5.6 C16.8 7.4 17.4 9 18 11 Z M18 11 C19.6 9.4 20.4 7.4 20.2 5.6 C19.2 7.4 18.6 9 18 11 Z'/></g></svg>");
-  --tx-adinkra: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' width='30' height='30'><g fill='none' stroke='%23d4a12a' stroke-opacity='.4' stroke-width='.9' stroke-linecap='round'><path d='M8 14 C3 10.4 2 7 4 5 C5.6 3.4 7.4 4.2 8 5.6 C8.6 4.2 10.4 3.4 12 5 C14 7 13 10.4 8 14 Z M5.4 6.8 C4.6 7.6 5.6 8.6 6.4 7.8 M10.6 6.8 C11.4 7.6 10.4 8.6 9.6 7.8'/><circle cx='22.5' cy='22.5' r='4'/><path d='M22.5 16.5 V28.5 M16.5 22.5 H28.5'/><path d='M23 4 C27 4 27 10 23 10 C19 10 19 6 22 6 C24 6 24 8 22.6 8'/><path d='M4 20 L8 24 L12 20 M4 25 L8 29 L12 25'/></g></svg>");
   --tx-comb: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24.25' width='14' height='24.25'><defs><radialGradient id='h' cx='.4' cy='.35' r='.7'><stop offset='0' stop-color='%23ffd75e'/><stop offset='.6' stop-color='%23f2a20f'/><stop offset='1' stop-color='%23b86a08'/></radialGradient></defs><rect width='14' height='24.25' fill='%23a85a06'/><g id='c' stroke='%23ffe9a8' stroke-width='.6' fill='url(%23h)'><path d='M7 .6 L13 4 V10.9 L7 14.4 L1 10.9 V4 Z'/></g><use href='%23c' x='-7' y='12.1'/><use href='%23c' x='7' y='12.1'/><use href='%23c' x='0' y='24.25'/><use href='%23c' x='-7' y='-12.1'/><use href='%23c' x='7' y='-12.1'/></svg>");
-  --tx-concrete: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .2  0 0 0 0 .2  0 0 0 .35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
 }
-.card:is(.v-aero, .v-greek, .v-african, .v-honey, .v-street, .v-chinese) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card:is(.v-aero, .v-honey, .v-chinese) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
 .vx-clip { overflow: hidden; border-radius: 4.5%/3.2%; }
 .var-tag.vt-aero, .ph.vt-aero { background: linear-gradient(180deg, #e9fbff, #7fd6ff 48%, #1e9be0 52%, #6fd4ff); color: #fff; text-shadow: 0 1px 1px #0a4f8a; border-radius: 1em; box-shadow: 0 0 .6em #4cc2ff, inset 0 0 0 1px #fff9; }
-.var-tag.vt-greek, .ph.vt-greek { background: #140c08; color: #d9773a; border: 1px solid #d9773a; font-family: Cinzel, serif; letter-spacing: .1em; text-shadow: none; }
-.var-tag.vt-african, .ph.vt-african { background: #1a0d06; color: #f2b705; border: 1px solid #f2b705; letter-spacing: .1em; text-shadow: none; }
+
 .var-tag.vt-honey, .ph.vt-honey { background: linear-gradient(180deg, #ffd75e, #f2a20f); color: #4a2604; border: 1px solid #a85a06; text-shadow: none; box-shadow: 0 0 .6em #f2a20f88; }
-.var-tag.vt-street, .ph.vt-street { background: #111; color: #ffe13b; border: 1px solid #ffe13b; font-family: "Permanent Marker", cursive; font-weight: 400; text-shadow: none; transform: rotate(-4deg); }
+
 .var-tag.vt-chinese, .ph.vt-chinese { background: #8a0c0c; color: #f3c94a; border: 1px solid #e2b13c; text-shadow: none; box-shadow: 0 0 .6em #e2b13c88; }
-.vdot.vt-aero { background: radial-gradient(circle at 35% 30%, #fff, #7fd6ff 45%, #1e9be0); } .vdot.vt-greek { background: radial-gradient(circle, #d9773a 0 45%, #140c08 50%); }
-.vdot.vt-african { background: linear-gradient(90deg, #f2b705 25%, #0a7d3b 25% 50%, #c8102e 50% 75%, #1a1a1a 75%); } .vdot.vt-honey { background: radial-gradient(circle at 35% 35%, #ffe08a, #f2a20f 55%, #b86a08); }
-.vdot.vt-street { background: conic-gradient(#ff2bd6, #ffe13b, #00e5ff, #7dff3a, #ff2bd6); } .vdot.vt-chinese { background: radial-gradient(circle, #e2b13c 0 30%, #d81e1e 35%); }
-.odd.odd-v.vt-aero { border-left-color: #4cc2ff; } .odd.odd-v.vt-greek { border-left-color: #d9773a; } .odd.odd-v.vt-african { border-left-color: #f2b705; }
-.odd.odd-v.vt-honey { border-left-color: #f2a20f; } .odd.odd-v.vt-street { border-left-color: #ff2bd6; } .odd.odd-v.vt-chinese { border-left-color: #d81e1e; }
+.vdot.vt-aero { background: radial-gradient(circle at 35% 30%, #fff, #7fd6ff 45%, #1e9be0); }
+.vdot.vt-honey { background: radial-gradient(circle at 35% 35%, #ffe08a, #f2a20f 55%, #b86a08); }
+.vdot.vt-chinese { background: radial-gradient(circle, #e2b13c 0 30%, #d81e1e 35%); }
+.odd.odd-v.vt-aero { border-left-color: #4cc2ff; }
+.odd.odd-v.vt-honey { border-left-color: #f2a20f; } .odd.odd-v.vt-chinese { border-left-color: #d81e1e; }
 
 /* Frutiger Aero - niebo z tęczą i chmurami, błyszcząca zielona łąka, rybki pływające po niebie, bańki, szklany połysk */
 .card.v-aero { --frame: linear-gradient(180deg, #f2fdff 0%, #8fdcff 44%, #1e9be0 50%, #4cc2ff 78%, #d3f6ff 100%); --spin: initial; box-shadow: 0 6px 18px #0008, 0 0 22px #4cc2ff99; }
@@ -1516,44 +1510,6 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-aero img { filter: saturate(1.2) brightness(1.08); }
 .pick.v-aero { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #4cc2ff, inset 0 -26px 26px -18px var(--rc); }
 
-/* Grecka - czarna waza czerwonofigurowa: terakotowe tondo, meander, fryz z palmet */
-.card.v-greek { --frame: var(--tx-meander) 0 0 / 3.6cqw 3.6cqw round; --spin: initial; box-shadow: 0 6px 18px #000a, 0 0 0 1px #d9773a; }
-.card.v-greek .card-inner { background: radial-gradient(120% 90% at 50% 30%, #2a1a12, #140c08 70%); color: #e48a4a; }
-.card.v-greek :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #e48a4a; }
-.card.v-greek .card-name { font-family: Cinzel, Georgia, serif; font-weight: 900; letter-spacing: .06em; }
-.card.v-greek .atk-name { font-family: Cinzel, Georgia, serif; }
-.card.v-greek .card-photo { border: none; background: none; border-radius: 50%; aspect-ratio: 1; margin: 3% 13% 0;
-  box-shadow: 0 0 0 .35em #140c08, 0 0 0 .5em #d9773a, 0 0 0 .62em #140c08, 0 0 0 .72em #d9773a88; }
-.card.v-greek .card-photo > img, .r-secret.v-greek .sc-art img { filter: grayscale(1) contrast(1.35) brightness(1.05); }
-.gr-figure { background: linear-gradient(180deg, #f09a5a, #c8642c); mix-blend-mode: multiply; }
-.card.v-greek .card-sub { background: none; border-top: .1em solid #d9773a; border-bottom: .1em solid #d9773a; margin-top: 12%; }
-.card.v-greek .card-attack { border-color: #d9773a44; }
-.card.v-greek .card-type { background: #140c08; box-shadow: 0 0 0 .1em #d9773a; }
-.gr-meander { left: 0; right: 0; height: 3.2%; background: var(--tx-meander) 0 0 / 3.2cqw 100%; }
-.gr-meander.t { top: 0; } .gr-meander.b { bottom: 0; }
-.gr-palm { left: 0; right: 0; top: 59%; height: 4.2%; background: var(--tx-palmette) 0 0 / 11cqw 100% repeat-x; }
-.r-secret.v-greek .sc-border { background: var(--tx-meander) 0 0 / 3.6cqw 3.6cqw; animation: none; }
-.r-secret.v-greek .sc-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #f09a5a, #c8642c); mix-blend-mode: multiply; }
-.r-secret.v-greek .sc-name { font-family: Cinzel, Georgia, serif; }
-.pick.v-greek img { filter: grayscale(1) contrast(1.3) sepia(1) hue-rotate(-20deg) saturate(2.2); }
-.pick.v-greek { box-shadow: inset 0 0 0 2px #d9773a, inset 0 0 0 4px #140c08, inset 0 -26px 26px -18px var(--rc); }
-
-/* Afrykańska - ramka z tkaniny kente, w środku złote symbole adinkra na ciemnym brązie */
-.card.v-african { padding: 6.4%; --spin: initial; box-shadow: 0 6px 18px #000a, 0 0 0 1px #1a1a1a;
-  --frame: repeating-linear-gradient(0deg, #00000030 0 .35cqw, transparent .35cqw 1.1cqw),
-    linear-gradient(0deg, transparent 0 44%, #1a1a1a 44% 50%, transparent 50% 94%, #1a1a1a 94%) 0 0 / 100% 12cqw,
-    repeating-linear-gradient(90deg, #f2b705 0 4cqw, #1a1a1a 4cqw 4.6cqw, #0a7d3b 4.6cqw 7cqw, #c8102e 7cqw 10.4cqw, #1a1a1a 10.4cqw 11cqw, #f2b705 11cqw 13cqw, #0a7d3b 13cqw 15cqw); }
-.card.v-african .v-stickers.under { inset: -6.4cqw; }   /* grubsza ramka niż zwykle (6.4% zamiast 3.6%) */
-.card.v-african .card-inner { background: var(--tx-adinkra) 0 0 / 15cqw 15cqw, radial-gradient(120% 90% at 50% 30%, #5a3416, #2a1608 75%); color: #f2d27a; }
-.card.v-african :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2d27a; }
-.card.v-african .card-photo { border: .2em solid #f2b705; border-image: none; box-shadow: 0 0 0 .15em #1a1a1a, 0 0 0 .3em #0a7d3b; }
-.card.v-african .card-sub { background: linear-gradient(90deg, transparent, #f2b70522, transparent); }
-.card.v-african .card-attack { border-color: #f2b70533; }
-.card.v-african .card-type { background: #2a1608; box-shadow: 0 0 0 .1em #f2b705; }
-.af-kente { left: 0; right: 0; top: 0; height: 2.4%; background: repeating-linear-gradient(90deg, #f2b705 0 3cqw, #0a7d3b 3cqw 5cqw, #c8102e 5cqw 7.6cqw, #1a1a1a 7.6cqw 8.4cqw); }
-.r-secret.v-african .sc-border { background: repeating-linear-gradient(90deg, #f2b705 0 4cqw, #1a1a1a 4cqw 4.6cqw, #0a7d3b 4.6cqw 7cqw, #c8102e 7cqw 10.4cqw); animation: none; padding: 4%; }
-.pick.v-african { box-shadow: inset 0 0 0 2px #f2b705, inset 0 0 0 4px #0a7d3b, inset 0 -26px 26px -18px var(--rc); }
-
 /* Miodowa - błyszczący plaster miodu, miód kapiący z góry, pszczoły */
 .card.v-honey { --frame: linear-gradient(135deg, #b86a08, #ffd75e 30%, #e08a0a 60%, #ffe9a8); --spin: initial; box-shadow: 0 6px 18px #000a, 0 0 18px #f2a20f66; }
 .card.v-honey .card-inner { background: var(--tx-comb) 0 0 / 9cqw 15.6cqw; color: #3a1e02; }
@@ -1576,29 +1532,6 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .r-secret.v-honey .sc-border { background: linear-gradient(135deg, #b86a08, #ffd75e 30%, #e08a0a 60%, #ffe9a8); animation: none; }
 .pick.v-honey img { filter: sepia(.4) saturate(1.4); }
 .pick.v-honey { box-shadow: inset 0 0 0 2px #f2a20f, inset 0 -26px 26px -18px var(--rc); }
-
-/* Uliczna - graffiti: ciemna ściana, wielkie litery wildstyle wzdłuż boków, mgiełka farby, zdjęcie jak z plakatu */
-.card.v-street { --frame: linear-gradient(135deg, #3a3a3a, #1a1a1a 50%, #2a2a2a); --spin: initial; box-shadow: 0 6px 18px #000a; }
-.card.v-street .card-inner { background: var(--tx-concrete) 0 0 / 120px, linear-gradient(170deg, #2a2a30, #18181c); color: #f2f2f2; }
-.card.v-street .card-name { font-family: "Permanent Marker", cursive; font-weight: 400; font-size: 1.05em; }
-.card.v-street :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2f2f2; text-shadow: 0 1px 2px #000; }
-.card.v-street :is(.card-head, .card-sub, .card-attack, .card-stats) { background: #111c; border-radius: .25em; border: none; }
-.card.v-street .card-head { padding: 0 .25em; }
-.card.v-street .card-attack { padding-inline: .35em; margin-top: 1.5%; }
-.card.v-street .card-attack:first-of-type { margin-top: auto; }
-.card.v-street .card-photo { border-image: none; border-color: #111; margin: 4% 14% 0; }
-.card.v-street .card-photo > img, .r-secret.v-street .sc-art img { filter: contrast(1.4) saturate(1.5); }
-.st-wild { position: absolute; font: 400 20cqw/.9 Bungee, Rubik, sans-serif; font-style: normal; letter-spacing: -.04em;
-  background: linear-gradient(180deg, #ffe13b, #ff6a1f 45%, #ff2bd6); -webkit-background-clip: text; background-clip: text; color: transparent;
-  -webkit-text-stroke: .9cqw #111; paint-order: stroke fill; filter: drop-shadow(.8cqw .8cqw 0 #00e5ff) drop-shadow(0 0 1.4cqw #0008); }
-.st-wild.w1 { left: -21%; top: 30%; rotate: -84deg; }
-.st-wild.w2 { right: -15%; top: 28%; rotate: 86deg; background-image: linear-gradient(180deg, #7dff3a, #00e5ff 50%, #b04dff); }
-.st-mist { left: 15%; top: 18%; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, #ff2bd655, transparent); filter: blur(2px); }
-.st-pop { background: radial-gradient(circle, #ff2bd6 0 .35cqw, transparent .45cqw) 0 0 / 1.6cqw 1.6cqw; mix-blend-mode: multiply; opacity: .35; }
-.r-secret.v-street .sc-border { background: conic-gradient(from var(--ang, 0deg), #ff2bd6, #ffe13b, #00e5ff, #7dff3a, #ff2bd6); }
-.r-secret.v-street .sc-name { font-family: "Permanent Marker", cursive; }
-.pick.v-street img { filter: contrast(1.4) saturate(1.5); }
-.pick.v-street { box-shadow: inset 0 0 0 2px #ff2bd6, inset 0 0 0 4px #111, inset 0 -26px 26px -18px var(--rc); }
 
 /* Chińska - czerwień ze złotem, kołyszące się lampiony, złote chmurki */
 .card.v-chinese { --frame: linear-gradient(135deg, #9a6a10, #fff2b0 25%, #e2b13c 50%, #fff2b0 75%, #9a6a10); --spin: initial; box-shadow: 0 6px 18px #000a, 0 0 20px #e2b13c66; }
@@ -1626,29 +1559,25 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
   --tx-camo-wood: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='c' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.011' numOctaves='3' seed='7' stitchTiles='stitch'/><feComponentTransfer><feFuncR type='linear' slope='3' intercept='-1'/></feComponentTransfer><feColorMatrix values='1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1'/><feComponentTransfer><feFuncR type='discrete' tableValues='.11 .35 .24 .54'/><feFuncG type='discrete' tableValues='.10 .25 .35 .54'/><feFuncB type='discrete' tableValues='.08 .15 .16 .35'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
   --tx-clouds: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .6  0 0 0 0 .7  1.6 0 0 0 -.6'/></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
   --tx-brickdark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 12' width='24' height='12'><rect width='24' height='12' fill='%23140c0c'/><rect x='.5' y='.5' width='11' height='5' fill='%233a1e1a'/><rect x='12.5' y='.5' width='11' height='5' fill='%23432420'/><rect x='-5.5' y='6.5' width='11' height='5' fill='%23452622'/><rect x='6.5' y='6.5' width='11' height='5' fill='%23361c18'/><rect x='18.5' y='6.5' width='11' height='5' fill='%23452622'/></svg>");
-  --tx-heart: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='.35' cy='.3' r='.8'><stop offset='0' stop-color='%23d4183a'/><stop offset='1' stop-color='%235a0612'/></radialGradient></defs><path d='M50 92 C10 62 0 36 15 18 C28 4 45 10 50 25 C55 10 72 4 85 18 C100 36 90 62 50 92 Z' fill='url(%23g)'/><path d='M50 25 L43 40 L55 51 L45 63 L53 76 L49 92' fill='none' stroke='%23120004' stroke-width='3.4' stroke-linejoin='bevel'/></svg>");
-  --tx-barbed: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'><g fill='none' stroke='%23a8aeb4' stroke-width='1.6' stroke-linecap='round'><path d='M0 10 C5 8 5 12 10 10 S15 8 20 10 S25 12 30 10 S35 8 40 10 S45 12 50 10 S55 8 60 10'/><path d='M0 50 C5 48 5 52 10 50 S15 48 20 50 S25 52 30 50 S35 48 40 50 S45 52 50 50 S55 48 60 50'/><path d='M10 0 C8 5 12 5 10 10 S8 15 10 20 S12 25 10 30 S8 35 10 40 S12 45 10 50 S8 55 10 60'/><path d='M50 0 C48 5 52 5 50 10 S48 15 50 20 S52 25 50 30 S48 35 50 40 S52 45 50 50 S48 55 50 60'/><path d='M27 6 L33 14 M33 6 L27 14 M27 46 L33 54 M33 46 L27 54 M6 27 L14 33 M6 33 L14 27 M46 27 L54 33 M46 33 L54 27' stroke-width='1.2'/></g></svg>");
 }
-.card:is(.v-beer, .v-moro, .v-emo, .v-electric, .v-synthwave, .v-motor) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-motor) .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
 /* panele z napisami - kolor tła ustawia każdy wariant przez --panel */
-.card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-emo, .v-motor) :is(.card-sub, .card-attack, .card-stats) { background: var(--panel); border: none; border-radius: .3em; }
-.card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-emo, .v-motor) .card-attack { padding-inline: .35em; margin-top: 1.5%; }
-.em-drips { position: absolute; inset: 0; }
-.em-drips > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-motor) :is(.card-sub, .card-attack, .card-stats) { background: var(--panel); border: none; border-radius: .3em; }
+.card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-motor) .card-attack { padding-inline: .35em; margin-top: 1.5%; }
 
 /* tagi, kropki, zawartość skrzynki */
 .var-tag.vt-beer, .ph.vt-beer { background: linear-gradient(180deg, #ffe58a, #f6b42a); color: #5a2e04; border: 1px solid #b86a08; text-shadow: none; box-shadow: 0 0 .6em #f6b42a88; }
 .var-tag.vt-moro, .ph.vt-moro { background: #3a3f24; color: #e8e2c8; border: 1px solid #1c1f14; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .1em; text-shadow: none; }
-.var-tag.vt-emo, .ph.vt-emo { background: #111; color: #ff4fb0; border: 1px solid #ff4fb0; box-shadow: 0 0 .6em #ff2b9a; text-shadow: none; }
+
 .var-tag.vt-electric, .ph.vt-electric { background: #0a1020; color: #9fdcff; border: 1px solid #4fb8ff; box-shadow: 0 0 .7em #4fb8ff; font-family: Orbitron, sans-serif; text-shadow: none; }
 .var-tag.vt-synthwave, .ph.vt-synthwave { background: #12002a; color: #00e5ff; border: 1px solid #00e5ff; font-family: Orbitron, sans-serif; box-shadow: 0 0 .6em #00e5ff; text-shadow: none; }
 .var-tag.vt-motor, .ph.vt-motor { background: #e8202f; color: #fff; font-family: Orbitron, sans-serif; font-style: italic; border: 1px solid #fff; text-shadow: none; }
 .vdot.vt-beer { background: linear-gradient(180deg, #fffdf6 0 30%, #f7bf3a 32%, #cf7a0c); } .vdot.vt-moro { background: var(--tx-camo-wood) 0 0 / 30px 30px; }
-.vdot.vt-emo { background: radial-gradient(circle, #d4183a 0 35%, #111 40%); }
+
 .vdot.vt-electric { background: radial-gradient(circle, #fff 0 20%, #4fb8ff 45%, #0a1020 70%); } .vdot.vt-synthwave { background: linear-gradient(180deg, #ffe14a, #ff2b8a 55%, #12002a 56%); }
 .vdot.vt-motor { background: conic-gradient(from 225deg, #f2f2f2 0 75%, #e8202f 75% 100%); box-shadow: 0 0 0 1px #111; }
-.odd.odd-v.vt-beer { border-left-color: #f7bf3a; } .odd.odd-v.vt-moro { border-left-color: #6a6f44; } 
-.odd.odd-v.vt-emo { border-left-color: #8a0a1a; } .odd.odd-v.vt-electric { border-left-color: #4fb8ff; } .odd.odd-v.vt-synthwave { border-left-color: #ff2bd6; }
+.odd.odd-v.vt-beer { border-left-color: #f7bf3a; } .odd.odd-v.vt-moro { border-left-color: #6a6f44; }
+.odd.odd-v.vt-electric { border-left-color: #4fb8ff; } .odd.odd-v.vt-synthwave { border-left-color: #ff2bd6; }
 .odd.odd-v.vt-motor { border-left-color: #e8202f; }
 
 /* Piwna - zimne piwo w zaparowanym szkle: głębia koloru, bąbelki z dna, piana z koronką, rosa (część kropel spływa) */
@@ -1709,22 +1638,6 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .r-secret.v-moro .sc-border { background: linear-gradient(135deg, #5a5f3a, #2a2e1c 50%, #8a7a4a); animation: none; }
 .pick.v-moro img { filter: sepia(.35) saturate(.8); }
 .pick.v-moro { box-shadow: inset 0 0 0 2px #6a6f44, inset 0 -26px 26px -18px var(--rc); }
-
-
-/* Emo - czerń i ciemna czerwień, drut kolczasty wokół zdjęcia, bijące pęknięte serce, zacieki jak rozmazany eyeliner */
-.card.v-emo { --panel: #000c; --frame: linear-gradient(135deg, #3a0610, #0a0002 50%, #2a0408); --spin: initial; box-shadow: 0 6px 18px #000c, 0 0 18px #8a0a1a66; }
-.card.v-emo .card-inner { background: radial-gradient(120% 90% at 50% 35%, #4a0610, #120004 70%); color: #f2f2f2; }
-.card.v-emo :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2f2f2; }
-.card.v-emo .card-name { font-family: "Permanent Marker", cursive; font-weight: 400; }
-.card.v-emo :is(.card-head, .card-foot) { background: var(--panel); border-radius: .3em; padding: 0 .25em; }
-.card.v-emo .card-photo { border-image: none; border-color: #111; }
-.card.v-emo .card-photo > img, .r-secret.v-emo .sc-art img { filter: grayscale(.6) contrast(1.2) sepia(.3) hue-rotate(-30deg); }
-.em-wire { left: 5.4%; right: 5.4%; top: 10.6%; height: 61%; border: 2.4cqw solid transparent; border-image: var(--tx-barbed) 20 round; filter: drop-shadow(0 .3cqw .3cqw #000a); }
-.em-heart { left: 84%; top: 66%; width: 24%; aspect-ratio: 1; translate: -50% -50%; filter: drop-shadow(0 .5cqw .6cqw #000c); background: var(--tx-heart) center / contain no-repeat; animation: emBeat 1.6s ease-in-out infinite; }
-@keyframes emBeat { 10% { transform: scale(1.04); } 20% { transform: scale(1); } 30% { transform: scale(1.03); } 40% { transform: none; } }
-.r-secret.v-emo .sc-border { background: linear-gradient(135deg, #8a0a1a, #0a0002 50%, #ff4fb0); animation: none; }
-.pick.v-emo img { filter: grayscale(.6) contrast(1.2) sepia(.3) hue-rotate(-30deg); }
-.pick.v-emo { box-shadow: inset 0 0 0 2px #8a0a1a, inset 0 -26px 26px -18px var(--rc); }
 
 /* Elektryczna - burzowe niebo z deszczem, pioruny z odgałęzieniami, przy uderzeniu karta się rozjaśnia */
 .card.v-electric { --panel: #050a18cc; --frame: linear-gradient(160deg, #1a2a4a, #0a1020 50%, #22385a); --spin: initial; box-shadow: 0 6px 18px #000c, 0 0 22px #4fb8ff66; }
@@ -1891,11 +1804,22 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .odd.odd-v.vt-neon { border-left-color: #ff3df0; }
 .card.v-neon { --frame: linear-gradient(160deg, #2a2a30, #0c0c10 50%, #222228); --spin: initial; box-shadow: 0 6px 18px #000c, 0 0 20px #ff3df055, 0 0 30px #3de0ff33; }
 .card.v-neon .card-inner { background: #0a080e; color: #fff; }
-.card.v-neon .card-name { color: #fff; text-shadow: 0 0 .15em #fff, 0 0 .4em #ff3df0, 0 0 .9em #3de0ff; animation: neBuzz 2.6s steps(1) infinite; }
-.card.v-neon :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f0e8ff; }
+/* napisy jak neonowe rurki: biały środek i kolorowa poświata - nazwa różowa (pisana), zdolności błękitne, liczby żółte */
+.card.v-neon .card-head { z-index: 5; }   /* nazwa nad rurką ramki */
+.card.v-neon .card-name { font-family: Yellowtail, cursive; font-weight: 400; font-size: 1.3em; color: #ffe6fb;
+  text-shadow: 0 0 .06em #fff, 0 0 .2em #ff3df0, 0 0 .45em #ff3df0, 0 0 .9em #ff3df0; animation: neBuzz 2.6s steps(1) infinite; }
+.card.v-neon :is(.card-sub, .atk-name, .card-foot) { color: #e6fbff; text-shadow: 0 0 .08em #fff, 0 0 .3em #3de0ff, 0 0 .6em #3de0ff; }
+.card.v-neon :is(.atk-dmg, .card-hp, .card-value) { color: #fff8d6; text-shadow: 0 0 .08em #fff, 0 0 .3em #ffe63c, 0 0 .6em #ffb13c; }
+.card.v-neon :is(.card-stats, :where(.card-stats b)) { color: #ffe6fb; text-shadow: 0 0 .08em #fff, 0 0 .3em #ff3df0; }
 .card.v-neon .card-sub { background: none; }
-.card.v-neon .card-attack { border-color: #ff3df055; }
-.card.v-neon .card-photo { border-image: none; border: .14em solid #333; background: #08060c; }
+.card.v-neon .card-attack { border: .1em solid #ffc6f6; border-radius: .4em; box-shadow: 0 0 .25em #ff3df0, inset 0 0 .3em #ff3df088; margin-top: 2%; padding-inline: .35em; }
+.card.v-neon .card-photo { border-image: none; border: .14em solid #d6f8ff; background: #08060c; box-shadow: 0 0 .25em #3de0ff, 0 0 .7em #3de0ff, inset 0 0 .5em #3de0ff88; }
+/* neonowa rurka dookoła karty (VX_DECO): biały środek, różowa poświata do środka i na zewnątrz, uchwyty, czasem mrugnie */
+.nn-tube { inset: 1.7%; border: .85cqw solid #ffd6f8; border-radius: 4%/2.9%;
+  box-shadow: 0 0 .6cqw #ff3df0, 0 0 2.4cqw #ff3df0, 0 0 4.5cqw #ff3df088, inset 0 0 .6cqw #ff3df0, inset 0 0 2.4cqw #ff3df0aa; animation: nnTube 7s steps(1) infinite; }
+@keyframes nnTube { 0%, 100% { opacity: 1; } 61% { opacity: .35; } 62% { opacity: 1; } 64% { opacity: .55; } 65% { opacity: 1; } }
+.nn-clip { width: 4.5%; height: 1.6%; border-radius: .4cqw; background: linear-gradient(180deg, #b8b8c0, #4a4a52); box-shadow: 0 .2cqw .3cqw #000a; }
+.nn-clip.a { left: 22%; top: 1.1%; } .nn-clip.b { right: 22%; top: 1.1%; } .nn-clip.c { left: 22%; bottom: 1.1%; } .nn-clip.d { right: 22%; bottom: 1.1%; }
 .card.v-neon .card-photo > img, .r-secret.v-neon .sc-art img { filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 4px #ff3df0aa) drop-shadow(0 0 4px #3de0ffaa); animation: neBuzz 2.6s steps(1) infinite; }
 .r-secret.v-neon .sc { background: #08060c; }
 .r-secret.v-neon .sc-border { background: conic-gradient(from var(--ang, 0deg), #ff3df0, #3de0ff, #ffe63c, #ff3df0); }
@@ -1979,42 +1903,6 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .r-secret.v-glitch .sc-border { background: conic-gradient(from var(--ang, 0deg), #ff2b5a, #101018, #00e5ff, #101018, #ff2b5a); }
 .pick.v-glitch img { filter: contrast(1.2) saturate(1.6) hue-rotate(20deg); }
 .pick.v-glitch { box-shadow: inset 2px 0 #ff2b5a, inset -2px 0 #00e5ff, inset 0 -26px 26px -18px var(--rc); }
-
-/* Dolarowa - karta jak banknot: papier z giloszowanymi rozetami (dollarBG), portret wygrawerowany zielonym tuszem w owalu
-   (fxPhoto: engraveCanvas), pieczęcie, nominały, nagłówek (pxStatus) i numer seryjny (variantSub) */
-.var-tag.vt-dollar { background: #1f4a2a; color: #e8f0d8; border: 1px solid #c8d8b0; font-family: "IM Fell English", Georgia, serif; font-weight: 400; letter-spacing: .08em; text-shadow: none; }
-.ph.vt-dollar { background: #1f4a2a; color: #e8f0d8; text-shadow: none; }
-.vdot.vt-dollar { background: #2a6a3a; box-shadow: 0 0 0 1px #c8d8b0; }
-.odd.odd-v.vt-dollar { border-left-color: #2a6a3a; }
-.card.v-dollar { --frame: linear-gradient(135deg, #2a5a3a, #8ab88a 30%, #1f4a2a 60%, #6a9a6a); --spin: initial; }
-.card.v-dollar .card-inner { background: var(--tx-paper), linear-gradient(170deg, #eef3e2, #d9e4c8); color: #1f4a2a; }
-.card.v-dollar .card-name { font-family: "IM Fell English", Georgia, serif; font-weight: 400; font-size: 1.1em; letter-spacing: .02em; }
-.card.v-dollar :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #1f4a2a; }
-.card.v-dollar .card-sub { background: none; font: 400 .5em/1.3 "IM Fell English", Georgia, serif; letter-spacing: .1em; border-top: .1em solid currentColor; border-bottom: .1em solid currentColor; }
-.card.v-dollar .card-sub b { color: #2a6a3a; font-family: "Share Tech Mono", monospace; letter-spacing: .05em; }
-.card.v-dollar .card-attack { border-color: #1f4a2a33; }
-.card.v-dollar .card-photo { border-image: none; border: .15em solid #1f4a2a; box-shadow: 0 0 0 .2em #eef3e2, 0 0 0 .28em #1f4a2a88;
-  background: radial-gradient(ellipse 34% 46% at 50% 47%, #f6f8ee 0 97%, transparent 98%); }
-.card.v-dollar .card-photo > img { -webkit-mask: radial-gradient(ellipse 34% 46% at 50% 47%, #000 97%, transparent 98%); mask: radial-gradient(ellipse 34% 46% at 50% 47%, #000 97%, transparent 98%); }
-.mn-head { font: 400 .5em/1 "IM Fell English", Georgia, serif; letter-spacing: .14em; color: #1f4a2a; text-align: center; margin: -1% 0 2%; border-bottom: .1em solid #1f4a2a; padding-bottom: .3em; }
-.mn-guil { position: absolute; inset: 0; opacity: .5; background: repeating-radial-gradient(circle at 0 0, transparent 0 1.6cqw, #1f4a2a33 1.6cqw 1.8cqw), repeating-radial-gradient(circle at 100% 100%, transparent 0 1.6cqw, #1f4a2a33 1.6cqw 1.8cqw); }
-.mn-ros { position: absolute; width: 34%; aspect-ratio: 1; opacity: .9; }
-.mn-ros svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.mn-ros.a { left: -8%; top: -5%; } .mn-ros.b { right: -8%; bottom: 8%; }
-.mn-ros.big { left: 0; right: 0; top: 4%; width: 100%; opacity: .7; }
-.mn-oval { background: radial-gradient(ellipse 34% 46% at 50% 47%, transparent 96%, #1f4a2a 96.5% 98%, transparent 98.5% 99.5%, #1f4a2a 100%, transparent 101%); }
-.mn-num { position: absolute; z-index: 2; font: 400 2.2em/1 "IM Fell English", Georgia, serif; color: #1f4a2a; text-shadow: 0 0 .2em #eef3e2; }
-.mn-num.tl { left: 4%; top: 2%; } .mn-num.tr { right: 4%; top: 2%; }
-.mn-seal { position: absolute; left: 5%; bottom: 6%; width: 18%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; z-index: 2;
-  font: 400 1.4em/1 "IM Fell English", serif; font-style: normal; color: #eef3e2; background: radial-gradient(circle, #2a6a3a 0 55%, #eef3e2 56% 60%, #2a6a3a 61%); box-shadow: 0 0 0 .15em #2a6a3a; }
-.mn-seal.black { left: auto; right: 5%; background: radial-gradient(circle, #1a1a1a 0 55%, #eef3e2 56% 60%, #1a1a1a 61%); box-shadow: 0 0 0 .15em #1a1a1a; }
-.r-secret.v-dollar .sc { background: var(--tx-paper), #e4ecd4; }
-.r-secret.v-dollar .sc-art::after { display: none; }
-.r-secret.v-dollar .sc-panel { background: #eef3e2e0; border-color: #1f4a2a; }
-.r-secret.v-dollar :is(.sc-name, .sc-hp, .sc-attack b, .sc-foot, .sc-atk, .sc-sub, .sc-val) { color: #1f4a2a !important; text-shadow: none; }
-.r-secret.v-dollar .sc-border { background: #1f4a2a; animation: none; }
-.pick.v-dollar img { filter: grayscale(1) contrast(1.3) sepia(1) hue-rotate(70deg) saturate(2) brightness(.8); }
-.pick.v-dollar { box-shadow: inset 0 0 0 2px #1f4a2a, inset 0 0 0 4px #eef3e2, inset 0 -26px 26px -18px var(--rc); }
 
 /* Mozaikowa - portret z klocków z nopkami (fxPhoto: mosaicCanvas) na zielonej płycie, w żółtej ramce z niebieskimi panelami */
 .var-tag.vt-mosaic { background: #c91a09; color: #fff; border-radius: .3em; text-shadow: none; }
