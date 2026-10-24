@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", greek: "🏺 GREEK", african: "🌍 AFRICA", honey: "🍯 HONEY", street: "🎨 STREET", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", emo: "🖤 EMO", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", dollar: "💵 $50", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", greek: "🏺 GREEK", african: "🌍 AFRICA", honey: "🍯 HONEY", street: "🎨 STREET", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", emo: "🖤 EMO", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", dollar: "💵 $50", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -261,6 +261,7 @@ function variantLayers(v, p = null) {
     if (x === "negative") html += '<div class="neg-grain"></div>';
     if (x === "joker") html += jokerDeco();
     if (x === "jeans") html += jeansDeco();
+    if (x === "ufo") html += ufoDeco(p);
     if (GEMS.includes(x)) html += '<div class="diamond-layer"></div><div class="diamond-glints"><i></i><i></i><i></i><i></i><i></i></div>';
     if (S.cfg.variants[x]?.stickers !== "under") html += stickersHTML(x, stickerList(x, p));   // "under" - pod zdjęciem (underStickersHTML)
   }
@@ -943,6 +944,19 @@ function jeansDeco() {
   return `<div class="dz-deco"><i class="dz-stitch"></i>${rivets}</div>`;
 }
 
+// Karta z UFO - wariant ⎍⎎⍜⌰⎍⎅ (static/css/ufo.css, wygląd "Pustka"): obracający się znak, napisy w alfabecie obcych.
+// Napisy (deco1 u góry - domyślnie losowe znaki, deco2 na dole) można zmienić w panelu admina (teksty na karcie).
+const UFO_GLYPHS = [..."⏃⏚☊⎅⟒⎎☌⊑⟟⟊☍⌰⋔⋏⍜⌿⍾⍀⌇⏁⎍⎐⍙⌖⊬⋉"];
+const ufoGlyphs = n => Array.from({ length: n }, () => UFO_GLYPHS[Math.floor(Math.random() * UFO_GLYPHS.length)]).join("");
+const UFO_SIGIL = `<i class="uf-sigil"><svg viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2">
+  <polygon points="50,4 92,27 92,73 50,96 8,73 8,27"/><polygon points="50,18 80,35 80,65 50,82 20,65 20,35"/>
+  <circle cx="50" cy="50" r="12"/><path d="M50 4V38M50 62v34M8 27l30 17M62 56l30 17M92 27L62 44M38 56L8 73"/></g></svg></i>`;
+function ufoDeco(p) {
+  const T = p ? cardTexts(p) : (k, h) => h;
+  return `<div class="uf-deco">${UFO_SIGIL}<span class="uf-ring">${T("deco1", ufoGlyphs(14))}</span>` +
+    `<span class="uf-band bot">${T("deco2", "⌇⌿⍜⏁⍀⏃⍀⟒⌇ ⍙ ⌿⎍⌇⏁☍⟒")}</span></div>`;
+}
+
 // MLG "Quickscope": jaskrawy gradient przesuwający się po skosie w środku karty (mlgBG), na zdjęciu celownik, który co jakiś
 // czas namierza twarz i strzela (błysk + hitmarkery, potem kilka sekund zwykłego zdjęcia - mlgPhoto), nad kartą killfeed
 // z nazwą karty, obracające się 360°, napisy i oko Illuminati (mlgDeco). Grafiki z biblioteki naklejek (static/img/mlg).
@@ -999,6 +1013,9 @@ function abilitiesOf(p) {
 // wariant flagowy (także połączony, np. flag+gold): flaga kraju karty jako tło ramki (zmienna CSS --flag)
 function flagStyle(p, variant) { return variantParts(variant).includes("flag") && p.country ? ` style="--flag:url('${flagUrl(p.country)}')"` : ""; }
 
+// własne napisy na karcie z panelu admina (pole "texts", karty specjalne): T(miejsce, zwykły tekst w HTML)
+function cardTexts(p) { return (k, html) => p.texts?.[k] != null ? esc(p.texts[k]) : html; }
+
 function cardHTML(pid, variant = "normal") {
   const p = person(pid);
   if (p.masked) return mysteryCardHTML(p);
@@ -1009,6 +1026,9 @@ function cardHTML(pid, variant = "normal") {
   const total = String(crate.people.length).padStart(3, "0");
   const cost = type.icon.repeat(Math.min(3, 1 + Math.floor(rarityIdx(p.rarity) / 2)));
   const abils = abilitiesOf(p);
+  const T = cardTexts(p), name = p.texts?.name ?? p.name;
+  // napis rzadkości: wariant może mieć własny (UFO - alfabet obcych zamiast "Specjalna")
+  const rarityName = variantParts(variant).map(x => S.cfg.variants[x]?.rarityName).find(Boolean) || r.name;
   return `
   <div class="card r-${p.rarity} ${vClass(variant)}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${flagStyle(p, variant)}>
     <div class="card-inner">
@@ -1016,27 +1036,27 @@ function cardHTML(pid, variant = "normal") {
       ${galaxyBG(variant)}${devilBG(variant)}${mlgBG(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
       ${variantTop(variant)}${pxStatus(p, variant)}
       <div class="card-head">
-        <span class="card-name">${variantParts(variant).includes("digital") ? `<span class="dg-type" style="--n:${[...p.name].length}">${esc(p.name)}</span>` : esc(p.name)}</span>
-        <span class="card-hp"><small>HP</small>${p.hp}</span>
-        <span class="card-type">${type.icon}</span>
+        <span class="card-name">${variantParts(variant).includes("digital") ? `<span class="dg-type" style="--n:${[...name].length}">${esc(name)}</span>` : esc(name)}</span>
+        <span class="card-hp"><small>${T("hpLabel", "HP")}</small>${T("hp", p.hp)}</span>
+        <span class="card-type">${T("type", type.icon)}</span>
       </div>
-      <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(p.name)}" loading="lazy" draggable="false"${photoFx(variant)}>${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
-      <div class="card-sub${p.subtitle ? " has-subtitle" : ""}">${p.subtitle ? esc(p.subtitle)
-        : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`}</div>
+      <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(name)}" loading="lazy" draggable="false"${photoFx(variant)}>${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
+      <div class="card-sub${p.subtitle || p.texts?.sub ? " has-subtitle" : ""}">${T("sub", p.subtitle ? esc(p.subtitle)
+        : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
       ${abils.map((a, i) => `<div class="card-attack${i ? " atk2" : ""}${a.kind !== "off" ? " " + a.kind : ""}">
-        <span class="atk-cost">${a.kind === "off" ? cost + (i ? type.icon : "") : S.cfg.abilityKinds[a.kind]?.icon || ""}</span>
-        <span class="atk-name">${esc(a.name)}</span>
-        <span class="atk-dmg">${a.value}</span>
+        <span class="atk-cost">${T(`atk${i + 1}Cost`, a.kind === "off" ? cost + (i ? type.icon : "") : S.cfg.abilityKinds[a.kind]?.icon || "")}</span>
+        <span class="atk-name">${T(`atk${i + 1}Name`, esc(a.name))}</span>
+        <span class="atk-dmg">${T(`atk${i + 1}Value`, a.value)}</span>
       </div>`).join("")}
       <div class="card-stats">
-        <span>słabość<b>${S.cfg.types[type.weak].icon}×2</b></span>
-        <span>odporność<b>${S.cfg.types[type.resist].icon}-20</b></span>
-        <span>wycofanie<b>${"⚪".repeat(1 + rarityIdx(p.rarity) % 3)}</b></span>
+        <span>${T("weakLabel", "słabość")}<b>${T("weak", S.cfg.types[type.weak].icon + "×2")}</b></span>
+        <span>${T("resistLabel", "odporność")}<b>${T("resist", S.cfg.types[type.resist].icon + "-20")}</b></span>
+        <span>${T("retreatLabel", "wycofanie")}<b>${T("retreat", "⚪".repeat(1 + rarityIdx(p.rarity) % 3))}</b></span>
       </div>
       <div class="card-foot">
-        <span class="card-rarity"><span class="gem"></span>${r.name}</span>
-        <span>${esc(crate.code)} ${String(p.number).padStart(3, "0")}/${total}</span>
-        <span class="card-value">${fmt(cardValue(pid, variant))}</span>
+        <span class="card-rarity"><span class="gem"></span>${T("rarity", rarityName)}</span>
+        <span>${T("number", `${esc(crate.code)} ${String(p.number).padStart(3, "0")}/${total}`)}</span>
+        <span class="card-value">${T("value", fmt(cardValue(pid, variant)))}</span>
       </div>
     </div>
     ${variantLayers(variant, p)}
@@ -1340,6 +1360,9 @@ function switchView(view, how = "push") {
   if (view === "arena" && !S.cfg.arena) view = "crates";  // Arena: na razie tylko dla adminów
   if ((view === "mockups" || view === "stickers" || view === "variants") && !S.me?.isAdmin) view = "crates";
   const path = viewPath(view);
+  const entering = view !== $(".view.active")?.id.replace("view-", "");
+  if (view === "inventory" && entering) ufoArrive();
+  else if (view !== "inventory" && S.ufo?.shown) ufoLeave();   // wyszedł z ekwipunku - karta znika bez animacji
   if (how !== "none" && location.pathname !== path) history[how === "replace" ? "replaceState" : "pushState"](null, "", path);
   const tab = $(`.tab[data-view="${view}"]`);
   const label = view === "profile" ? (PROF.username || S.me.username) : tab && `${tab.querySelector(".ti").textContent} ${tab.querySelector(".tl").textContent}`;
@@ -1594,6 +1617,19 @@ function weightedPerson(crateId) {
   return ids[0];
 }
 
+// Easter egg (obrazek od admina, S.cfg.easterEgg): bardzo rzadko jeden z kafelków bębna zamienia się w ten obrazek.
+// Widać go tylko w trakcie losowania: wybieramy kafelek, który po zatrzymaniu bębna (strip w pozycji "to") ma prawą
+// krawędź co najmniej jeden kafelek za lewą krawędzią bębna - ostatnie z nich mijają środek jeszcze w czasie hamowania.
+function spinEgg(strip, step, mw, to) {
+  const egg = S.cfg.easterEgg;
+  if (!egg || Math.random() >= egg.chance) return;
+  const last = Math.floor((-to - mw) / step) - 1;   // k * step + to + mw < -step  =>  całkowicie poza ekranem
+  const k = last - Math.floor(Math.random() * 3);
+  const tile = strip.children[k];
+  if (k < 1 || !tile) return;
+  tile.outerHTML = `<div class="mini mini-egg"><img src="${esc(egg.url)}" alt="" draggable="false"></div>`;
+}
+
 function miniHTML(pid, win = false) {
   const p = person(pid);
   if (p.rarity === "secret") {
@@ -1729,6 +1765,7 @@ function runStage() {
     const from = rand(0, step * 0.8);
     const to = -(WIN * step + mw / 2 + off) + center;
     strip.style.transform = `translate3d(${from}px, -50%, 0)`;
+    spinEgg(strip, step, mw, to);
     const dur = o.fast ? 700 : rand(5200, 6200);
     const delay = o.fast ? i * 18 : i * 70;
     return { el, strip, drop, from, to, step, center, dur, start: now + delay, lastIdx: -1, done: false };
@@ -1996,7 +2033,7 @@ function collectedOwned(pairs) {
 
 // owned: { personId: { best: wariant, count: liczba } } - count 0 = karta była, ale już jej nie ma (sprzedana / oddana)
 function binderHTML(crate, owned, spread, { mine = true } = {}) {
-  const ids = crate.people;
+  const ids = crate.people.filter(id => person(id)?.source !== "ufo" || owned[id]);   // karta z UFO - niespodzianka, nie w klaserze
   const pages = [];
   for (let i = 0; i < ids.length; i += 9) pages.push(ids.slice(i, i + 9));
   if (!pages.length) pages.push([]);
@@ -2177,14 +2214,103 @@ function renderInventory() {
     (list.length !== S.items.length ? ` <span class="muted">(wszystkich: ${S.items.length})</span>` : "");
   const grid = $("#invGrid");
   if (!list.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">${S.items.length ? "Brak kart pasujących do filtrów." : "Ekwipunek jest pusty. Otwórz jakąś skrzynkę! 📦"}</div>`;
+    grid.innerHTML = ufoItemHTML() + `<div class="empty" style="grid-column:1/-1">${S.items.length ? "Brak kart pasujących do filtrów." : "Ekwipunek jest pusty. Otwórz jakąś skrzynkę! 📦"}</div>`;
   } else {
-    grid.innerHTML = list.slice(0, f.limit).map(i =>
+    grid.innerHTML = ufoItemHTML() + list.slice(0, f.limit).map(i =>
       `<div class="inv-item${f.selected.has(i.id) ? " sel" : ""}${i.fav ? " fav" : ""}" data-id="${i.id}"><span class="tick">✓</span><button class="zoom-btn" title="Powiększ">🔍</button>${favBtnHTML(i.id, i.fav)}${cardHTML(i.person, i.variant)}</div>`).join("");
   }
   $("#invMore").parentElement.hidden = list.length <= f.limit;
   $("#invMore").textContent = `Pokaż więcej (${list.length - f.limit})`;
   updateSellbar();
+}
+
+// ================================================================ WIZYTA UFO (easter egg)
+// Bardzo rzadko (UFO_VISIT w data.py, losuje serwer w /api/me) w ekwipunku pojawia się karta ze źródłem "ufo" - na samej
+// górze, bez żadnych powiadomień. Gracz jej nie dostaje: kliknięta - przylatuje po nią UFO i ją wciąga; po wyjściu
+// z ekwipunku znika bez animacji. S.ufo = { pid, shown } - shown: już pokazana (serwer zapomina o wizycie od razu).
+function noteUfo(me) { if (me?.ufo && !S.ufo && person(me.ufo)) S.ufo = { pid: me.ufo, shown: false }; }
+function ufoArrive() {
+  if (!S.ufo || S.ufo.shown) return;
+  S.ufo.shown = true;
+  api("/api/ufo/seen", {}).catch(() => {});
+}
+function ufoLeave() { if (!S.ufo?.abducting) S.ufo = null; }
+function ufoItemHTML() {
+  if (!S.ufo?.shown || S.ufo.abducting || S.inv.mode === "hof") return "";
+  const p = person(S.ufo.pid);
+  return p ? `<div class="inv-item ufo-item">${cardHTML(p.id, p.fixedVariant || "ufo")}</div>` : "";
+}
+
+const UFO_SHIP = `<svg viewBox="0 0 170 90" aria-hidden="true">
+  <defs><radialGradient id="ufDome" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#f2fdff"/><stop offset=".55" stop-color="#9fe6f5" stop-opacity=".85"/><stop offset="1" stop-color="#3a7f90" stop-opacity=".9"/></radialGradient>
+  <linearGradient id="ufHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e6ea"/><stop offset=".45" stop-color="#9aa0a7"/><stop offset="1" stop-color="#4b5057"/></linearGradient></defs>
+  <ellipse cx="85" cy="70" rx="34" ry="9" fill="#b9f3ff" opacity=".55"/>
+  <path d="M52 44 Q55 12 85 10 Q115 12 118 44 Z" fill="url(#ufDome)" stroke="#5b6a70" stroke-width="1.5"/>
+  <ellipse cx="85" cy="52" rx="82" ry="20" fill="url(#ufHull)" stroke="#33373c" stroke-width="2"/>
+  <ellipse cx="85" cy="46" rx="60" ry="8" fill="none" stroke="#ffffff70" stroke-width="2"/>
+  ${[22, 46, 72, 98, 124, 148].map(x => `<circle class="ul" cx="${x}" cy="${(55 - Math.abs(85 - x) / 12).toFixed(1)}" r="4.5" fill="#fff6a8"/>`).join("")}
+</svg>`;
+
+// Kliknięta karta z wizyty UFO: UFO przylatuje, wciąga kartę promieniem i odlatuje (dźwięki: Sound.ufo*)
+async function ufoAbduct(item) {
+  if (!S.ufo || S.ufo.abducting) return;
+  S.ufo.abducting = true;
+  const card = item.querySelector(".card");
+  const r = card.getBoundingClientRect();
+  const scene = document.createElement("div");
+  scene.className = "ufo-scene";
+  const cx = r.left + r.width / 2;
+  const hoverY = Math.max(70, r.top - 70);               // UFO nad kartą (gdy karta przy górze ekranu - przy samej górze)
+  const fromLeft = cx > innerWidth / 2;                    // przylatuje z dalszej strony ekranu
+  scene.innerHTML = `<div class="ufo-beam"></div><div class="ufo-card">${card.outerHTML}</div><div class="ufo-ship">${UFO_SHIP}</div>`;
+  document.body.appendChild(scene);
+  const [beam, ghost, ship] = scene.children;
+  Object.assign(ghost.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px" });
+  Object.assign(beam.style, { left: cx + "px", top: hoverY + "px", height: Math.max(40, r.bottom - hoverY) + "px" });
+  item.classList.add("gone");
+  const at = (x, y, extra = "") => `translate(${x}px, ${y}px) ${extra}`;
+  const startX = fromLeft ? -160 : innerWidth + 160;
+  try {
+    // 1. przylot - z daleka, z lekkim bujaniem
+    Sound.ufoArrive();
+    await ship.animate([
+      { transform: at(startX, -120, "rotate(-14deg) scale(.6)") },
+      { transform: at((startX + cx) / 2, hoverY - 60, "rotate(8deg) scale(.85)"), offset: .6 },
+      { transform: at(cx, hoverY + 8, "rotate(-4deg)"), offset: .85 },
+      { transform: at(cx, hoverY, "rotate(0deg)") },
+    ], { duration: 1500, easing: "cubic-bezier(.3,.7,.3,1)", fill: "forwards" }).finished;
+    const bob = ship.animate([{ transform: at(cx, hoverY) }, { transform: at(cx, hoverY - 5, "rotate(1.5deg)") }, { transform: at(cx, hoverY) }],
+      { duration: 900, iterations: Infinity, easing: "ease-in-out" });
+    // 2. promień
+    Sound.ufoBeam();
+    await beam.animate([{ opacity: 0, transform: "scaleY(0)" }, { opacity: 1, transform: "scaleY(1)" }],
+      { duration: 350, easing: "ease-out", fill: "forwards" }).finished;
+    // 3. karta drży, unosi się, kręci i maleje w środku UFO
+    const dy = hoverY + 10 - (r.top + r.height / 2);
+    await ghost.animate([
+      { transform: "none", filter: "brightness(1)" },
+      { transform: "translateX(-3px) rotate(-1deg)", offset: .06 }, { transform: "translateX(3px) rotate(1deg)", offset: .12 },
+      { transform: "translateX(-2px)", offset: .18 }, { transform: "translateY(-6px)", filter: "brightness(1.4)", offset: .26 },
+      { transform: `translateY(${dy * .55}px) rotate(200deg) scale(.55)`, filter: "brightness(1.8)", offset: .7 },
+      { transform: `translateY(${dy}px) rotate(420deg) scale(.04)`, filter: "brightness(3)", opacity: .6 },
+    ], { duration: 1900, easing: "cubic-bezier(.5,0,.7,1)", fill: "forwards" }).finished;
+    ghost.remove();
+    // 4. promień gaśnie, UFO odlatuje
+    await beam.animate([{ opacity: 1, transform: "scaleY(1)" }, { opacity: 0, transform: "scaleY(0)" }],
+      { duration: 300, easing: "ease-in", fill: "forwards" }).finished;
+    bob.cancel();
+    Sound.ufoLeave();
+    const endX = fromLeft ? innerWidth + 200 : -200;
+    await ship.animate([
+      { transform: at(cx, hoverY) },
+      { transform: at(cx + (fromLeft ? -20 : 20), hoverY + 10, "rotate(-6deg)"), offset: .2 },
+      { transform: at(endX, -200, `rotate(${fromLeft ? 18 : -18}deg) scale(.3)`) },
+    ], { duration: 1000, easing: "cubic-bezier(.6,0,.9,.4)", fill: "forwards" }).finished;
+  } finally {
+    scene.remove();
+    item.remove();
+    S.ufo = null;
+  }
 }
 
 function updateSellbar() {
@@ -2259,14 +2385,14 @@ function renderMockups() {
       const id = `__mock_${v}_${i + 1}`;   // przykładowa karta tylko na czas budowania HTML
       S.cfg.people[id] = Object.assign({}, base, {
         id, rarity: "special", crate: crate.id, crates: [crate.id], number: i + 1, style: i + 1, fixedVariant: v,
-        source: v === "jeans" ? "link" : "casino", imgAs: base.id,
+        source: v === "jeans" ? "link" : v === "ufo" ? "ufo" : "casino", imgAs: base.id,
         attack2: base.attack2 || "Specjalny atak", dmg2: base.dmg2 || Math.round(base.dmg * 1.4) });
       const html = `<figure class="mock"><div class="mock-card">${cardHTML(id, v)}</div>
         <figcaption><b>${i + 1}. ${esc(name)}</b><span class="muted small">wygląd ${i + 1} · ${esc(V.name)}</span></figcaption></figure>`;
       delete S.cfg.people[id];
       return html;
     }).join("");
-    return `<section class="panel mock-sec"><h3>${v === "joker" ? "🃏" : "👖"} ${esc(V.name)} <small class="muted">— ${esc(V.desc || "")}</small></h3>
+    return `<section class="panel mock-sec"><h3>${{ joker: "🃏", jeans: "👖", ufo: "🛸" }[v] || "🎴"} ${esc(V.name)} <small class="muted">— ${esc(V.desc || "")}</small></h3>
       <div class="mock-grid">${cards}</div></section>`;
   }).join("");
   $("#mockupsBody").innerHTML = `<div class="mock-head">
@@ -2430,6 +2556,8 @@ function bind() {
   $("#invSort").addEventListener("change", e => { S.inv.sort = e.target.value; renderInventory(); });
   $("#invMore").addEventListener("click", () => { S.inv.limit += INV_PAGE; renderInventory(); });
   $("#invGrid").addEventListener("click", async e => {
+    const ufo = e.target.closest(".ufo-item");
+    if (ufo) return ufoAbduct(ufo);
     const it = e.target.closest(".inv-item"); if (!it) return;
     if (e.target.closest(".zoom-btn")) return;
     if (e.target.closest("[data-fav]")) {
@@ -2451,6 +2579,7 @@ function bind() {
   $("#sellDupes").addEventListener("click", sellAllDupes);
 
   $("#invGrid").addEventListener("contextmenu", e => {
+    if (e.target.closest(".ufo-item")) return e.preventDefault();
     const c = e.target.closest(".inv-item .card"); if (!c) return;
     e.preventDefault(); openViewer(c.dataset.pid, c.dataset.variant);
   });
@@ -2527,10 +2656,14 @@ function bind() {
   const embed = new URLSearchParams(location.search).has("embed");
   if (embed) document.body.classList.add("embed");
   // podgrzej cache miniatur, żeby bębny od razu miały obrazki
-  else Object.keys(cfg.people).forEach(id => { const im = new Image(); im.src = imgUrl(id, null, true); });
+  else {
+    Object.keys(cfg.people).forEach(id => { const im = new Image(); im.src = imgUrl(id, null, true); });
+    if (cfg.easterEgg) new Image().src = cfg.easterEgg.url;
+  }
   bind();
   watchCovers();
   renderHeader();
+  noteUfo(me);
   showRoute("replace");  // widok z adresu strony (/inventory, /player/nazwa...)
   setupInstall();
   updateSellbar();

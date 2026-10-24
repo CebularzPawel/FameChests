@@ -81,6 +81,18 @@
       </div>
 
       <div class="panel">
+        <h3>🥚 Easter egg w skrzynkach</h3>
+        <p class="muted small">Przy otwieraniu skrzynki jest bardzo mała szansa (<b id="eggChance"></b> na skrzynkę), że jeden z obrazków
+          przelatujących w bębnie będzie tym obrazkiem. Widać go tylko w trakcie losowania — po zatrzymaniu bębna jest zawsze poza ekranem.</p>
+        <form id="eggForm" class="a-egg-form" autocomplete="off">
+          <div class="a-img-box"><img id="eggPreview" alt="" hidden><span>Obrazek</span></div>
+          <label>Plik z dysku<input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+          <button class="btn primary" type="submit">💾 Wgraj</button>
+          <button class="btn danger" type="button" id="eggRemove" hidden>🗑️ Usuń obrazek</button>
+        </form>
+      </div>
+
+      <div class="panel">
         <h3>📢 Wiadomości do graczy</h3>
         <p class="muted small">Jak lista zmian po aktualizacji: każdy gracz, który wejdzie do gry w wybranym czasie, zobaczy wiadomość
           raz — przy pierwszym wejściu w tym czasie (także, gdy już jest w grze, gdy ten czas się zacznie). Godziny według Twojego zegara.</p>

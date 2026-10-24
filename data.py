@@ -159,6 +159,12 @@ VARIANTS = {
     "jeans":   {"name": "Dżinsowa",     "chance": 0.0, "mult": 1.0, "exclusive": True, "special": True,
                 "styles": ["Klasyczny dżins"],
                 "desc": "Karta z dżinsu - pomarańczowe przeszycia i miedziane nity."},
+    # wariant karty z UFO (źródło "ufo", karta "placeholder"): szary nieregularny ośmiokąt "Pustka" (static/css/ufo.css,
+    # ufoDeco w app.js). Nazwa i napis rzadkości ("rarityName" zamiast "Specjalna") w alfabecie obcych.
+    "ufo":     {"name": "⎍⎎⍜⌰⎍⎅", "chance": 0.0, "mult": 1.0, "exclusive": True, "special": True,
+                "rarityName": "⌇⌿⟒☊⟊⏃⌰⋏⏃",
+                "styles": ["Pustka"],
+                "desc": "Karta nie z tej planety - szary nieregularny ośmiokąt, plaster heksagonów i znak obcych."},
 }
 # Warstwy (na razie tylko Flagowy): wszystkie warianty leżą na jednej warstwie, a flaga na osobnej. Gdy wypadnie
 # flagowa karta, z szansą "extraChance" dostaje jeszcze jeden wariant - losowany z tymi samymi szansami co zwykle
@@ -495,12 +501,33 @@ CRATES = {
     # otworzyć (nawet adminowi) i nie ma jej w sklepie; jest w klaserze i w filtrach ekwipunku
     "specjalne": {"name": "Karty specjalne", "short": "Specjalne", "code": "SP", "emoji": "🃏",
                   "color1": "#19e6ff", "color2": "#3a0a5a", "price": CRATE_PRICE, "shop": False, "restricted": False,
-                  "special": True, "desc": "tylko z kasyna albo z linku od admina", "people": []},
+                  "special": True, "desc": "tylko z kasyna albo z linku od admina", "people": [
+                      # easter egg: bardzo rzadko sama pojawia się w ekwipunku i zabiera ją UFO (UFO_VISIT). Zdjęcie na razie Tuska.
+                      dict(P("sp_placeholder", "placeholder", ("pl", "Donald Tusk"), "special", "polityka", 120, "Sonda", 90),
+                           source="ufo", fixedVariant="ufo", style=1)]},
 }
 SPECIAL_CRATE = "specjalne"
 # skąd gracz może dostać kartę specjalną (pole karty "source", wybór w panelu admina)
 SPECIAL_SOURCES = {"casino": "🎰 Kasyno — wygrane w grach, które dają nowe karty (ruletka, blackjack)",
-                   "link": "🔗 Link od admina — każdy gracz może go użyć raz"}
+                   "link": "🔗 Link od admina — każdy gracz może go użyć raz",
+                   "ufo": "🛸 UFO — na razie nie do zdobycia: czasem sama pojawia się w ekwipunku i zabiera ją UFO"}
+# Wizyta UFO: przy każdym odpytaniu /api/me (co 30 s w otwartej grze) szansa, że karta ze źródłem "ufo" pojawi się graczowi
+# w ekwipunku (na samej górze, bez powiadomień). Kliknięta - zabiera ją UFO; po wyjściu z ekwipunku znika. Gracz jej nie dostaje.
+# 1/3000 = średnio raz na ~25 godzin gry.
+UFO_VISIT = {"chance": 1.0}   # TEST: 100% - przed wydaniem przywrócić 1 / 3000
+# Easter egg w bębnie: z tą szansą (na każdą otwieraną skrzynkę) jeden z obrazków przelatujących w bębnie to obrazek od admina
+# (panel admina, sekcja 🥚). Nigdy nie zostaje na ekranie po zatrzymaniu bębna (spinEgg w app.js).
+EASTER_EGG = {"chance": 1.0}   # TEST: 100% - przed wydaniem przywrócić 0.003
+# Teksty na karcie (pole karty "texts", panel admina - karty specjalne): każdy napis na karcie można zmienić niezależnie
+# od statystyk (np. inna cena na karcie, a wartość ta sama). Pusty = zwykły tekst. "atk1Name" itd. - zdolności po kolei.
+CARD_TEXT_SLOTS = {
+    "name": "Nazwa", "hpLabel": "Napis HP", "hp": "HP", "type": "Ikona typu", "sub": "Linia pod zdjęciem",
+    **{f"atk{i}{k}": f"Zdolność {i}: {n}" for i in range(1, 5) for k, n in (("Cost", "koszt"), ("Name", "nazwa"), ("Value", "wartość"))},
+    "weakLabel": "Napis „słabość”", "weak": "Słabość", "resistLabel": "Napis „odporność”", "resist": "Odporność",
+    "retreatLabel": "Napis „wycofanie”", "retreat": "Wycofanie", "rarity": "Rzadkość", "number": "Numer karty",
+    "value": "Cena", "deco1": "Napis ozdobny 1", "deco2": "Napis ozdobny 2",
+}
+CARD_TEXT_MAX = 60
 # Karta specjalna z kasyna: przy każdej WYGRANEJ w ruletce i blackjacku (i innych grach, które dają nowe karty) szansa
 # = wygrana w groszach / "per", najwyżej "max". Szansa rośnie z wygraną, więc małymi zakładami nie da się jej "wyfarmić":
 # średnio kosztuje to tyle, ile jest warta (przewaga kasyna 1/37 · per / szansa na wygraną).

@@ -28,7 +28,7 @@ from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARE
                   VARIANTS, VARIANT_DEFAULTS, CRATE_VARIANTS, PATCH_NOTES, MARKET, ROULETTE, ROULETTE_BETS, ROULETTE_RED, ROULETTE_WHEEL,
                   JACKPOT, card_value, card_variants, combine_variant, SPECIAL_VARIANTS, SPECIAL_SOURCES, SPECIAL_CRATE,
                   CASINO_SPECIAL, CASINO_VARIANTS, CASINO_TOP, BLACKJACK, STICKER_VARIANTS, STICKER_LIBRARY,
-                  STICKER_ANIMS)
+                  STICKER_ANIMS, UFO_VISIT, EASTER_EGG, CARD_TEXT_SLOTS)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_MODE = "--test" in sys.argv  # osobny zapis do testów: python app.py --test
@@ -41,7 +41,8 @@ STATE_KEYS = (("balance", STARTING_BALANCE), ("opened", 0), ("spent", 0), ("earn
               ("contracts", 0), ("upgrades_won", 0), ("upgrades_lost", 0), ("feed_seen", 0), ("daily_total", 0),
               ("patch_seen", 0),  # patch_seen: ostatnia obejrzana lista zmian (PATCH_NOTES)
               ("market_seen", 0),  # market_seen: kiedy gracz ostatnio oglądał rynek (znaczek z nowościami)
-              ("jackpot_seen", 0))  # jackpot_seen: koniec (ms) ostatniej gry w jackpot, której wynik gracz już widział
+              ("jackpot_seen", 0),  # jackpot_seen: koniec (ms) ostatniej gry w jackpot, której wynik gracz już widział
+              ("ufo_visit", 0))  # ufo_visit: 1 = przy następnym wejściu do ekwipunku czeka karta, którą zabierze UFO
 ESCROW = 0  # "właściciel" kart wystawionych na rynek / postawionych w blackjacku (czekają na koniec transakcji)
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.\-ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]{3,20}$")
 FEED_RARITY = RARITY_ORDER.index("gold")  # od legendarnych w górę dropy trafiają automatycznie do aktywności znajomych
@@ -743,6 +744,8 @@ def public_person(p, found):
                                   "kind1", "kind2", "abilities", "arena", "crate", "crates", "number", "valueMult",
                                   "country", "forge", "source", "fixedVariant", "style", "subtitle", "desc")}
     base["imgv"] = img_version(p["id"])
+    if p.get("texts"):
+        base["texts"] = p["texts"]
     vp = variant_photos(p["id"])
     if vp:
         base["variantPhotos"] = vp
@@ -945,7 +948,28 @@ def config():
                              for pid in catalog.STICKER_CARDS.get(v, {}) if pid in catalog.PEOPLE} for v in STICKER_VARIANTS},
         "stickerLibrary": {k: {"name": n, "url": asset(f"img/mlg/{k}.svg")} for k, n in STICKER_LIBRARY.items()},
         "stickerAnims": STICKER_ANIMS,
+        "easterEgg": easter_egg_json(),
     })
+
+
+# ---------------------------------------------------------------- easter egg w bębnie (obrazek od admina)
+EGG_ID = "__egg"   # plik w image_cache (__egg.png itp.)
+
+
+def easter_egg_json():
+    """Obrazek od admina, który czasem przelatuje w bębnie skrzynki (spinEgg w app.js) - None, gdy go nie ma."""
+    path = images.find(EGG_ID)
+    return {"url": f"/egg?v={int(os.path.getmtime(path)) % 10 ** 9}", "chance": EASTER_EGG["chance"]} if path else None
+
+
+@app.route("/egg")
+@login_required
+def egg_image():
+    path = images.find(EGG_ID)
+    if not path:
+        return "", 404
+    path = images.web_version(path)
+    return send_file(path, mimetype=images.mimetype(path), max_age=30 * 86400 if request.args.get("v") else 0)
 
 
 def my_items():
@@ -1879,13 +1903,40 @@ def me():
     lobby = my_lobby(me_id)
     invites = db().execute("SELECT COUNT(*) FROM jackpots j JOIN jackpot_invites i ON i.jackpot_id = j.id WHERE i.user_id = ? "
                            "AND j.status = 'open' AND j.joiner_id IS NULL AND j.creator_id != ?", (me_id, me_id)).fetchone()[0]
-    return jsonify({"user": user_json(u), "dailyClaimable": daily_info(me_id)["claimable"],
+    return jsonify({"ufo": ufo_visit(st),   # karta, którą przy wejściu do ekwipunku zabierze UFO (bez powiadomień)
+                    "user": user_json(u), "dailyClaimable": daily_info(me_id)["claimable"],
                     "incoming": incoming, "unread": unread, "trades": trades_in, "market": market_badge(me_id),
                     "inv": [inv[0], inv[1]], "balance": st["balance"],
                     "jackpot": jackpot_news(me_id, st["jackpot_seen"]),   # wynik gry w jackpot, którego jeszcze nie widział
                     "jackpotLobby": lobby["id"] if lobby else None, "jackpotInvites": invites,
                     "patchNotes": [n for n in PATCH_NOTES if n["v"] > seen][:3],  # nowości od ostatniej wizyty
                     "messages": active_messages(me_id)})   # wiadomości od adminów, których jeszcze nie widział
+
+
+def ufo_cards():
+    return [p["id"] for p in catalog.PEOPLE.values() if p.get("source") == "ufo"]
+
+
+def ufo_visit(st):
+    """Wizyta UFO: rzadko (UFO_VISIT) gracz dostaje w ekwipunku kartę ze źródłem "ufo" - tylko do pokazania, nie do zatrzymania."""
+    cards = ufo_cards()
+    if not cards:
+        return None
+    if not st["ufo_visit"]:
+        if rng.random() >= UFO_VISIT["chance"]:
+            return None
+        set_state("ufo_visit", 1)
+        db().commit()
+    return rng.choice(cards)
+
+
+@app.post("/api/ufo/seen")
+@login_required
+def ufo_seen():
+    """Gracz zobaczył kartę w ekwipunku - UFO ją zabrało (albo wyszedł z ekwipunku); następna wizyta znów losowo."""
+    set_state("ufo_visit", 0)
+    db().commit()
+    return jsonify({"ok": True})
 
 
 def active_messages(user_id):
@@ -3366,7 +3417,7 @@ def unique_id(base, taken):
 def admin_card_json(p):
     return dict({k: p.get(k) for k in ("id", "name", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2",
                                        "kind1", "kind2", "abilities", "arena", "country", "source", "fixedVariant", "style",
-                                       "subtitle", "desc", "crate", "crates", "number", "builtin", "modified")},
+                                       "subtitle", "desc", "texts", "crate", "crates", "number", "builtin", "modified")},
                 wiki=list(p["wiki"]) if p.get("wiki") else None,
                 hasImage=bool(images.find(p["id"])), hasAlt=bool(images.find(p["id"], True)),
                 cardVariants=catalog.photo_variants(p["id"]), variantPhotos=variant_photos(p["id"]),
@@ -3482,7 +3533,39 @@ def admin_catalog():
                               "effectTargets": ARENA_EFFECT_TARGETS, "maxEffects": MAX_ABILITY_EFFECTS},
                     "variants": VARIANTS, "exclusiveVariants": CRATE_VARIANTS,
                     "specialVariants": SPECIAL_VARIANTS, "specialSources": SPECIAL_SOURCES, "specialCrate": SPECIAL_CRATE,
+                    "cardTextSlots": CARD_TEXT_SLOTS, "easterEgg": easter_egg_json(), "eggChance": EASTER_EGG["chance"],
                     "defaultPrice": CRATE_PRICE, "users": users})
+
+
+@app.post("/api/admin/egg")
+@admin_required
+def admin_egg_save():
+    """Easter egg w bębnie: wgranie albo usunięcie obrazka."""
+    upload = request.files.get("image")
+    try:
+        if upload and upload.filename:
+            images.save(EGG_ID, upload.read())
+            log_admin("egg_save")
+        elif request.form.get("remove") == "1":
+            images.delete(EGG_ID)
+            log_admin("egg_delete")
+        else:
+            return jsonify({"error": "Wybierz plik"}), 400
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    db().commit()
+    return jsonify({"ok": True, "easterEgg": easter_egg_json()})
+
+
+@app.post("/api/admin/ufo/test")
+@admin_required
+def admin_ufo_test():
+    """Test wizyty UFO: przy następnym wejściu do ekwipunku admin zobaczy kartę ze źródłem "ufo"."""
+    if not ufo_cards():
+        return jsonify({"error": "Żadna karta nie ma źródła „UFO”"}), 400
+    set_state("ufo_visit", 1)
+    db().commit()
+    return jsonify({"ok": True})
 
 
 @app.post("/api/admin/crates")
@@ -3602,6 +3685,8 @@ def admin_save_card():
         "desc": (f.get("desc") or "").replace("\r\n", "\n").strip()[:catalog.DESC_MAX],
         # karta specjalna: skąd (kasyno / link), jedyny wariant (Jokerowa, Dżinsowa) i wygląd 1-6 (catalog.rebuild sprawdza)
         "source": f.get("source"), "fixedVariant": f.get("fixed_variant"), "style": f.get("style"),
+        # własne napisy na karcie (karty specjalne) - niezależne od statystyk
+        "texts": catalog.clean_texts({k: f.get("t_" + k) for k in CARD_TEXT_SLOTS}),
         # skrzynki istniejące w chwili zapisu - nowe wbudowane skrzynki dodane później dopiszą tę kartę (catalog.rebuild)
         "crates_seen": sorted(set(catalog.CRATES) | set(catalog.HIDDEN_CRATES)),
     }

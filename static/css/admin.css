@@ -173,3 +173,14 @@ fieldset.a-special { border-color: #19e6ff66; }
 .a-tabs a:hover { color: var(--text); }
 .a-tabs a.active { background: var(--panel2); color: var(--text); box-shadow: 0 2px 6px #0006; }
 @media (max-width: 900px) { .topbar:has(.a-tabs) { flex-wrap: wrap; } .a-tabs { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; } }
+
+/* teksty na karcie specjalnej (pole "texts") */
+.a-texts { margin-top: 10px; border: 1px dashed #ffffff22; border-radius: 10px; padding: 8px 10px; }
+.a-texts summary { cursor: pointer; font-weight: 700; }
+.a-texts-group { margin-top: 10px; }
+.a-texts-group .a-grid { margin-top: 4px; }
+
+/* easter egg w bębnie */
+.a-egg-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.a-egg-form .a-img-box { width: 110px; height: 120px; }
+.a-egg-form .a-img-box img { object-fit: contain; }

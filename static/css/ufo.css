@@ -1,0 +1,110 @@
+/* ============================================================ KARTA Z UFO - wariant ⎍⎎⍜⌰⎍⎅ (karty specjalne, "ufo" w data.py)
+   Jeden wygląd: "Pustka" (szary nieregularny ośmiokąt, makieta: /mockups).
+   Ozdoby: ufoDeco() w app.js (.uf-deco). Kształt karty: --cut (cała karta) i --cut-in (środek z napisami).
+   Cień (box-shadow) przycina clip-path, dlatego karta nie ma cienia - poświata jest w środku.
+   Wizyta UFO w ekwipunku (ufoAbduct w app.js) - na końcu pliku. */
+.card.v-ufo:not(#_) {
+  --rc: #b9bec4;
+  --ink: #1f2226; --ink2: #4a4f55; --panel: linear-gradient(170deg, #e9ebed, #c6cacf);
+  --frame: linear-gradient(150deg, #8d939a, #d9dde1 30%, #6c7279 55%, #c3c8cd 80%, #7d838a);
+  --band: #2f3439; --photo-line: #5d636a;
+  clip-path: var(--cut); border-radius: 0; padding: 7% 9%;
+  background: var(--frame); box-shadow: none;
+}
+.card.v-ufo:not(#_)::after { content: none; }
+.card.v-ufo:not(#_) .card-inner {
+  clip-path: var(--cut-in); border-radius: 0; background: var(--panel); color: var(--ink); padding: 9% 8% 7%;
+  box-shadow: inset 0 0 0 .14em #0003, inset 0 0 1.4em #0002;
+}
+.card.v-ufo:not(#_) .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; letter-spacing: .02em; font-size: .9em; }
+.card.v-ufo:not(#_) .card-hp { color: var(--ink); }
+.card.v-ufo:not(#_) .card-type { background: #d5d8dc; box-shadow: 0 0 0 .1em #0004; filter: grayscale(1); }
+.card.v-ufo:not(#_) .card-photo {
+  border: .2em solid var(--photo-line); border-image: none; background: #2a2d31;
+  clip-path: polygon(6% 0, 94% 0, 100% 6%, 100% 94%, 94% 100%, 6% 100%, 0 94%, 0 6%);
+}
+.card.v-ufo:not(#_) .card-photo > img { filter: none; }   /* zdjęcie zawsze bez filtrów */
+.card.v-ufo:not(#_) .card-sub { background: none; color: var(--ink2); font-style: normal; letter-spacing: .1em; }
+.card.v-ufo:not(#_) .card-attack { border-color: color-mix(in srgb, var(--ink) 18%, transparent); }
+.card.v-ufo:not(#_) .atk-cost { filter: grayscale(1); }
+.card.v-ufo:not(#_) .card-stats, .card.v-ufo:not(#_) .card-stats b, .card.v-ufo:not(#_) .card-foot { color: var(--ink2); }
+.card.v-ufo:not(#_) .card-stats b { filter: grayscale(1); }
+.card.v-ufo:not(#_) .card-rarity { font-family: "Share Tech Mono", monospace; letter-spacing: .12em; }
+.card.v-ufo:not(#_) .gem { background: var(--rc); box-shadow: 0 0 0 .12em #0005, 0 0 .6em #fff; transform: rotate(22.5deg); clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); }
+.card.v-ufo:not(#_) .card-value { color: var(--ink); font-family: "Share Tech Mono", monospace; }
+.var-tag.vt-ufo, .ph.vt-ufo {
+  background: linear-gradient(90deg, #4a4f55, #c9cdd2, #4a4f55); color: #15171a; text-shadow: none;
+  font-family: "Share Tech Mono", monospace; letter-spacing: .14em; box-shadow: 0 0 .7em #ffffff88; border: 1px solid #222;
+}
+.card.v-ufo:not(#_) .var-tag.vt-ufo { top: 36%; right: 11%; }
+.pick.v-ufo { box-shadow: inset 0 0 0 2px #9aa0a6, inset 0 0 0 4px #2a2d31, inset 0 -26px 26px -18px #c9cdd2; }
+.vdot.vt-ufo { background: repeating-conic-gradient(#3a3f45 0 45deg, #c9cdd2 0 90deg); box-shadow: 0 0 0 1px #fff8; }
+.vchip.vt-ufo.active { background: linear-gradient(90deg, #2a2d31, #9aa0a6); color: #fff; }
+.avv-ufo img { box-shadow: 0 0 0 2px #9aa0a6, 0 0 0 4px #2a2d31, 0 0 12px #e6e9ec !important; }
+.av-vname.vt-ufo { color: #c9cdd2; }
+
+/* ozdoby wspólne */
+.uf-deco { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; color: var(--band); }
+.uf-deco > * { position: absolute; }
+.uf-band {
+  left: 18%; right: 18%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: clip;
+  font-family: "Share Tech Mono", monospace; font-size: 3.6cqw; letter-spacing: .3em; line-height: 1; color: var(--band);
+  text-shadow: 0 .15cqw 0 #fff6, 0 -.15cqw 0 #0004;
+}
+.uf-band.top { top: 2.2%; }
+.uf-band.bot { bottom: 2.2%; }
+
+/* ================================================================ WYGLĄD "PUSTKA" (jedyny)
+   Nieregularny ośmiokąt w odcieniach szarości, plaster heksagonów na ramce, obracający się znak, napisy obcych. */
+@keyframes ufSpin { to { transform: rotate(360deg); } }
+@keyframes ufFlicker { 0%, 100% { opacity: .85; } 45% { opacity: .85; } 46% { opacity: .2; } 47% { opacity: .9; } 48% { opacity: .3; } 49% { opacity: .85; } }
+.card.v-ufo:not(#_) {
+  --cut: polygon(20% 0, 88% 0, 100% 9%, 100% 78%, 80% 100%, 10% 100%, 0 90%, 0 16%);
+  --cut-in: polygon(14% 0, 92% 0, 100% 6%, 100% 84%, 86% 100%, 6% 100%, 0 93%, 0 10%);
+  --frame: radial-gradient(circle at 50% 40%, #8a8e94, #5b5f65 75%);
+  --panel: linear-gradient(170deg, #5d6167f2, #4a4e54f2);
+  --ink: #f2f3f5; --ink2: #d3d6da; --band: #e6e8eb; --photo-line: #9ba0a7; --rc: #f2f3f5;
+  padding: 8% 10%; overflow: hidden;
+}
+.card.v-ufo:not(#_)::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: .45;
+  background: radial-gradient(circle at 50% 50%, transparent 0 60%, #000 100%),
+    conic-gradient(from 90deg at 2px 2px, #0000 90deg, #ffffff1a 0) 0 0 / 7cqw 12cqw,
+    repeating-linear-gradient(60deg, transparent 0 3.4cqw, #ffffff14 3.4cqw 3.6cqw),
+    repeating-linear-gradient(-60deg, transparent 0 3.4cqw, #ffffff14 3.4cqw 3.6cqw);
+}
+.card.v-ufo:not(#_) .card-type { background: #6b7076; }
+.card.v-ufo:not(#_) .card-inner { padding: 9% 6% 7%; box-shadow: inset 0 0 0 .1em #ffffff33, inset 0 0 2em #0004; }
+/* większe zdjęcie - przy większej liczbie zdolności niższe, żeby napisy się mieściły */
+.card.v-ufo:not(#_) .card-photo { aspect-ratio: 1 / 1.02; margin-left: -1%; margin-right: -1%; }
+.card.v-ufo.two-atk:not(#_) .card-photo { aspect-ratio: 1 / .86; }
+.card.v-ufo.atk-3:not(#_) .card-photo { aspect-ratio: 1 / .76; }
+.card.v-ufo.atk-4:not(#_) .card-photo { aspect-ratio: 1 / .66; }
+.uf-sigil { left: 50%; top: 42%; width: 120cqw; translate: -50% -50%; color: #fff; opacity: .14; animation: ufSpin 40s linear infinite; }
+.uf-sigil svg { width: 100%; display: block; }
+.uf-ring { top: 2%; left: 22%; right: 14%; text-align: center; font-size: 3.4cqw; letter-spacing: .4em; color: var(--band); white-space: nowrap; overflow: hidden; animation: ufFlicker 7s infinite; }
+
+/* ---------------------------------------------------------------- easter egg w bębnie skrzynki (spinEgg w app.js) */
+.mini.mini-egg { background: #0b0d14; border-bottom-color: #0b0d14; box-shadow: none; }
+.mini.mini-egg img { aspect-ratio: auto; height: 100%; object-fit: contain; object-position: 50% 50%; }
+
+/* ---------------------------------------------------------------- wizyta UFO w ekwipunku (ufoAbduct w app.js) */
+.inv-item.ufo-item { cursor: pointer; }
+.inv-item.ufo-item.gone { visibility: hidden; }
+.ufo-scene { position: fixed; inset: 0; z-index: 9000; pointer-events: none; overflow: hidden; }
+.ufo-scene > * { position: fixed; left: 0; top: 0; }
+.ufo-ship { width: 170px; height: 90px; margin: -60px 0 0 -85px; filter: drop-shadow(0 6px 10px #000a); z-index: 3; }
+.ufo-ship svg { width: 100%; height: 100%; overflow: visible; }
+.ufo-ship .ul { animation: ufoLights .5s steps(1) infinite; }
+.ufo-ship .ul:nth-of-type(2n) { animation-delay: .25s; }
+@keyframes ufoLights { 0% { fill: #fff6a8; } 50% { fill: #5a5f66; } }
+.ufo-beam {
+  margin-left: -60px; width: 120px; transform-origin: 50% 0; z-index: 1; opacity: 0;
+  background: linear-gradient(180deg, #e8fbffcc, #b9f3ff55 70%, #b9f3ff11);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  filter: blur(1px);
+}
+.ufo-beam::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(180deg, #ffffff33 0 6px, transparent 6px 14px); animation: ufoBeamRun .4s linear infinite; }
+@keyframes ufoBeamRun { to { background-position: 0 14px; } }
+.ufo-card { z-index: 2; transform-origin: 50% 50%; }
+.ufo-card .card { width: 100%; --cw: 100%; }

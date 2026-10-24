@@ -17,7 +17,7 @@ import data
 CRATE_FIELDS = ("name", "short", "code", "emoji", "color1", "color2", "price", "desc", "shop", "restricted", "weights",
                 "variants")
 CARD_FIELDS = ("name", "wiki", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2", "kind1", "kind2", "abilities",
-               "arena", "crate", "crates", "country", "source", "fixedVariant", "style", "subtitle", "desc")
+               "arena", "crate", "crates", "country", "source", "fixedVariant", "style", "subtitle", "desc", "texts")
 SUBTITLE_MAX, DESC_MAX = 40, 1000   # podtytuł (krótki tekst na karcie) i opis (obok karty w podglądzie) - z panelu admina
 COUNTRY_RE = re.compile(r"^[a-z]{2}(-[a-z0-9]{1,3})?$")   # kod kraju ISO 3166 (np. pl, de, gb-eng) - do wariantu flagowego
 STICKER_ID_RE = re.compile(r"^[a-f0-9]{8}$")
@@ -36,6 +36,16 @@ def clean_abilities(raw):
             value = 0
         out.append({"name": name, "kind": a.get("kind") if a.get("kind") in data.ABILITY_KINDS else "off", "value": value})
     return out[:data.MAX_EXTRA_ABILITIES]
+
+
+def clean_texts(raw):
+    """Własne napisy na karcie (data.CARD_TEXT_SLOTS): {miejsce: tekst}; puste pomijamy."""
+    out = {}
+    for k, v in (raw if isinstance(raw, dict) else {}).items():
+        v = str(v or "").strip()[:data.CARD_TEXT_MAX]
+        if k in data.CARD_TEXT_SLOTS and v:
+            out[k] = v
+    return out
 
 
 def clean_country(raw):
@@ -427,6 +437,7 @@ def rebuild(conn):
         p["country"] = clean_country(p.get("country"))
         p["subtitle"] = str(p.get("subtitle") or "").strip()[:SUBTITLE_MAX]
         p["desc"] = str(p.get("desc") or "").strip()[:DESC_MAX]
+        p["texts"] = clean_texts(p.get("texts"))
         if p.get("rarity") not in data.RARITIES:
             p["rarity"] = "green"
         if p.get("type") not in data.TYPES:

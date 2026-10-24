@@ -44,6 +44,7 @@ async function load() {
   A.cat = await api("/api/admin/catalog");
   loadLinks();
   loadMessages();
+  renderEgg();
   if (!A.crate || !A.cat.crates.some(c => c.id === A.crate)) A.crate = A.cat.crates.find(c => !c.hidden)?.id || null;
   render();
 }
@@ -291,11 +292,26 @@ function specialFieldsHTML(c) {
         `<option value="${v}"${v === variant ? " selected" : ""}>${esc(A.cat.variants[v].name)}</option>`).join("")}</select></label>
       <label class="a-style" ${(A.cat.variants[variant]?.styles || []).length > 1 ? "" : "hidden"}>Wygląd<select name="style">${styleOpts(variant, c.style)}</select></label>
       <div class="wide">${c.id ? '<button class="btn" type="button" data-act="preview-special" title="W nowej karcie, tak jak w skrzynce - z wybranym wariantem i wyglądem, nawet niezapisanym">👁️ Podgląd karty</button>'
-        : '<span class="muted small">👁️ Podgląd po dodaniu karty</span>'}</div>
+        : '<span class="muted small">👁️ Podgląd po dodaniu karty</span>'}
+        <button class="btn" type="button" data-act="ufo-test" ${c.source === "ufo" ? "" : "hidden"} title="Przy następnym wejściu do ekwipunku w grze zobaczysz kartę ze źródłem UFO">🛸 Test: pokaż mi ją w ekwipunku</button></div>
     </div>
+    ${cardTextsHTML(c)}
     <p class="muted small">Wszystkie wyglądy zobaczysz na stronie <a href="/mockups" target="_blank">🎴 makiety</a> (tylko dla adminów). Karta trafi do skrzynki „Karty specjalne”.
       Kartę z linku rozdajesz w sekcji 🔗 Linki do kart specjalnych.</p>
   </fieldset>`;
+}
+// własne napisy na karcie specjalnej (pole "texts") - niezależne od statystyk; puste = zwykły tekst
+function cardTextsHTML(c) {
+  const t = c.texts || {}, slots = Object.entries(A.cat.cardTextSlots);
+  const group = (title, keys) => `<div class="a-texts-group"><span class="muted small">${title}</span><div class="a-grid">${keys.map(k =>
+    `<label>${esc(A.cat.cardTextSlots[k])}<input type="text" name="t_${k}" value="${esc(t[k] || "")}" maxlength="60" placeholder="zwykły"></label>`).join("")}</div></div>`;
+  const atk = slots.filter(([k]) => k.startsWith("atk")).map(([k]) => k);
+  const rest = slots.filter(([k]) => !k.startsWith("atk")).map(([k]) => k);
+  return `<details class="wide a-texts"${Object.keys(t).length ? " open" : ""}>
+    <summary>✏️ Teksty na karcie <small class="muted">(każdy napis osobno, niezależnie od statystyk — puste pole = zwykły tekst)</small></summary>
+    ${group("Napisy", rest)}${group("Zdolności (po kolei, tak jak na karcie)", atk)}
+    <p class="muted small">Np. „Cena” zmienia tylko napis — prawdziwa wartość karty zostaje taka, jak wynika z rzadkości. Napisy ozdobne pojawiają się w niektórych wyglądach.</p>
+  </details>`;
 }
 function styleOpts(variant, sel) {
   return (A.cat.variants[variant]?.styles || ["—"]).map((name, i) =>
@@ -477,6 +493,26 @@ function resetMessageForm() {
   f.elements.end.value = localInput(start + 3 * 3600 * 1000);   // domyślnie przez 3 godziny od teraz
 }
 
+// ================================================================ EASTER EGG W BĘBNIE
+
+function renderEgg() {
+  if (!A.cat) return;
+  const e = A.cat.easterEgg, img = $("#eggPreview");
+  $("#eggChance").textContent = `${+(A.cat.eggChance * 100).toFixed(3)}%`;
+  img.hidden = !e; if (e) img.src = e.url;
+  $("#eggRemove").hidden = !e;
+}
+
+async function saveEgg(form) {
+  try {
+    const r = await api("/api/admin/egg", { method: "POST", form });
+    A.cat.easterEgg = r.easterEgg;
+    $("#eggForm").reset();
+    renderEgg();
+    toast(r.easterEgg ? "🥚 Obrazek zapisany" : "🥚 Obrazek usunięty");
+  } catch (err) { toast(err.message, true); }
+}
+
 // ================================================================ DZIENNIK ADMINÓW
 
 const LOG_ACTIONS = {
@@ -488,6 +524,7 @@ const LOG_ACTIONS = {
   link_create: "🔗 Nowy link do karty", link_on: "🔗 Włączył link", link_off: "🔗 Wyłączył link",
   message_add: "📢 Nowa wiadomość do graczy", message_delete: "📢 Usunięcie wiadomości",
   stickers_save: "🎨 Naklejki wariantu", stickers_card: "🎨 Naklejki jednej karty",
+  egg_save: "🥚 Easter egg w bębnie", egg_delete: "🥚 Usunięcie easter egga",
   variant_save: "✨ Ustawienia wariantu", variant_event: "⏰ Wydarzenie wariantu", variant_event_stop: "⏰ Koniec wydarzenia wariantu",
 };
 
@@ -707,6 +744,11 @@ function bind() {
     } catch (err) { toast(err.message, true); }
   });
   resetMessageForm();
+  $("#eggForm").addEventListener("submit", e => { e.preventDefault(); saveEgg(new FormData(e.target)); });
+  $("#eggRemove").addEventListener("click", () => {
+    if (!confirm("Usunąć obrazek easter egga? Bęben przestanie go pokazywać.")) return;
+    const f = new FormData(); f.append("remove", "1"); saveEgg(f);
+  });
   $("#logFilter").addEventListener("change", renderLog);
   $("#logSearch").addEventListener("input", renderLog);
   $("#logRefresh").addEventListener("click", loadLog);
@@ -799,6 +841,7 @@ function bind() {
       $("#cardForm .a-special").hidden = !sp;
       $("#cardForm .a-crate-checks").hidden = sp;
     }
+    if (inp.name === "source") $("#cardForm [data-act=ufo-test]").hidden = inp.value !== "ufo";
     if (inp.name === "fixed_variant") {   // wariant z jednym wyglądem (Dżinsowa) - bez wyboru wyglądu
       $("#cardForm [name=style]").innerHTML = styleOpts(inp.value, 1);
       $("#cardForm .a-style").hidden = (A.cat.variants[inp.value]?.styles || []).length < 2;
@@ -838,6 +881,10 @@ function bind() {
         const f = new FormData($("#cardForm"));
         const q = new URLSearchParams({ card: id, variant: f.get("fixed_variant") || "", style: f.get("style") || "" });
         return window.open(`/mockups?${q}`, "_blank");
+      }
+      if (act === "ufo-test") {
+        await api("/api/admin/ufo/test", { method: "POST" });
+        return toast("🛸 Wejdź do gry i otwórz ekwipunek (najpóźniej po 30 s) — karta będzie na samej górze");
       }
       if (act === "preview-variants") {   // podgląd karty we wszystkich wariantach - strona gry osadzona w oknie edycji
         const box = $("#cardForm .a-preview-box");

@@ -46,6 +46,46 @@ const Sound = (() => {
     s.start(start); s.stop(start + dur + 0.05);
   }
 
+  // ton z vibrato (LFO na wysokości), przesuwający się od "from" do "to"; tremolo - drganie głośności (Hz)
+  function warble(start, dur, from, to, { rate = 6, depth = 20, vol = 0.1, type = "sine", tremolo = 0 } = {}) {
+    const c = ac();
+    const o = c.createOscillator(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(from, start);
+    o.frequency.exponentialRampToValueAtTime(to, start + dur);
+    lfo.frequency.value = rate; lg.gain.value = depth;
+    lfo.connect(lg).connect(o.frequency);
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start + Math.min(0.25, dur / 4));
+    g.gain.setValueAtTime(vol, start + dur * 0.7);
+    g.gain.linearRampToValueAtTime(0, start + dur);
+    let out = g;
+    if (tremolo) {
+      const tg = c.createGain(), tl = c.createOscillator(), td = c.createGain();
+      tg.gain.value = 0.6; tl.frequency.value = tremolo; td.gain.value = 0.4;
+      tl.connect(td).connect(tg.gain);
+      g.connect(tg); out = tg;
+      tl.start(start); tl.stop(start + dur + 0.05);
+    }
+    o.connect(g); out.connect(master);
+    o.start(start); lfo.start(start);
+    o.stop(start + dur + 0.05); lfo.stop(start + dur + 0.05);
+  }
+
+  // niskie buczenie silnika (piła przez filtr dolnoprzepustowy)
+  function hum(start, dur, freq, vol) {
+    const c = ac();
+    const o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
+    o.type = "sawtooth"; o.frequency.value = freq;
+    f.type = "lowpass"; f.frequency.value = 240;
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start + 0.3);
+    g.gain.setValueAtTime(vol, start + dur - 0.4);
+    g.gain.linearRampToValueAtTime(0, start + dur);
+    o.connect(f).connect(g).connect(master);
+    o.start(start); o.stop(start + dur + 0.05);
+  }
+
   const N = { C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, B4: 493.88,
               C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77,
               C6: 1046.5, D6: 1174.66, E6: 1318.5, G6: 1567.98, C7: 2093 };
@@ -135,6 +175,33 @@ const Sound = (() => {
 
     // wariant MLG: trąbka na sprężone powietrze - trzy krótkie "BWA" i długie "BWAAA" (rozstrojony akord piłokształtny
     // przez filtr, z płaską głośnością zamiast wybrzmiewania jak w tone())
+    // UFO (wizyta UFO w ekwipunku): przylot - drgający "theremin" schodzący w dół i niski szum silnika
+    ufoArrive() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      warble(t, 1.5, 1400, 520, { rate: 7, depth: 60, vol: 0.12 });
+      warble(t + 0.05, 1.5, 700, 260, { rate: 7.3, depth: 30, vol: 0.06, type: "triangle" });
+      hum(t, 1.6, 62, 0.16);
+      noise(t, 1.4, { vol: 0.08, freq: 600, q: 0.7, type: "lowpass", slideTo: 260 });
+    },
+    // promień: lśniący akord wznoszący się w górę z tremolo + szum "zasysania"
+    ufoBeam() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      [1, 1.25, 1.5, 2].forEach((m, i) => warble(t + i * 0.04, 2.4, 260 * m, 900 * m, { rate: 11 + i, depth: 8 * m, vol: 0.05, tremolo: 9 }));
+      hum(t, 2.5, 55, 0.12);
+      noise(t + 0.2, 2.2, { vol: 0.07, freq: 300, q: 1.5, slideTo: 5200 });
+      tone(N.C7, t + 2.15, 0.35, { type: "sine", vol: 0.08 });   // "pyk" - karta w środku
+    },
+    // odlot: szybki świst w górę z efektem Dopplera
+    ufoLeave() {
+      if (!enabled) return;
+      const c = ac(), t = c.currentTime;
+      warble(t, 1.0, 500, 2600, { rate: 16, depth: 90, vol: 0.11 });
+      warble(t + 0.08, 0.9, 250, 1300, { rate: 15, depth: 40, vol: 0.05, type: "triangle" });
+      noise(t, 0.9, { vol: 0.09, freq: 800, q: 1, slideTo: 6000 });
+    },
+
     airhorn() {
       if (!enabled) return;
       const c = ac(), t = c.currentTime;

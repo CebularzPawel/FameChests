@@ -86,6 +86,7 @@ function startPolling() {
       const me = await api("/api/me");
       const hadNew = me.unread > 0 || me.incoming > 0 || me.trades > 0;
       applyBadges(me);
+      noteUfo(me);                                      // wizyta UFO - pokaże się przy następnym wejściu do ekwipunku
       if (hadNew && currentView() === "friends" && !S.opening) renderFriends();
       if (me.market && currentView() === "market" && !S.opening && !dialogOpen()) renderMarket(true);
       S.jpLobby = me.jackpotLobby;

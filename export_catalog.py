@@ -63,6 +63,11 @@ def export(db_path=os.path.join(BASE_DIR, "game.db")):
             if path:
                 shutil.copy2(path, os.path.join(IMAGES_DIR, os.path.basename(path)))
                 copied += 1
+    # easter egg w bębnie skrzynki (panel admina, sekcja 🥚) - plik __egg.*
+    path = images.find("__egg")
+    if path:
+        shutil.copy2(path, os.path.join(IMAGES_DIR, os.path.basename(path)))
+        copied += 1
     return len(out["crates"]), len(out["cards"]), copied
 
 
