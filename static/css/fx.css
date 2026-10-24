@@ -394,9 +394,19 @@ input[type=text]:focus, input[type=number]:focus, input[type=password]:focus { o
 .upg-q { width: 100px; height: 130px; border: 2px dashed #ffffff30; border-radius: 10px; display: grid; place-items: center; font-family: Bungee, Rubik, sans-serif; font-size: 40px; color: #ffffff30; }
 .upg-quick { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .upg-mid .big-btn { width: 100%; max-width: 420px; }
+/* ulepszacz w kasynie "w ciemno": moje karty + koło, cel to zakryta karta z samą wartością */
+.upg-cols.blind { grid-template-columns: minmax(0, 1fr) minmax(300px, 1.1fr); margin-top: 12px; }
+.upg-mystery { width: 100px; height: 130px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: repeating-linear-gradient(45deg, #ffffff08 0 8px, transparent 8px 16px), linear-gradient(160deg, #2a2050, #12102a); border: 2px solid #b6ff5c88; box-shadow: 0 0 14px #3ddc8444; }
+.upg-mystery b { font-family: Bungee, Rubik, sans-serif; font-weight: 400; font-size: 44px; color: #b6ff5c; text-shadow: 0 0 12px #3ddc84; line-height: 1; }
+.upg-mystery span { font-weight: 900; color: var(--text); font-size: 14px; }
+.upg-mystery.empty { border-style: dashed; border-color: #ffffff30; box-shadow: none; }
+.upg-mystery.empty b { color: #ffffff30; text-shadow: none; }
+.upg-note { text-align: center; max-width: 420px; }
+.upg-res-special { font-weight: 900; color: #ffcf3f; }
 
 @media (max-width: 1100px) {
-  .upg-cols { grid-template-columns: 1fr 1fr; }
+  .upg-cols, .upg-cols.blind { grid-template-columns: 1fr 1fr; }
   .upg-mid { grid-column: 1 / -1; order: -1; }
 }
 @media (max-width: 900px) {
@@ -404,7 +414,7 @@ input[type=text]:focus, input[type=number]:focus, input[type=password]:focus { o
   .forge-cols .contract { order: -1; }
 }
 @media (max-width: 700px) {
-  .upg-cols { grid-template-columns: 1fr; }
+  .upg-cols, .upg-cols.blind { grid-template-columns: 1fr; }
   .slot { width: 92px; }
 }
 

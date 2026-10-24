@@ -29,6 +29,15 @@ function toast(msg, err = false) {
   setTimeout(() => t.remove(), 3700);
 }
 
+// lista kart skrzynki: zwinięta / rozwinięta (zapamiętane w przeglądarce)
+function setCardsCollapsed(on) {
+  $("#cardList").hidden = on;
+  const b = $("#cardsToggle");
+  b.textContent = on ? "▸" : "▾";
+  b.setAttribute("aria-expanded", String(!on));
+  try { localStorage.setItem("adminCardsCollapsed", on ? "1" : "0"); } catch (_) {}
+}
+
 async function load() {
   loadUsers();
   loadLog();
@@ -248,6 +257,14 @@ function openCardForm(id) {
           </div>
         </div>
       </fieldset>`).join("")}
+
+      <fieldset class="a-preview">
+        <legend>👁️ Podgląd we wszystkich wariantach</legend>
+        ${isNew ? '<p class="muted small">Podgląd będzie dostępny po dodaniu karty.</p>'
+          : `<p class="muted small">Karta tak jak w grze, w każdym wariancie, który może mieć${c.rarity === "secret" ? " (także tajna)" : ""}. Pokazuje zapisaną wersję — po zapisaniu odśwież podgląd.</p>
+        <button class="btn" type="button" data-act="preview-variants">👁️ Pokaż podgląd</button>
+        <div class="a-preview-box" hidden></div>`}
+      </fieldset>
 
       <div class="a-actions">
         <button class="btn primary" type="submit">💾 ${isNew ? "Dodaj kartę" : "Zapisz"}</button>
@@ -707,6 +724,8 @@ function bind() {
     A.crate = b.dataset.crate; render();
   });
   $("#newCrate").addEventListener("click", () => { A.crate = "__new"; render(); $("#crateForm [name=name]").focus(); });
+  $("#cardsToggle").addEventListener("click", () => setCardsCollapsed(!$("#cardList").hidden));
+  try { if (localStorage.getItem("adminCardsCollapsed") === "1") setCardsCollapsed(true); } catch (_) {}
   $("#newCard").addEventListener("click", () => openCardForm(null));
   $("#cardSearch").addEventListener("input", e => { A.search = e.target.value; renderCards(); });
   $("#rarityFilter").addEventListener("change", e => { A.rarity = e.target.value; renderCards(); });
@@ -819,6 +838,13 @@ function bind() {
         const f = new FormData($("#cardForm"));
         const q = new URLSearchParams({ card: id, variant: f.get("fixed_variant") || "", style: f.get("style") || "" });
         return window.open(`/mockups?${q}`, "_blank");
+      }
+      if (act === "preview-variants") {   // podgląd karty we wszystkich wariantach - strona gry osadzona w oknie edycji
+        const box = $("#cardForm .a-preview-box");
+        box.innerHTML = `<iframe src="/mockups?${new URLSearchParams({ preview: id, embed: 1 })}" title="Podgląd karty"></iframe>`;
+        box.hidden = false;
+        e.target.textContent = "🔄 Odśwież podgląd";
+        return;
       }
       if (act === "add-ability") {
         if (document.querySelectorAll("#abilityRows .a-ability").length >= A.cat.maxExtraAbilities) return toast(`Maksymalnie ${A.cat.maxExtraAbilities} dodatkowe zdolności`, true);

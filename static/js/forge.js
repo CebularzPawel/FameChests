@@ -1,19 +1,17 @@
 "use strict";
-// Kuźnia: kontrakt (N kart -> 1 wyższej rzadkości) i ulepszacz (koło szans).
+// Kuźnia: kontrakt (N kart -> 1 wyższej rzadkości). Ulepszacz jest w Kasynie (upgrade.js).
 
 const FORGE = {
-  mode: "contract",
   tier: "green",
   slots: [],
   busy: false,
   sort: "valueAsc",       // sortowanie kart do kontraktu
   q: "",                  // wyszukiwanie kart do kontraktu
-  upg: { inputs: new Set(), target: null, variant: "all", search: "", angle: 0, sortMine: "value", sortTarget: "valueAsc", qMine: "" },
   bulk: { n: 1, dupes: true, keepSpecial: true },   // wiele kontraktów naraz
 };
 const MAX_BULK_CONTRACTS = 50;  // tyle przyjmie serwer w jednym zapytaniu
 const PICK_LIMIT = 300;
-// ulubione karty (⭐) i karty specjalne nie trafiają do kuźni
+// ulubione karty (⭐) i karty specjalne nie trafiają do kuźni ani do ulepszacza
 const forgeItems = () => S.items.filter(i => !i.fav && !isSpecialCard(i.person));
 const PICK_TAGS = { bw: "B&W", reverse: "REV", bronze: "BRNZ", silver: "SILV", steel: "⚙️", sapphire: "💙", blackdiamond: "🖤", holo: "HOLO", pearl: "🦪", gold: "GOLD", vintage: "📷", marble: "🏛️", slime: "🟢", matte: "MAT", racing: "🏁", bismuth: "🌈", digital: "💻", cyber: "🌃", fade: "🎨", wanted: "🤠", artdeco: "DÉCO", cheese: "🧀", aero: "🫧", greek: "🏺", african: "🌍", honey: "🍯", street: "🎨", chinese: "🏮", moro: "🪖", beer: "🍺", neon: "💡", emo: "🖤", electric: "⚡", synthwave: "📼", motor: "🏎️", toxic: "☢️", pixel: "👾", popart: "💥", glass: "⛪", thermal: "🌡️", blueprint: "📐", glitch: "📺", dollar: "💵", mosaic: "🧱", noir: "🕵️", flag: "🏳️", halloween: "🎃", lantern: "🏮", devil: "😈", joker: "🃏", jeans: "👖", clear: "🫧", sketch: "✒️", emerald: "💚", amethyst: "💜", ruby: "❤️", mlg: "🎯", royal: "👑", diamond: "💎", galaxy: "🌌", negative: "◐", rzulty: "💛" };
 
@@ -32,12 +30,9 @@ function pickHTML(item, { sel = false, extra = "" } = {}) {
 function pct(x) { return (x * 100).toLocaleString("pl-PL", { maximumFractionDigits: x < 0.01 ? 2 : 1 }) + "%"; }
 
 function renderForge() {
-  $("#forgeSeg").innerHTML = [["contract", "📜 Kontrakt"], ["upgrade", "⬆️ Ulepszacz"]].map(([m, n]) =>
-    `<button data-mode="${m}" class="${FORGE.mode === m ? "active" : ""}">${n}</button>`).join("");
-  $("#forgeInfo").innerHTML = FORGE.mode === "contract"
-    ? `Połącz kilka kart tej samej rzadkości w jedną kartę <b>wyższej</b> rzadkości. Karty w specjalnych wariantach zwiększają szansę na wariant.`
-    : `Postaw swoje karty i wybierz cel. Im droższy cel, tym mniejsza szansa. Przegrana = karty przepadają!`;
-  FORGE.mode === "contract" ? renderContract() : renderUpgrader();
+  $("#forgeInfo").innerHTML = `📜 <b>Kontrakt:</b> połącz kilka kart tej samej rzadkości w jedną kartę <b>wyższej</b> rzadkości. Karty w specjalnych wariantach zwiększają szansę na wariant.
+    <span class="muted">Ulepszacz jest teraz w Kasynie.</span>`;
+  renderContract();
 }
 
 // ================================================================ KONTRAKT
@@ -395,291 +390,47 @@ async function runContract() {
   });
 }
 
-// ================================================================ ULEPSZACZ
-
-function upgStake() {
-  return S.items.filter(i => FORGE.upg.inputs.has(i.id)).reduce((a, i) => a + i.value, 0);
-}
-
-function upgChance(stake, goal) {
-  if (!stake || !goal || goal <= stake) return 0;
-  return Math.min(S.cfg.upgradeMax, stake / goal * S.cfg.upgradeEdge);
-}
-
-function allTargets() {
-  const out = [];
-  // tylko karty ze skrzynek, które są teraz w sklepie (bez tajnych)
-  Object.values(S.cfg.people).filter(p => p.rarity !== "secret" && p.forge).forEach(p => {
-    // wariantów wyjątkowych nie da się ulepszyć - tylko ze skrzynek; wyłączonych (strona /variants) też nie
-    S.cfg.variantOrder.filter(v => !isExclusive(v) && (v === "normal" || variantOn(v)))
-      .forEach(v => out.push({ key: `${p.id}|${v}`, person: p.id, variant: v, value: cardValue(p.id, v) }));
-  });
-  return out.sort((a, b) => a.value - b.value || person(a.person).name.localeCompare(person(b.person).name, "pl"));
-}
-
-function renderUpgrader() {
-  const u = FORGE.upg;
-  const owned = new Set(forgeItems().map(i => i.id));
-  [...u.inputs].forEach(id => { if (!owned.has(id)) u.inputs.delete(id); });
-  const stake = upgStake();
-  const everything = allTargets();
-  const targets = everything.filter(t => t.value > stake && (u.variant === "all" || t.variant === u.variant) &&
-    cardMatches(t, u.search));
-  let target = u.target ? everything.find(t => t.key === u.target) : null;
-  if (target && target.value <= stake) { target = null; u.target = null; }
-  const chance = target ? upgChance(stake, target.value) : 0;
-  // wybrane karty zostają na liście także wtedy, gdy nie pasują do wyszukiwania (żeby dało się je odznaczyć)
-  const mine = sortCards(forgeItems().filter(i => u.inputs.has(i.id) || cardMatches(i, u.qMine)), u.sortMine);
-
-  keepScroll($("#forgeBody"), () => $("#forgeBody").innerHTML = `
-  <div class="upg-cols">
-    <div class="panel upg-side">
-      <h3>Twoje karty <small class="muted">(max ${S.cfg.upgradeMaxItems})</small></h3>
-      <div class="upg-sum">Wkład: <b>${fmt(stake)}</b> · ${u.inputs.size} ${plural(u.inputs.size, "karta", "karty", "kart")}
-        ${u.inputs.size ? '<button class="btn tiny" id="uClear">Wyczyść</button>' : ""}</div>
-      <div class="upg-filters"><input type="text" data-fq="mine" placeholder="🔍 Szukaj…" value="${esc(u.qMine)}">${sortSelectHTML(u.sortMine, 'data-fsort="mine"')}</div>
-      <div class="pick-grid" data-keep="mine">${mine.length ? mine.slice(0, PICK_LIMIT).map(i => pickHTML(i, { sel: u.inputs.has(i.id) })).join("")
-        : `<div class="empty">${u.qMine.trim() ? "Żadna karta nie pasuje do wyszukiwania." : "Nie masz kart."}</div>`}</div>
-    </div>
-
-    <div class="panel upg-mid">
-      <div class="upg-wheel" id="upgWheel">
-        <svg viewBox="0 0 300 300">
-          <defs>
-            <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddc84"/><stop offset="1" stop-color="#b6ff5c"/></linearGradient>
-          </defs>
-          <circle class="upg-track" cx="150" cy="150" r="128"/>
-          <circle class="upg-arc" id="upgArc" cx="150" cy="150" r="128"/>
-          ${Array.from({ length: 60 }, (_, k) => `<line class="upg-tick${k % 5 ? "" : " big"}" x1="150" y1="44" x2="150" y2="${k % 5 ? 50 : 56}" transform="rotate(${k * 6} 150 150)"/>`).join("")}
-        </svg>
-        <div class="upg-pointer" id="upgPointer"><i></i></div>
-        <div class="upg-readout">
-          <div class="upg-pct" id="upgPct">${pct(chance)}</div>
-          <div class="muted small">szansa</div>
-          <div class="upg-mult">${target && stake ? "×" + (target.value / stake).toLocaleString("pl-PL", { maximumFractionDigits: 2 }) : "—"}</div>
-        </div>
-        <div class="upg-result" id="upgResult" hidden></div>
-      </div>
-      <div class="upg-pair">
-        <div class="upg-stake"><b>${fmt(stake)}</b><small>${u.inputs.size} ${plural(u.inputs.size, "karta", "karty", "kart")}</small></div>
-        <div class="upg-arrow">➜</div>
-        <div class="upg-target">${target ? pickHTML({ id: 0, person: target.person, variant: target.variant, value: target.value }) : '<div class="upg-q">?</div>'}</div>
-      </div>
-      <div class="upg-quick">${[1.5, 2, 3, 5, 10, 20].map(m => `<button class="chip" data-mult="${m}"${stake ? "" : " disabled"}>×${String(m).replace(".", ",")}</button>`).join("")}</div>
-      <button class="big-btn" id="upgBtn"${target && stake && chance > 0 ? "" : " disabled"}>⬆️ ULEPSZ${chance ? ` (${pct(chance)})` : ""}</button>
-    </div>
-
-    <div class="panel upg-side">
-      <h3>Cel</h3>
-      <div class="upg-filters">
-        <input type="text" id="uSearch" placeholder="🔍 Szukaj…" value="${esc(u.search)}">
-        <select id="uVariant">${[["all", "Wszystkie"], ...S.cfg.variantOrder.filter(v => !isExclusive(v) && (v === "normal" || variantOn(v))).map(v => [v, variantName(v)])].map(([v, n]) =>
-          `<option value="${v}"${u.variant === v ? " selected" : ""}>${n}</option>`).join("")}</select>
-        ${sortSelectHTML(u.sortTarget, 'data-fsort="target"', UNIQUE_SORTS)}
-      </div>
-      <div class="pick-grid" data-keep="target">${targets.length ? sortCards(targets, u.sortTarget).slice(0, PICK_LIMIT).map(t => pickHTML({ id: t.key, person: t.person, variant: t.variant, value: t.value },
-        { sel: t.key === u.target, extra: stake ? `<span class="pc">${pct(upgChance(stake, t.value))}</span>` : "" })).join("")
-        : '<div class="empty">Brak celów — twój wkład jest już wart więcej niż każda karta!</div>'}</div>
-    </div>
-  </div>`);
-  drawUpgWheel(chance);
-}
-
-function upgArcStart(chance) { return -chance * 180; } // łuk wyśrodkowany u góry
-
-function drawUpgWheel(chance) {
-  const arc = $("#upgArc");
-  if (!arc) return;
-  const C = 2 * Math.PI * 128;
-  arc.style.strokeDasharray = `${chance * C} ${C}`;
-  arc.setAttribute("transform", `rotate(${upgArcStart(chance) - 90} 150 150)`);
-  $("#upgPointer").style.transform = `rotate(${FORGE.upg.angle}deg)`;
-}
-
-function upgPickMult(m) {
-  const stake = upgStake();
-  if (!stake) return;
-  const all = allTargets().filter(t => t.value >= stake * m && t.value > stake && (FORGE.upg.variant === "all" || t.variant === FORGE.upg.variant));
-  if (!all.length) { toast("Brak tak drogiego celu", true); return; }
-  const v = all[0].value;
-  const same = all.filter(t => t.value === v);
-  FORGE.upg.target = same[Math.floor(Math.random() * same.length)].key;
-  Sound.click();
-  renderUpgrader();
-}
-
-async function runUpgrade() {
-  const u = FORGE.upg;
-  if (FORGE.busy || !u.target || !u.inputs.size) return;
-  const target = allTargets().find(t => t.key === u.target);
-  const ids = [...u.inputs];
-  const stake = upgStake();
-  if (ids.some(id => rarityIdx(person(S.items.find(i => i.id === id).person).rarity) >= rarityIdx("gold")) &&
-      !confirm(`Stawiasz karty legendarne (${fmt(stake)}). Na pewno?`)) return;
-  FORGE.busy = true;
-  Sound.unlock();
-  $$("#forgeBody button, #forgeBody input, #forgeBody select").forEach(b => b.disabled = true);
-  let res;
-  try {
-    res = await api("/api/upgrade", { ids, target: target.person, variant: target.variant });
-    if (res.discovered?.length) await refreshConfig();
-  } catch (e) { FORGE.busy = false; Sound.error(); toast(e.message, true); renderUpgrader(); return; }
-
-  const wheel = $("#upgWheel");
-  wheel.classList.add("spinning");
-  const chance = res.chance;
-  drawUpgWheel(chance);
-  const finalAngle = upgArcStart(chance) + res.roll * 360;
-  const start = u.angle;
-  const base = start - (((start % 360) + 360) % 360);
-  const fast = S.fast;
-  const end = base + 360 * (fast ? 3 : 6) + ((finalAngle % 360) + 360) % 360;
-  const D = fast ? 1600 : 5200;
-  const t0 = performance.now();
-  const pointer = $("#upgPointer");
-  const a0 = upgArcStart(chance);
-  const inArc = a => { const n = (((a - a0) % 360) + 360) % 360; return n < chance * 360; };
-  let lastTick = Math.floor(start / 10);
-  await new Promise(done => {
-    const frame = now => {
-      const t = Math.min(1, (now - t0) / D);
-      const e = 1 - Math.pow(1 - t, 4);
-      const ang = start + (end - start) * e;
-      pointer.style.transform = `rotate(${ang}deg)`;
-      const tk = Math.floor(ang / 10);
-      if (tk !== lastTick) { lastTick = tk; Sound.tick(1 - t); }
-      wheel.classList.toggle("in-arc", inArc(ang));
-      if (t < 1) requestAnimationFrame(frame); else done();
-    };
-    requestAnimationFrame(frame);
-  });
-  u.angle = end;
-  wheel.classList.remove("spinning");
-
-  removeItems(res.consumed);
-  u.inputs.clear();
-  if (res.win) S.items = [res.item, ...S.items];
-  applyState(res.state);
-
-  const b = wheel.getBoundingClientRect();
-  const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
-  const box = $("#upgResult");
-  if (res.win) {
-    wheel.classList.add("won");
-    Sound.win();
-    const rr = person(res.item.person).rarity;
-    fx().burst(cx, cy, 180, rr === "ultra" ? RAINBOW : ["#3ddc84", "#b6ff5c", "#ffffff", S.cfg.rarities[rr].color], { speed: 14 });
-    if (rarityIdx(rr) >= rarityIdx("gold")) { await sleep(600); await epicReveal(res.item, { fast }); }
-    else confetti(["#3ddc84", "#b6ff5c", "#fff", S.cfg.rarities[rr].color], 120);
-    announceFirsts([res.item]);
-    box.innerHTML = `<div class="upg-res-label win">WYGRANA!</div>${cardHTML(res.item.person, res.item.variant)}<div class="muted small">kliknij kartę, aby ją obejrzeć</div>`;
-  } else {
-    wheel.classList.add("lost");
-    Sound.fail();
-    fx().burst(cx, cy, 90, ["#ff5468", "#ff9a9a", "#552"], { speed: 9, g: 0.3 });
-    $$("#forgeBody .upg-side:first-child .pick.sel").forEach(el => {
-      el.style.setProperty("--dx", rand(-120, 120) + "px");
-      el.style.setProperty("--dr", rand(-60, 60) + "deg");
-      el.classList.add("shatter");
-    });
-    box.innerHTML = `<div class="upg-res-label lose">PRZEGRANA</div><div class="upg-lost">💥 ${fmt(stake)}</div>`;
-  }
-  box.hidden = false;
-  // wynik znika sam (albo po kliknięciu) i ulepszacz jest od razu gotowy do kolejnej próby - cel zostaje wybrany.
-  // Odblokowujemy też wtedy, gdy gracz w międzyczasie przeszedł do innej zakładki (wcześniej trzeba było odświeżyć stronę).
-  const finish = () => {
-    if (!FORGE.busy) return;
-    FORGE.busy = false;
-    if (FORGE.mode === "upgrade" && currentView() === "forge") renderUpgrader();
-  };
-  setTimeout(finish, res.win ? 2600 : 1600);
-  box.addEventListener("click", e => { if (!e.target.closest(".card")) finish(); });
-}
-
 // ================================================================ ZDARZENIA
 
 function bindForge() {
-  $("#forgeSeg").addEventListener("click", e => {
-    const b = e.target.closest("button"); if (!b || FORGE.busy) return;
-    FORGE.mode = b.dataset.mode; Sound.click(); renderForge();
-  });
   $("#forgeBody").addEventListener("change", e => {
     const opt = e.target.closest("[data-bulk-opt]");
     if (opt) { FORGE.bulk[opt.dataset.bulkOpt] = opt.checked; renderContract(); }
   });
   $("#forgeBody").addEventListener("click", e => {
     const t = e.target;
-    if (FORGE.busy) {
-      // podgląd wygranej karty w ulepszaczu
-      const c = t.closest("#upgResult .card");
-      if (c) openViewer(c.dataset.pid, c.dataset.variant);
-      return;
+    if (FORGE.busy) return;
+    const tierBtn = t.closest("[data-tier]");
+    if (tierBtn) { FORGE.tier = tierBtn.dataset.tier; FORGE.slots = []; Sound.click(); resetKeep("contract"); return renderContract(); }
+    const pick = t.closest(".pick");
+    if (pick) {
+      if (FORGE.slots.length >= S.cfg.contractSize[FORGE.tier]) { Sound.error(); return toast("Kontrakt jest pełny", true); }
+      FORGE.slots.push(+pick.dataset.id); Sound.click(); return renderContract();
     }
-    if (FORGE.mode === "contract") {
-      const tierBtn = t.closest("[data-tier]");
-      if (tierBtn) { FORGE.tier = tierBtn.dataset.tier; FORGE.slots = []; Sound.click(); resetKeep("contract"); return renderContract(); }
-      const pick = t.closest(".pick");
-      if (pick) {
-        if (FORGE.slots.length >= S.cfg.contractSize[FORGE.tier]) { Sound.error(); return toast("Kontrakt jest pełny", true); }
-        FORGE.slots.push(+pick.dataset.id); Sound.click(); return renderContract();
-      }
-      const slot = t.closest(".slot.filled");
-      if (slot) { FORGE.slots = FORGE.slots.filter(id => id !== +slot.dataset.id); Sound.click(); return renderContract(); }
-      if (t.closest("#cAuto")) return contractAutoFill();
-      if (t.closest("#cClear")) { FORGE.slots = []; Sound.click(); return renderContract(); }
-      if (t.closest("#cSign")) return runContract();
-      if (t.closest("#cBulk")) return runBulkContracts();
-      const b = t.closest("[data-bulk]");
-      if (b) {
-        const plan = bulkPlan(FORGE.tier);
-        FORGE.bulk.n = b.dataset.bulk === "max" ? plan.max : Math.max(1, Math.min(plan.max, plan.n + (b.dataset.bulk === "+" ? 1 : -1)));
-        Sound.click(); return renderContract();
-      }
-    } else {
-      const u = FORGE.upg;
-      const pick = t.closest(".pick");
-      if (pick && pick.closest(".upg-side")) {
-        const side = pick.closest(".upg-side");
-        if (side === side.parentElement.firstElementChild) {
-          const id = +pick.dataset.id;
-          if (u.inputs.has(id)) u.inputs.delete(id);
-          else if (u.inputs.size >= S.cfg.upgradeMaxItems) { Sound.error(); return toast(`Maksymalnie ${S.cfg.upgradeMaxItems} kart`, true); }
-          else u.inputs.add(id);
-        } else {
-          u.target = pick.dataset.id;
-        }
-        Sound.click();
-        return renderUpgrader();
-      }
-      const mult = t.closest("[data-mult]");
-      if (mult) return upgPickMult(+mult.dataset.mult);
-      if (t.closest("#uClear")) { u.inputs.clear(); return renderUpgrader(); }
-      if (t.closest("#upgBtn")) return runUpgrade();
+    const slot = t.closest(".slot.filled");
+    if (slot) { FORGE.slots = FORGE.slots.filter(id => id !== +slot.dataset.id); Sound.click(); return renderContract(); }
+    if (t.closest("#cAuto")) return contractAutoFill();
+    if (t.closest("#cClear")) { FORGE.slots = []; Sound.click(); return renderContract(); }
+    if (t.closest("#cSign")) return runContract();
+    if (t.closest("#cBulk")) return runBulkContracts();
+    const b = t.closest("[data-bulk]");
+    if (b) {
+      const plan = bulkPlan(FORGE.tier);
+      FORGE.bulk.n = b.dataset.bulk === "max" ? plan.max : Math.max(1, Math.min(plan.max, plan.n + (b.dataset.bulk === "+" ? 1 : -1)));
+      Sound.click(); return renderContract();
     }
   });
   $("#forgeBody").addEventListener("input", e => {
-    if (e.target.id === "uSearch") {
-      FORGE.upg.search = e.target.value;
-      const pos = e.target.selectionStart;
-      resetKeep("target");
-      renderUpgrader();
-      const inp = $("#uSearch"); inp.focus(); inp.setSelectionRange(pos, pos);
-    }
     const fq = e.target.dataset.fq;
-    if (fq) {
+    if (fq === "contract") {
       const pos = e.target.selectionStart;
       resetKeep(fq);
-      if (fq === "contract") { FORGE.q = e.target.value; renderContract(); }
-      else { FORGE.upg.qMine = e.target.value; renderUpgrader(); }
+      FORGE.q = e.target.value; renderContract();
       const inp = $(`[data-fq=${fq}]`); inp.focus(); inp.setSelectionRange(pos, pos);
     }
   });
   $("#forgeBody").addEventListener("change", e => {
-    if (e.target.id === "uVariant") { FORGE.upg.variant = e.target.value; resetKeep("target"); renderUpgrader(); }
     const fs = e.target.dataset.fsort;
-    if (fs) resetKeep(fs);
-    if (fs === "contract") { FORGE.sort = e.target.value; renderContract(); }
-    if (fs === "mine") { FORGE.upg.sortMine = e.target.value; renderUpgrader(); }
-    if (fs === "target") { FORGE.upg.sortTarget = e.target.value; renderUpgrader(); }
+    if (fs === "contract") { resetKeep(fs); FORGE.sort = e.target.value; renderContract(); }
   });
 }

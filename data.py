@@ -220,10 +220,12 @@ CRATES_ADDED_LATER = {"halloween"}
 CONTRACT_SIZE = {"green": 5, "uncommon": 5, "blue": 5, "purple": 6, "red": 6, "gold": 7}   # tajnych kart nie da się wytworzyć
 # (wynikiem kontraktu jest następna rzadkość, która ma karty - pusta rzadkość, np. Niepospolita bez kart, jest pomijana)
 CONTRACT_VARIANT_BONUS = 0.1   # każda karta w specjalnym wariancie zwiększa szanse na wariant o 10%
-# Kuźnia - ulepszacz: szansa = wartość wkładu / wartość celu * UPGRADE_EDGE (max UPGRADE_MAX)
+# Kasyno - ulepszacz "w ciemno": gracz wybiera tylko mnożnik wkładu (UPGRADE_MULTS), cel to losowa karta o najniższej
+# wartości >= wkład × mnożnik - widać ją dopiero po wygranej. Szansa = wkład / wartość celu * UPGRADE_EDGE (max UPGRADE_MAX)
 UPGRADE_EDGE = 0.9
 UPGRADE_MAX = 0.8
 UPGRADE_MAX_ITEMS = 10
+UPGRADE_MULTS = [1.5, 2, 3, 5, 10, 20]
 MAX_DEPOSIT = 1_000_000
 
 # Skrzynki z pieniędzmi (codzienna nagroda za logowanie).
@@ -656,6 +658,13 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 13, "date": "2026-10-24", "title": "Ulepszacz w kasynie - w ciemno",
+     "items": [
+         "⬆️ <b>Ulepszacz</b> przeniósł się z ⚒️ Kuźni do 🎰 <b>Kasyna</b>.",
+         "🎲 Grasz teraz <b>w ciemno</b>: stawiasz karty i wybierasz mnożnik (×1,5 … ×20). Widzisz wartość nagrody i szansę, "
+         "ale <b>jaką kartę</b> wygrasz, zobaczysz dopiero po wygranej.",
+         "🃏 Przy wygranej w ulepszaczu — jak w ruletce i blackjacku — możesz dostać kartę specjalną <b>Jokerową</b>.",
+     ]},
     {"v": 12, "date": "2026-10-21", "title": "Wygrane w kasynie w wariantach",
      "items": [
          "✨ Wygrane w <b>ruletce</b> i <b>blackjacku</b> mogą teraz przyjść w <b>wariantach</b> — Złota, Holo, Szmaragdowa, "

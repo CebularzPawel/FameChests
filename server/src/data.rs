@@ -36,6 +36,8 @@ pub struct VariantDef {
     pub combo: bool,
     pub layers: Vec<String>,
     pub styles: Vec<String>,
+    /// domyślnie wyłączony (nie wypada, nie jest celem ulepszacza)
+    pub off: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -144,6 +146,8 @@ pub struct GameData {
     pub upgrade_edge: f64,
     pub upgrade_max: f64,
     pub upgrade_max_items: usize,
+    /// mnożniki wkładu do wyboru w ulepszaczu "w ciemno"
+    pub upgrade_mults: Vec<f64>,
     pub max_deposit: i64,
     pub money_chests: IndexMap<String, MoneyChest>,
     pub money_chests_json: Value,
@@ -333,6 +337,7 @@ impl GameData {
             upgrade_edge: get(&raw, "upgradeEdge")?,
             upgrade_max: get(&raw, "upgradeMax")?,
             upgrade_max_items: get(&raw, "upgradeMaxItems")?,
+            upgrade_mults: get(&raw, "upgradeMults")?,
             max_deposit: get(&raw, "maxDeposit")?,
             money_chests,
             money_chests_json: v("moneyChests"),

@@ -1,6 +1,6 @@
 "use strict";
-// Kasyno: ruletka i blackjack (stawką są karty, wygrana też w kartach) oraz jackpot - lobby dla dwóch graczy (zwycięzca
-// bierze wszystkie karty). Losuje zawsze serwer - przeglądarka tylko pokazuje animację z gotowym wynikiem.
+// Kasyno: ruletka i blackjack (stawką są karty, wygrana też w kartach), ulepszacz "w ciemno" (upgrade.js) oraz jackpot -
+// lobby dla dwóch graczy (zwycięzca bierze wszystkie karty). Losuje zawsze serwer - przeglądarka tylko pokazuje animację.
 
 const CS = {
   tab: "roulette",
@@ -71,12 +71,13 @@ function csPickerHTML(set, q, max, zone, dupesTip = "Dodaj wszystkie karty, któ
 }
 
 function renderCasino() {
-  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
+  $("#casinoSeg").innerHTML = [["roulette", "🎡 Ruletka"], ["blackjack", "🃏 Blackjack"], ["upgrade", "⬆️ Ulepszacz"], ["jackpot", "💰 Jackpot (2 graczy)"]].map(([t, n]) =>
     `<button data-cstab="${t}" class="${CS.tab === t ? "active" : ""}">${n}</button>`).join("");
   const own = new Set(S.items.map(i => i.id));
   [CS.sel, CS.bj.sel, CS.bj.dsel].forEach(set => [...set].forEach(id => { if (!own.has(id)) set.delete(id); }));
   if (CS.tab === "roulette") { stopJackpotPolling(); drawRoulette(); }
   else if (CS.tab === "blackjack") { stopJackpotPolling(); renderBlackjack(); }
+  else if (CS.tab === "upgrade") { stopJackpotPolling(); renderUpgrader(); }
   else renderJackpot();
 }
 

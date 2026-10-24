@@ -33,6 +33,7 @@ out = {
     "upgradeEdge": data.UPGRADE_EDGE,
     "upgradeMax": data.UPGRADE_MAX,
     "upgradeMaxItems": data.UPGRADE_MAX_ITEMS,
+    "upgradeMults": data.UPGRADE_MULTS,
     "maxDeposit": data.MAX_DEPOSIT,
     "moneyChests": data.MONEY_CHESTS,
     "dailyStreak": data.DAILY_STREAK,

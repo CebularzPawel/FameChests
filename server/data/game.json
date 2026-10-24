@@ -478,6 +478,14 @@
  "upgradeEdge": 0.9,
  "upgradeMax": 0.8,
  "upgradeMaxItems": 10,
+ "upgradeMults": [
+  1.5,
+  2,
+  3,
+  5,
+  10,
+  20
+ ],
  "maxDeposit": 1000000,
  "moneyChests": {
   "daily": {
@@ -3273,6 +3281,16 @@
   "expireHours": 24
  },
  "patchNotes": [
+  {
+   "v": 13,
+   "date": "2026-10-24",
+   "title": "Ulepszacz w kasynie - w ciemno",
+   "items": [
+    "⬆️ <b>Ulepszacz</b> przeniósł się z ⚒️ Kuźni do 🎰 <b>Kasyna</b>.",
+    "🎲 Grasz teraz <b>w ciemno</b>: stawiasz karty i wybierasz mnożnik (×1,5 … ×20). Widzisz wartość nagrody i szansę, ale <b>jaką kartę</b> wygrasz, zobaczysz dopiero po wygranej.",
+    "🃏 Przy wygranej w ulepszaczu — jak w ruletce i blackjacku — możesz dostać kartę specjalną <b>Jokerową</b>."
+   ]
+  },
   {
    "v": 12,
    "date": "2026-10-21",

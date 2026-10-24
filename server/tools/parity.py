@@ -90,8 +90,8 @@ def scenario(base):
         post("contracts bulk", a, "/api/contracts", {"groups": [greens[5:10]]})
     st = get("state 2", a, "/api/state")
     items = [it for it in st.get("items", []) if not it["fav"]]
-    post("upgrade", a, "/api/upgrade", {"ids": [items[0]["id"]], "target": "pl_walesa", "variant": "normal"})
-    post("upgrade exclusive", a, "/api/upgrade", {"ids": [items[1]["id"]], "target": "pl_walesa", "variant": "royal"})
+    post("upgrade", a, "/api/upgrade", {"ids": [items[0]["id"]], "mult": 2})
+    post("upgrade wrong mult", a, "/api/upgrade", {"ids": [items[1]["id"]], "mult": 7})
 
     # znajomi, aktywność, wymiana
     post("friend req", a, "/api/friends/request", {"username": "Bob1"})

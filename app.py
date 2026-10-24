@@ -24,7 +24,7 @@ import images
 from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARENA_TARGETS, ARENA_VISUALS,
                   MAX_ABILITY_EFFECTS, MAX_EXTRA_ABILITIES, CONTRACT_SIZE, CONTRACT_VARIANT_BONUS, CRATE_PRICE, DAILY_STREAK, MAX_DEPOSIT,
                   MAX_OPEN, MONEY_CHESTS, RARITIES, RARITY_ORDER, SECRET_ODDS, SHOWCASE_SIZE,
-                  STARTING_BALANCE, TYPES, UPGRADE_EDGE, UPGRADE_MAX, UPGRADE_MAX_ITEMS, VARIANT_ORDER,
+                  STARTING_BALANCE, TYPES, UPGRADE_EDGE, UPGRADE_MAX, UPGRADE_MAX_ITEMS, UPGRADE_MULTS, VARIANT_ORDER,
                   VARIANTS, VARIANT_DEFAULTS, CRATE_VARIANTS, PATCH_NOTES, MARKET, ROULETTE, ROULETTE_BETS, ROULETTE_RED, ROULETTE_WHEEL,
                   JACKPOT, card_value, card_variants, combine_variant, SPECIAL_VARIANTS, SPECIAL_SOURCES, SPECIAL_CRATE,
                   CASINO_SPECIAL, CASINO_VARIANTS, CASINO_TOP, BLACKJACK, STICKER_VARIANTS, STICKER_LIBRARY,
@@ -926,6 +926,7 @@ def config():
         "upgradeEdge": UPGRADE_EDGE,
         "upgradeMax": UPGRADE_MAX,
         "upgradeMaxItems": UPGRADE_MAX_ITEMS,
+        "upgradeMults": UPGRADE_MULTS,
         "maxDeposit": MAX_DEPOSIT,
         "moneyChests": MONEY_CHESTS,
         "dailyStreak": DAILY_STREAK,
@@ -1240,42 +1241,61 @@ def contracts_bulk():
     return jsonify({"results": results, "consumed": all_ids, "discovered": new, "state": get_state()})
 
 
+def upgrade_pool():
+    """Możliwe cele ulepszacza: karty ze skrzynek w sklepie (bez tajnych i specjalnych) w zwykłym wariancie albo we
+    włączonych, nie wyjątkowych wariantach - [(wartość, karta, wariant)]."""
+    variants = ["normal", *catalog.base_variants()]
+    return [(card_value(p, v), p, v) for p in catalog.PEOPLE.values()
+            if p.get("forge") and p["rarity"] not in ("secret", "special") for v in variants]
+
+
+def upgrade_targets(stake, mult):
+    """Cel ulepszacza dla wkładu i mnożnika: najniższa wartość >= wkład × mnożnik (i > wkład) oraz wszystkie karty
+    o tej wartości (jedna z nich zostanie wylosowana). (wartość, [(karta, wariant)]) albo (None, [])."""
+    fits = [x for x in upgrade_pool() if x[0] >= stake * mult and x[0] > stake]
+    if not fits:
+        return None, []
+    goal = min(x[0] for x in fits)
+    return goal, [(p, v) for value, p, v in fits if value == goal]
+
+
 @app.post("/api/upgrade")
 @login_required
 def upgrade():
+    """Ulepszacz w kasynie, "w ciemno": gracz stawia karty i wybiera mnożnik, serwer losuje kartę-cel (gracz widzi tylko
+    jej wartość i szansę). Wygrana daje kartę-cel i może też dać kartę specjalną z kasyna (Joker)."""
     lock_me()
     body = request.get_json(force=True)
-    ids = [int(i) for i in body.get("ids", [])]
-    target = catalog.PEOPLE.get(body.get("target"))
-    variant = body.get("variant", "normal")
+    try:
+        ids = [int(i) for i in body.get("ids", [])]
+        mult = float(body.get("mult"))
+    except (TypeError, ValueError):
+        return bad("Nieprawidłowy wybór kart")
     rows = owned_rows(ids)
-    if rows is None or not 1 <= len(rows) <= UPGRADE_MAX_ITEMS or target is None or variant not in VARIANTS:
-        return jsonify({"error": "Nieprawidłowy wybór kart"}), 400
+    if rows is None or not 1 <= len(rows) <= UPGRADE_MAX_ITEMS or mult not in UPGRADE_MULTS:
+        return bad("Nieprawidłowy wybór kart")
     if any(r["favorite"] for r in rows):
-        return jsonify({"error": FAV_ERROR}), 400
+        return bad(FAV_ERROR)
     if any(catalog.is_special(catalog.PEOPLE[r["person_id"]]) for r in rows):
-        return jsonify({"error": SPECIAL_ERROR}), 400
-    if target["rarity"] in ("secret", "special"):
-        return jsonify({"error": "Tajnych kart nie da się wytworzyć w kuźni"}), 400
-    if not target.get("forge"):
-        return jsonify({"error": "Tej karty nie ma teraz w żadnej skrzynce w sklepie — nie da się jej wytworzyć"}), 400
-    if VARIANTS[variant].get("exclusive"):
-        return jsonify({"error": f"Wariant „{VARIANTS[variant]['name']}” wypada tylko ze skrzynek"}), 400
-    if variant != "normal" and variant not in catalog.base_variants():
-        return jsonify({"error": f"Wariant „{VARIANTS[variant]['name']}” jest teraz wyłączony"}), 400
+        return bad(SPECIAL_ERROR)
     stake = sum(row_value(r) for r in rows)
-    goal = card_value(target, variant)
-    if goal <= stake:
-        return jsonify({"error": "Cel musi być wart więcej niż twoje karty"}), 400
+    goal, targets = upgrade_targets(stake, mult)
+    if not targets:
+        return bad("Nie ma tak drogiej karty - wybierz mniejszy mnożnik")
     chance = min(UPGRADE_MAX, stake / goal * UPGRADE_EDGE)
     roll_ = rng.random()
     win = roll_ < chance
     delete_items(ids)
-    item = insert_item(target["id"], variant, "upgrade") if win else None
-    new = note_drops([item], "upgrade") if win else []
+    item = special = None
+    new = []
+    if win:
+        target, variant = rng.choice(targets)
+        item = insert_item(target["id"], variant, "upgrade")
+        new = note_drops([item], "upgrade")
+        special = casino_special_drop(goal)   # karta specjalna z kasyna (Joker) albo None
     add_state("upgrades_won" if win else "upgrades_lost", 1)
     db().commit()
-    return jsonify({"win": win, "chance": chance, "roll": roll_, "item": item,
+    return jsonify({"win": win, "chance": chance, "roll": roll_, "goal": goal, "item": item, "special": special,
                     "consumed": ids, "discovered": new, "state": get_state()})
 
 

@@ -72,6 +72,7 @@ pub struct ConfigResponse {
     upgrade_edge: f64,
     upgrade_max: f64,
     upgrade_max_items: usize,
+    upgrade_mults: &'static [f64],
     max_deposit: i64,
     money_chests: &'static Value,
     daily_streak: i64,
@@ -124,6 +125,7 @@ pub async fn config(State(st): State<AppState>, Me(me): Me) -> Res {
         upgrade_edge: g.upgrade_edge,
         upgrade_max: g.upgrade_max,
         upgrade_max_items: g.upgrade_max_items,
+        upgrade_mults: &g.upgrade_mults,
         max_deposit: g.max_deposit,
         money_chests: &g.money_chests_json,
         daily_streak: g.daily_streak,
@@ -481,9 +483,7 @@ pub async fn contracts_bulk(State(st): State<AppState>, Me(me): Me, JsonBody(req
 #[serde(default)]
 pub struct UpgradeRequest {
     ids: Vec<i64>,
-    target: String,
-    #[serde(default = "normal")]
-    variant: String,
+    mult: f64,
 }
 
 #[derive(Serialize)]
@@ -491,22 +491,51 @@ struct UpgradeResponse {
     win: bool,
     chance: f64,
     roll: f64,
+    goal: i64,
     item: Option<NewItem>,
+    special: Option<NewItem>,
     consumed: Vec<i64>,
     discovered: Vec<String>,
     state: GameState,
 }
 
+/// Możliwe cele ulepszacza: karty ze skrzynek w sklepie (bez tajnych i specjalnych) w zwykłym wariancie albo
+/// w nie wyjątkowych i nie wyłączonych wariantach - (wartość, karta, wariant)
+fn upgrade_pool(cat: &Catalog) -> Vec<(i64, &Arc<Person>, &'static String)> {
+    let g = g();
+    let variants: Vec<&'static String> = g
+        .variant_order
+        .iter()
+        .filter(|v| {
+            let x = &g.variants[*v];
+            *v == "normal" || !(x.combo || x.special || x.exclusive || x.off || !x.cards.is_empty())
+        })
+        .collect();
+    cat.people
+        .values()
+        .filter(|p| p.forge && !p.is_secret() && !p.is_special())
+        .flat_map(|p| variants.iter().map(move |v| (p.value(v), p, *v)))
+        .collect()
+}
+
+/// Cel ulepszacza dla wkładu i mnożnika: najniższa wartość >= wkład × mnożnik (i > wkład) oraz wszystkie karty
+/// o tej wartości - jedna z nich zostanie wylosowana
+fn upgrade_targets(cat: &Catalog, stake: i64, mult: f64) -> Option<(i64, Vec<(Arc<Person>, String)>)> {
+    let fits: Vec<_> = upgrade_pool(cat).into_iter().filter(|x| x.0 as f64 >= stake as f64 * mult && x.0 > stake).collect();
+    let goal = fits.iter().map(|x| x.0).min()?;
+    Some((goal, fits.into_iter().filter(|x| x.0 == goal).map(|x| (x.1.clone(), x.2.clone())).collect()))
+}
+
+/// Ulepszacz w kasynie, "w ciemno": gracz stawia karty i wybiera mnożnik, serwer losuje kartę-cel (gracz widzi tylko
+/// jej wartość i szansę). Wygrana daje kartę-cel i może też dać kartę specjalną z kasyna (Joker).
 pub async fn upgrade(State(st): State<AppState>, Me(me): Me, JsonBody(req): JsonBody<UpgradeRequest>) -> Res {
     let cx = Ctx::new(st, me);
     let g = g();
     let mut tx = cx.st.db.begin().await?;
     lock_me(&mut tx, cx.uid()).await?;
     let rows = owned_rows(&mut tx, &cx.cat, cx.uid(), &req.ids).await?;
-    let (Some(rows), Some(target)) = (rows, cx.cat.person(&req.target).cloned()) else {
-        return bad("Nieprawidłowy wybór kart");
-    };
-    let Some(variant) = g.variants.get(&req.variant).filter(|_| (1..=g.upgrade_max_items).contains(&rows.len())) else {
+    let Some(rows) = rows.filter(|r| (1..=g.upgrade_max_items).contains(&r.len()) && g.upgrade_mults.contains(&req.mult))
+    else {
         return bad("Nieprawidłowy wybór kart");
     };
     if rows.iter().any(|r| r.favorite != 0) {
@@ -515,36 +544,30 @@ pub async fn upgrade(State(st): State<AppState>, Me(me): Me, JsonBody(req): Json
     if rows.iter().any(|r| cx.cat.people[&r.person_id].is_special()) {
         return bad(SPECIAL_ERROR);
     }
-    if target.is_secret() || target.is_special() {
-        return bad("Tajnych kart nie da się wytworzyć w kuźni");
-    }
-    if !target.forge {
-        return bad("Tej karty nie ma teraz w żadnej skrzynce w sklepie — nie da się jej wytworzyć");
-    }
-    if variant.exclusive {
-        return bad(format!("Wariant „{}” wypada tylko ze skrzynek", variant.name));
-    }
     let stake: i64 = rows.iter().map(|r| row_value(&cx.cat, r)).sum();
-    let goal = target.value(&req.variant);
-    if goal <= stake {
-        return bad("Cel musi być wart więcej niż twoje karty");
-    }
+    let Some((goal, targets)) = upgrade_targets(&cx.cat, stake, req.mult) else {
+        return bad("Nie ma tak drogiej karty - wybierz mniejszy mnożnik");
+    };
+    let Some((target, variant)) = targets.choose(&mut rand::thread_rng()).cloned() else {
+        return bad("Nie ma tak drogiej karty - wybierz mniejszy mnożnik");
+    };
     let chance = g.upgrade_max.min(stake as f64 / goal as f64 * g.upgrade_edge);
     let roll = random();
     let win = roll < chance;
     delete_items(&mut tx, cx.uid(), &req.ids).await?;
-    let (item, discovered) = if win {
-        let item = insert_item(&mut tx, &cx, &target.id, &req.variant, "upgrade").await?;
+    let (item, special, discovered) = if win {
+        let item = insert_item(&mut tx, &cx, &target.id, &variant, "upgrade").await?;
         let new = note_drops(&mut tx, &cx, &drops_of(std::slice::from_ref(&item)), "upgrade").await?;
-        (Some(item), new)
+        let special = super::casino::casino_special_drop(&mut tx, &cx, goal).await?; // karta specjalna z kasyna (Joker)
+        (Some(item), special, new)
     } else {
-        (None, vec![])
+        (None, None, vec![])
     };
     add_state(&mut tx, cx.uid(), if win { "upgrades_won" } else { "upgrades_lost" }, 1).await?;
     let state = get_state(&mut tx, cx.uid()).await?;
     tx.commit().await?;
     metrics::counter!("scambox_forge_total", "kind" => if win { "upgrade_won" } else { "upgrade_lost" }).increment(1);
-    ok(UpgradeResponse { win, chance, roll, item, consumed: req.ids, discovered, state })
+    ok(UpgradeResponse { win, chance, roll, goal, item, special, consumed: req.ids, discovered, state })
 }
 
 // ---------------------------------------------------------------- codzienna nagroda

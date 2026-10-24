@@ -2241,6 +2241,8 @@ async function claimLink(token) {
 // Admin wybiera wariant i wygląd karty specjalnej w panelu (edycja karty); przycisk "Podgląd" w panelu otwiera
 // /mockups?card=<id>&variant=<wariant>&style=<wygląd> - podgląd karty jak w skrzynce, także z niezapisanym wyglądem.
 function renderMockups() {
+  const pq = new URLSearchParams(location.search).get("preview");
+  if (pq) return renderCardPreview(pq);
   const base = person("pl_tusk") || Object.values(S.cfg.people).find(p => !p.masked && p.rarity !== "secret");
   const crate = crateList().find(c => c.special) || crateOf(base.crate);
   const real = Object.values(S.cfg.people).filter(p => isSpecialCard(p) && !p.id.startsWith("__"))
@@ -2285,6 +2287,32 @@ function renderMockups() {
     if (+q.get("style") > 0) p.style = +q.get("style");
     try { openViewer(pid, p.fixedVariant); } finally { Object.assign(p, saved); }
   }
+}
+
+// Podgląd jednej karty we wszystkich jej możliwych wariantach (possibleVariants) - /mockups?preview=<id>&embed=1, osadzony
+// w oknie edycji karty w panelu admina. Dane karty bierzemy z /api/admin/catalog, więc działa też dla tajnej karty (bez
+// maski, zdjęcie z ?admin=1) i dla karty ukrytej. Kliknięcie karty = duży podgląd.
+async function renderCardPreview(pid) {
+  const box = $("#mockupsBody");
+  box.innerHTML = '<div class="empty">Ładowanie…</div>';
+  let card;
+  try { card = (await api("/api/admin/catalog")).cards.find(c => c.id === pid); } catch (e) { box.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (!card) { box.innerHTML = '<div class="empty">Nie ma takiej karty.</div>'; return; }
+  const p = S.cfg.people[pid] = Object.assign({}, S.cfg.people[pid] || {}, card, { masked: false, imgq: card.rarity === "secret" ? "admin=1" : "" });
+  const vs = possibleVariants(p);
+  const fig = v => `<figure class="mock"><div class="mock-card" data-pv="${esc(v)}">${cardHTML(pid, v)}</div>
+    <figcaption><b>${esc(variantName(v))}</b><span class="muted small">×${(S.cfg.variants[v]?.mult || 1).toLocaleString("pl-PL")} · ${fmt(cardValue(pid, v))}${
+      v !== "normal" && !isCombo(v) && !variantOn(v) ? " · wyłączony" : ""}</span></figcaption></figure>`;
+  const single = vs.filter(v => !isCombo(v)), combos = vs.filter(isCombo);
+  box.innerHTML = `<div class="mock-head"><p class="muted small">${esc(p.name)} — ${single.length} ${plural(single.length, "wariant", "warianty", "wariantów")}${
+      combos.length ? ` + ${combos.length} ${plural(combos.length, "połączenie", "połączenia", "połączeń")}` : ""}. Kliknij kartę, żeby ją powiększyć.
+      Podgląd pokazuje zapisaną kartę.</p></div>
+    <div class="mock-grid pv-grid">${single.map(fig).join("")}</div>
+    ${combos.length ? `<details class="pv-combos"><summary>Połączenia wariantów (${combos.length})</summary><div class="mock-grid pv-grid">${combos.map(fig).join("")}</div></details>` : ""}`;
+  box.onclick = e => {
+    const c = e.target.closest("[data-pv]");
+    if (c) { Sound.click(); openViewer(pid, c.dataset.pv); }
+  };
 }
 
 // ================================================================ ZDARZENIA
@@ -2438,6 +2466,7 @@ function bind() {
   bindForge();
   bindMarket();
   bindCasino();
+  bindUpgrader();
   bindSocial();
   bindArena();
   bindHallOfFame();
@@ -2494,8 +2523,11 @@ function bind() {
   S.collected = new Set((st.collected || []).map(([p, v]) => `${p}|${v}`));
   S.crate = S.binderCrate = cfg.crateOrder[0];
   try { S.fast = localStorage.getItem("fast") === "1"; } catch (_) {}
+  // ?embed=1 - strona osadzona w panelu admina (podgląd karty): bez paska, okienek na start i odpytywania serwera
+  const embed = new URLSearchParams(location.search).has("embed");
+  if (embed) document.body.classList.add("embed");
   // podgrzej cache miniatur, żeby bębny od razu miały obrazki
-  Object.keys(cfg.people).forEach(id => { const im = new Image(); im.src = imgUrl(id, null, true); });
+  else Object.keys(cfg.people).forEach(id => { const im = new Image(); im.src = imgUrl(id, null, true); });
   bind();
   watchCovers();
   renderHeader();
@@ -2504,6 +2536,7 @@ function bind() {
   updateSellbar();
   applyBadges(me);
   S.jpLobby = me.jackpotLobby;
+  if (embed) return;
   startPolling();
   const startDialogs = () => {
     if (me.patchNotes?.length) setTimeout(() => showPatchNotes(me.patchNotes), 500);  // nowa aktualizacja: co się zmieniło

@@ -39,7 +39,7 @@ pub struct StakeRequest {
 
 /// Wygrana w grze kasyna, która daje nowe karty: z szansą wygrana / CASINO_SPECIAL["per"] (najwyżej "max") gracz dostaje
 /// dodatkowo kartę specjalną z kasyna - zawsze w jej jedynym wariancie (np. Jokerowa). Zwraca nową kartę albo None.
-async fn casino_special_drop(c: &mut Conn, cx: &Ctx, payout: i64) -> sqlx::Result<Option<NewItem>> {
+pub(crate) async fn casino_special_drop(c: &mut Conn, cx: &Ctx, payout: i64) -> sqlx::Result<Option<NewItem>> {
     let cs = &g().casino_special;
     let pool: Vec<_> = cx.cat.people.values().filter(|p| p.is_special() && p.source.as_deref() == Some("casino")).collect();
     let Some(p) = pool.choose(&mut rand::thread_rng()).copied() else { return Ok(None) };
