@@ -1579,16 +1579,25 @@ function weightedPerson(crateId) {
 }
 
 // Easter egg (obrazek od admina, S.cfg.easterEgg): bardzo rzadko jeden z kafelków bębna zamienia się w ten obrazek.
-// Widać go tylko w trakcie losowania: wybieramy kafelek, który po zatrzymaniu bębna (strip w pozycji "to") ma prawą
-// krawędź co najmniej jeden kafelek za lewą krawędzią bębna - ostatnie z nich mijają środek jeszcze w czasie hamowania.
-function spinEgg(strip, step, mw, to) {
-  const egg = S.cfg.easterEgg;
-  if (!egg || Math.random() >= egg.chance) return;
-  const last = Math.floor((-to - mw) / step) - 1;   // k * step + to + mw < -step  =>  całkowicie poza ekranem
-  const k = last - Math.floor(Math.random() * 3);
+// Ma przejechać przez bęben dopiero pod koniec, gdy ten już powoli hamuje, i zniknąć za lewą krawędzią tuż przed
+// zatrzymaniem (po zatrzymaniu nigdy go nie widać). Dlatego wybieramy kafelek i trochę przesuwamy miejsce zatrzymania
+// na wygranej karcie (off - w tych samych granicach co zwykle), żeby prawa krawędź obrazka po zatrzymaniu była
+// EGG_EDGE px za lewą krawędzią bębna. Prawa krawędź kafelka k po zatrzymaniu: (k - win) * step + mw / 2 + center - off.
+const EGG_EDGE = 6;
+function eggSpot(step, mw, center, win, off) {
+  for (let k = win - 1; k > 0; k--) {
+    const o = (k - win) * step + mw / 2 + center + EGG_EDGE;
+    if (Math.abs(o) <= 0.42 * mw) return [o, k];
+    if (o < -0.42 * mw) break;
+  }
+  // nie da się dopasować (wąski bęben) - najbliższy kafelek, który po zatrzymaniu jest już cały poza bębnem
+  const to = -(win * step + mw / 2 + off) + center;
+  return [off, Math.floor((-to - mw - EGG_EDGE) / step)];
+}
+function spinEgg(strip, k) {
   const tile = strip.children[k];
   if (k < 1 || !tile) return;
-  tile.outerHTML = `<div class="mini mini-egg"><img src="${esc(egg.url)}" alt="" draggable="false"></div>`;
+  tile.outerHTML = `<div class="mini mini-egg"><img src="${esc(S.cfg.easterEgg.url)}" alt="" draggable="false"></div>`;
 }
 
 function miniHTML(pid, win = false) {
@@ -1722,11 +1731,12 @@ function runStage() {
     const strip = el.firstElementChild;
     const step = mw + mgap;
     const center = cellW / 2;
-    const off = rand(-0.42, 0.42) * mw;
+    let off = rand(-0.42, 0.42) * mw, egg = 0;
+    if (S.cfg.easterEgg && Math.random() < S.cfg.easterEgg.chance) [off, egg] = eggSpot(step, mw, center, WIN, off);
     const from = rand(0, step * 0.8);
     const to = -(WIN * step + mw / 2 + off) + center;
     strip.style.transform = `translate3d(${from}px, -50%, 0)`;
-    spinEgg(strip, step, mw, to);
+    if (egg) spinEgg(strip, egg);
     const dur = o.fast ? 700 : rand(5200, 6200);
     const delay = o.fast ? i * 18 : i * 70;
     return { el, strip, drop, from, to, step, center, dur, start: now + delay, lastIdx: -1, done: false };
