@@ -148,6 +148,8 @@ pub struct GameData {
     pub upgrade_max_items: usize,
     /// mnożniki wkładu do wyboru w ulepszaczu "w ciemno"
     pub upgrade_mults: Vec<f64>,
+    /// warianty usunięte z gry - karty graczy w nich zamieniamy przy starcie (startup::drop_removed_variants)
+    pub removed_variants: Vec<String>,
     pub max_deposit: i64,
     pub money_chests: IndexMap<String, MoneyChest>,
     pub money_chests_json: Value,
@@ -338,6 +340,7 @@ impl GameData {
             upgrade_max: get(&raw, "upgradeMax")?,
             upgrade_max_items: get(&raw, "upgradeMaxItems")?,
             upgrade_mults: get(&raw, "upgradeMults")?,
+            removed_variants: get(&raw, "removedVariants")?,
             max_deposit: get(&raw, "maxDeposit")?,
             money_chests,
             money_chests_json: v("moneyChests"),

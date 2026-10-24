@@ -4,6 +4,7 @@ use indexmap::IndexMap;
 use sqlx::PgPool;
 
 use crate::config::Config;
+use crate::data::g;
 use crate::db::{self, now};
 use crate::game::ESCROW;
 use crate::{catalog, export};
@@ -29,6 +30,7 @@ impl FirstDrop {
 
 pub async fn init_db(pool: &PgPool, cfg: &Config) -> anyhow::Result<catalog::Catalog> {
     db::init_schema(pool).await?;
+    drop_removed_variants(pool).await?;
     let mut tx = pool.begin().await?;
     // klaser pamięta karty, które gracz kiedykolwiek miał: uzupełniamy z obecnych kart i z aktywności
     sqlx::query!(
@@ -98,6 +100,52 @@ pub async fn init_db(pool: &PgPool, cfg: &Config) -> anyhow::Result<catalog::Cat
     let cat = catalog::load(&mut *pool.acquire().await?).await?;
     backfill_hall_of_fame(pool).await?;
     Ok(cat)
+}
+
+/// Tabele z wariantem karty (kolumna) - przy usuwaniu wariantu z gry
+const VARIANT_COLUMNS: &[(&str, &str)] = &[
+    ("items", "variant"),
+    ("feed", "variant"),
+    ("market_listings", "variant"),
+    ("market_wanted", "variant"),
+    ("jackpot_items", "variant"),
+    ("trade_lines", "variant"),
+    ("users", "avatar_variant"),
+];
+
+/// Warianty usunięte z gry (removedVariants w game.json): karty graczy, oferty, ikony itd. w nich stają się zwykłe
+/// (z połączenia zostaje warstwa: flag+greek -> flag), a wpisy w klaserze i Hall of Fame znikają. Bezpieczne przy każdym
+/// starcie. Zapytania bez makr (nazwy tabel z listy), więc bez `cargo sqlx prepare`.
+async fn drop_removed_variants(pool: &PgPool) -> anyhow::Result<()> {
+    let mut tx = pool.begin().await?;
+    for v in &g().removed_variants {
+        let combo = format!("+{v}");
+        let like = format!("%+{v}");
+        for (table, col) in VARIANT_COLUMNS {
+            sqlx::query(&format!("UPDATE {table} SET {col} = 'normal' WHERE {col} = $1")).bind(v).execute(&mut *tx).await?;
+            sqlx::query(&format!("UPDATE {table} SET {col} = REPLACE({col}, $1, '') WHERE {col} LIKE $2"))
+                .bind(&combo)
+                .bind(&like)
+                .execute(&mut *tx)
+                .await?;
+        }
+        sqlx::query(
+            "INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal'
+             FROM user_collected WHERE variant = $1 ON CONFLICT DO NOTHING",
+        )
+        .bind(v)
+        .execute(&mut *tx)
+        .await?;
+        for table in ["user_collected", "hall_of_fame"] {
+            sqlx::query(&format!("DELETE FROM {table} WHERE variant = $1 OR variant LIKE $2"))
+                .bind(v)
+                .bind(&like)
+                .execute(&mut *tx)
+                .await?;
+        }
+    }
+    tx.commit().await?;
+    Ok(())
 }
 
 /// Hall of Fame zapisujemy od tej aktualizacji. Jednorazowo (pusta tabela) uzupełniamy ją z historii: karty, które gracze

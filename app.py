@@ -24,7 +24,7 @@ import images
 from data import (ABILITY_KINDS, ARENA, ARENA_EFFECT_TARGETS, ARENA_EFFECTS, ARENA_TARGETS, ARENA_VISUALS,
                   MAX_ABILITY_EFFECTS, MAX_EXTRA_ABILITIES, CONTRACT_SIZE, CONTRACT_VARIANT_BONUS, CRATE_PRICE, DAILY_STREAK, MAX_DEPOSIT,
                   MAX_OPEN, MONEY_CHESTS, RARITIES, RARITY_ORDER, SECRET_ODDS, SHOWCASE_SIZE,
-                  STARTING_BALANCE, TYPES, UPGRADE_EDGE, UPGRADE_MAX, UPGRADE_MAX_ITEMS, UPGRADE_MULTS, VARIANT_ORDER,
+                  STARTING_BALANCE, TYPES, UPGRADE_EDGE, UPGRADE_MAX, UPGRADE_MAX_ITEMS, UPGRADE_MULTS, REMOVED_VARIANTS, VARIANT_ORDER,
                   VARIANTS, VARIANT_DEFAULTS, CRATE_VARIANTS, PATCH_NOTES, MARKET, ROULETTE, ROULETTE_BETS, ROULETTE_RED, ROULETTE_WHEEL,
                   JACKPOT, card_value, card_variants, combine_variant, SPECIAL_VARIANTS, SPECIAL_SOURCES, SPECIAL_CRATE,
                   CASINO_SPECIAL, CASINO_VARIANTS, CASINO_TOP, BLACKJACK, STICKER_VARIANTS, STICKER_LIBRARY,
@@ -131,6 +131,7 @@ def init_db():
     else:
         init_sqlite(conn)
     catalog.init_tables(conn)
+    drop_removed_variants(conn)
     # klaser pamięta karty, które gracz kiedykolwiek miał: uzupełniamy z obecnych kart i z aktywności
     # (wszystko, co ktoś wylosował / pokazał, kiedyś było jego) - bezpieczne przy każdym starcie
     conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT DISTINCT user_id, person_id, variant "
@@ -164,6 +165,27 @@ def init_db():
     catalog.rebuild(conn)
     backfill_hall_of_fame(conn)
     conn.close()
+
+
+# tabele z wariantem karty (kolumna) - przy usuwaniu wariantu z gry
+VARIANT_COLUMNS = [("items", "variant"), ("feed", "variant"), ("market_listings", "variant"), ("market_wanted", "variant"),
+                   ("jackpot_items", "variant"), ("trade_lines", "variant"), ("users", "avatar_variant")]
+
+
+def drop_removed_variants(conn):
+    """Warianty usunięte z gry (REMOVED_VARIANTS): karty graczy, oferty, ikony itd. w nich stają się zwykłe (z połączenia
+    zostaje warstwa: flag+greek -> flag), a wpisy w klaserze, Hall of Fame i ustawienia wariantu znikają. Bezpieczne przy
+    każdym starcie (gdy nic nie zostało, nic się nie zmienia)."""
+    for v in REMOVED_VARIANTS:
+        for table, col in VARIANT_COLUMNS:
+            conn.execute(f"UPDATE {table} SET {col} = 'normal' WHERE {col} = ?", (v,))
+            conn.execute(f"UPDATE {table} SET {col} = REPLACE({col}, ?, '') WHERE {col} LIKE ?", ("+" + v, "%+" + v))
+        conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal' "
+                     "FROM user_collected WHERE variant = ? ON CONFLICT DO NOTHING", (v,))
+        for table in ("user_collected", "hall_of_fame"):
+            conn.execute(f"DELETE FROM {table} WHERE variant = ? OR variant LIKE ?", (v, "%+" + v))
+        conn.execute("DELETE FROM catalog_variants WHERE id = ?", (v,))
+    conn.commit()
 
 
 def backfill_hall_of_fame(conn):
