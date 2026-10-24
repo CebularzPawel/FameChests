@@ -507,11 +507,13 @@ SPECIAL_SOURCES = {"casino": "🎰 Kasyno — wygrane w grach, które dają nowe
                    "ufo": "🛸 UFO — na razie nie do zdobycia: czasem sama pojawia się w ekwipunku i zabiera ją UFO"}
 # Wizyta UFO: przy każdym odpytaniu /api/me (co 30 s w otwartej grze) szansa, że karta ze źródłem "ufo" pojawi się graczowi
 # w ekwipunku (na samej górze, bez powiadomień). Kliknięta - zabiera ją UFO; po wyjściu z ekwipunku znika. Gracz jej nie dostaje.
-# 1/3000 = średnio raz na ~25 godzin gry.
-UFO_VISIT = {"chance": 1.0}   # TEST: 100% - przed wydaniem przywrócić 1 / 3000
+# Losowane przy każdym odpytaniu /api/me (ok. 120 razy na godzinę gry): 1/12000 = średnio raz na ~100 godzin gry -
+# dużo rzadziej niż obrazek w bębnie (u aktywnego gracza raz na kilka tygodni-miesięcy).
+UFO_VISIT = {"chance": 1 / 12000}
 # Easter egg w bębnie: z tą szansą (na każdą otwieraną skrzynkę) jeden z obrazków przelatujących w bębnie to obrazek od admina
 # (panel admina, sekcja 🥚). Nigdy nie zostaje na ekranie po zatrzymaniu bębna (spinEgg w app.js).
-EASTER_EGG = {"chance": 1.0}   # TEST: 100% - przed wydaniem przywrócić 0.003
+# 0.001 = średnio raz na 1000 skrzynek - u bardzo aktywnego gracza mniej więcej raz w tygodniu, u reszty rzadziej.
+EASTER_EGG = {"chance": 0.001}
 # Teksty na karcie (pole karty "texts", panel admina - karty specjalne): każdy napis na karcie można zmienić niezależnie
 # od statystyk (np. inna cena na karcie, a wartość ta sama). Pusty = zwykły tekst. "atk1Name" itd. - zdolności po kolei.
 CARD_TEXT_SLOTS = {
