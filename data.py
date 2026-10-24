@@ -746,8 +746,8 @@ SLOTS = {"maxCards": 20, "pair": "cherry", "pairPays": 1,
 HORSE_RACE = {"period": 300, "betOpen": 300, "betClose": 8, "maxCards": 20, "maxBets": 3,
               "laps": 4, "dt": 0.25, "duration": (70, 170), "tail": 6,
               "formSpread": 0.45, "strength": 0.022, "noise": 0.06, "noiseTau": 8,
-              "turboChance": 0.3, "turboMult": 9, "turboLaps": (1.3, 2.0), "turboAgain": 0.06,
-              "turnChance": 0.2, "dieChance": 0.12, "carChance": 0.06, "tripChance": 0.002, "tripGap": 0.006,
+              "turboMult": 5, "turboLaps": 0.25,
+              "turnChance": 0.2, "dieChance": 0.12, "carChance": 0.06, "tripChance": 0.002, "tripGap": 0.006, "tripDeath": 0.1, "carSpeed": 12, "carEntry": 2.5,
               "boxRows": (0.3, 0.75), "boxRespawn": 0.3, "itemDelay": (1.0, 4.0)}
 # Skrzynki z przedmiotami jak w Mario Kart: rzędy "boxRows" (ułamek okrążenia) na każdym torze; koń, który przez nie przejedzie,
 # dostaje przedmiot (jeśli nie ma już innego), a po "itemDelay" s go używa. Pierwsze okrążenie: każdy rząd jest dla każdego konia,
@@ -755,6 +755,7 @@ HORSE_RACE = {"period": 300, "betOpen": 300, "betClose": 8, "maxCards": 20, "max
 HORSE_ITEMS = {
     "banana":    {"icon": "🍌", "name": "Skórka od banana", "w": (40, 24, 8)},    # leży za koniem, ślizga tego, kto za nim jedzie
     "rocket":    {"icon": "🚀", "name": "Rakieta", "w": (4, 20, 32)},             # leci w konia przed sobą i go przewraca
+    "turbo":     {"icon": "🌈", "name": "Tęczowe turbo", "w": (0, 4, 10)},               # ćwierć okrążenia bardzo szybko (jedyne źródło turbo)
     "mushroom":  {"icon": "🍄", "name": "Grzyb", "w": (18, 24, 24)},              # chwilowe przyspieszenie
     "snail":     {"icon": "🐌", "name": "Ślimak", "w": (14, 14, 4)},              # zwalnia konia przed sobą
     "lightning": {"icon": "⚡", "name": "Piorun", "w": (0, 5, 14)},               # zwalnia wszystkich innych
@@ -763,14 +764,14 @@ HORSE_ITEMS = {
 HORSES = [
     {"id": 0, "name": "Rączy Bolek", "color": "#e53935", "speed": 1.4, "pitch": 1.0, "pays": 3.5},
     {"id": 1, "name": "Kasztanka z Allegro", "color": "#fb8c00", "speed": 1.0, "pitch": 1.25, "pays": 5.0},
-    {"id": 2, "name": "Pan Kuleczka", "color": "#fdd835", "speed": 0.7, "pitch": 0.85, "pays": 6.5},
-    {"id": 3, "name": "Dżordż Klonik", "color": "#43a047", "speed": 0.4, "pitch": 1.1, "pays": 8.5},
+    {"id": 2, "name": "Pan Kuleczka", "color": "#fdd835", "speed": 0.7, "pitch": 0.85, "pays": 5.5},
+    {"id": 3, "name": "Dżordż Klonik", "color": "#43a047", "speed": 0.4, "pitch": 1.1, "pays": 7.5},
     {"id": 4, "name": "Siwy Dym", "color": "#00acc1", "speed": 0.2, "pitch": 0.95, "pays": 7.5},
-    {"id": 5, "name": "Koń Trojański", "color": "#1e88e5", "speed": 0.0, "pitch": 0.75, "pays": 9.0},
+    {"id": 5, "name": "Koń Trojański", "color": "#1e88e5", "speed": 0.0, "pitch": 0.75, "pays": 10.5},
     {"id": 6, "name": "Galopujący Ziemniak", "color": "#5e35b1", "speed": -0.3, "pitch": 1.4, "pays": 11.0},
-    {"id": 7, "name": "Wojtek Kopyto", "color": "#d81b60", "speed": -0.6, "pitch": 0.9, "pays": 13.5},
-    {"id": 8, "name": "Madame Kłusak", "color": "#6d4c41", "speed": -1.0, "pitch": 1.3, "pays": 14.0},
-    {"id": 9, "name": "Lord Siano", "color": "#b0bec5", "speed": -1.5, "pitch": 0.8, "pays": 20.5},
+    {"id": 7, "name": "Wojtek Kopyto", "color": "#d81b60", "speed": -0.6, "pitch": 0.9, "pays": 14.5},
+    {"id": 8, "name": "Madame Kłusak", "color": "#6d4c41", "speed": -1.0, "pitch": 1.3, "pays": 19.5},
+    {"id": 9, "name": "Lord Siano", "color": "#b0bec5", "speed": -1.5, "pitch": 0.8, "pays": 25.0},
 ]
 # Jackpot: lobby dla 2 graczy (publiczne / prywatne z zaproszeniami), obaj wybierają karty i akceptują; szansa na wygraną
 # = wartość moich kart / wartość wszystkich, zwycięzca bierze wszystkie karty. Lobby bez ruchu przez expireHours się zamyka.
@@ -783,8 +784,8 @@ PATCH_NOTES = [
      "items": [
          "🐎 Nowa gra w 🎰 <b>Kasynie</b>: <b>Wyścigi konne</b>. 10 koni na okrągłym torze, każdy z innym mnożnikiem wygranej.",
          "🕔 Wspólny wyścig startuje <b>co 5 minut</b> dla wszystkich graczy (trwa 1–3 min) - postaw karty na konia i kibicuj razem z innymi. Możesz też zagrać <b>solo</b>, od razu.",
-         "📦 Na torze są skrzynki „?” jak w Mario Kart: konie rzucają skórki od banana 🍌, strzelają rakietami 🚀, jedzą grzyby 🍄, zwalniają się ślimakiem 🐌 i piorunem ⚡, łapią gwiazdę ⭐.",
-         "🌈 W wyścigu dzieje się dużo: konie dostają <b>turbo</b>, zawracają i uciekają z toru, potykają się o siebie i padają… a czasem wjedzie samochód 🚗 - wtedy nikt nie wygrywa i stawki wracają.",
+         "📦 Na torze są skrzynki „?” jak w Mario Kart: konie rzucają skórki od banana 🍌, strzelają rakietami 🚀, jedzą grzyby 🍄, łapią tęczowe turbo 🌈 (ćwierć okrążenia), zwalniają się ślimakiem 🐌 i piorunem ⚡, łapią gwiazdę ⭐.",
+         "🌈 W wyścigu dzieje się dużo: konie zawracają i uciekają z toru, potykają się o siebie i padają… a czasem wjedzie samochód 🚗 - wtedy nikt nie wygrywa i stawki wracają.",
          "🔔 Przed wyjściem z kasyna po przegranej gra zapyta, czy na pewno chcesz wyjść.",
      ]},
     {"v": 13, "date": "2026-10-24", "title": "Ulepszacz w kasynie - w ciemno",

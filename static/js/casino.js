@@ -774,8 +774,7 @@ function bindCasino() {
   $("#casinoSeg").addEventListener("click", e => {
     const b = e.target.closest("[data-cstab]"); if (!b || CS.spinning) return;
     if (b.dataset.cstab === CS.tab) return;
-    const go = () => { CS.tab = b.dataset.cstab; Sound.click(); renderCasino(); };
-    if (!csLeaveGuard(go)) go();
+    CS.tab = b.dataset.cstab; Sound.click(); renderCasino();   // zmiana gry w kasynie bez pytania - pytamy tylko przy wyjściu z kasyna
   });
   const body = $("#casinoBody");
   body.addEventListener("click", e => {

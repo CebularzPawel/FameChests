@@ -277,6 +277,8 @@
 .hr-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
 .hr-actions .big-btn { min-width: 0; font-size: 15px; padding: 12px 8px; }
 .hr-solo { background: linear-gradient(180deg, #7a4cff, #4a2bb5); }
+.hr-debug { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 10px; margin: 6px 0; border: 1px dashed #ff9a1f88; border-radius: 10px; font-size: 13px; }
+.hr-debug label { display: flex; gap: 4px; align-items: center; cursor: pointer; }
 .hr-h { min-width: 26px; height: 26px; padding: 0 4px; border-radius: 6px; display: grid; place-items: center; font-weight: 900; font-size: 12px; color: #fff; text-shadow: 0 1px 2px #000a; background: #555; }
 @media (max-width: 900px) {
   .hr-cols { grid-template-columns: minmax(0, 1fr); }

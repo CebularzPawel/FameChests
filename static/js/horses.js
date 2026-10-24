@@ -8,6 +8,7 @@
 
 const HR = {
   sel: new Set(), q: "", horse: null,
+  force: new Set(["car"]),   // tryb debug (admin): wymuszone zdarzenia
   d: null,                  // ostatnia odpowiedź /api/casino/horses
   offset: 0,                // zegar serwera - zegar przeglądarki (s)
   solo: null,               // wyścig solo w toku: { race, res, t0, done }
@@ -105,6 +106,7 @@ function hrBetsOpen() {
 
 function hrResultHTML(r) {
   if (!r) return '<span class="muted">Wybierz konia, postaw karty i kibicuj!</span>';
+  if (r.kind === "debug") return `<div class="rl-res"><span class="sl-big">🛠</span><div><b>Wyścig testowy zakończony</b><div class="muted small">${r.winner >= 0 ? `Wygrał: ${esc(hrHorses()[r.winner].name)}` : "Nikt nie wygrał"} · bez stawki</div></div></div>`;
   const h = hrHorses()[r.horse];
   const name = `<i class="hr-dot" style="background:${h.color}"></i> <b>${esc(h.name)}</b>`;
   if (r.status === "won") {
@@ -164,6 +166,9 @@ function hrRenderPanel(full = false) {
           <button class="big-btn rl-spin" id="hrBet" data-open="${open}"${sel && HR.sel.size && open && !busy ? "" : " disabled"}>🎟 ${open ? `POSTAW NA WYŚCIG · start za <span data-hrcount>${hrClockText(d.next.start - hrNow())}</span>` : `ZAKŁADY ZAMKNIĘTE · start za <span data-hrcount>${hrClockText(d.next.start - hrNow())}</span>`}${stake ? ` · ${fmt(stake)}` : ""}</button>
           <button class="big-btn rl-spin hr-solo" id="hrSolo"${sel && HR.sel.size && !busy ? "" : " disabled"}>🐎 WYŚCIG SOLO${stake ? ` · ${fmt(stake)}` : ""}</button>
         </div>
+        ${S.me?.isAdmin ? `<div class="hr-debug"><b>🛠 Debug (admin)</b>
+          ${[["car", "🚗 samochód"], ["turbo", "🌈 turbo"], ["turn", "↩️ ucieczka"], ["die", "💀 śmierć"]].map(([k, n]) => `<label><input type="checkbox" data-hrforce="${k}"${HR.force.has(k) ? " checked" : ""}> ${n} 100%</label>`).join("")}
+          <button class="btn tiny" id="hrDebug"${busy ? " disabled" : ""}>▶ Wyścig testowy (bez stawki)</button></div>` : ""}
         <div class="rl-bet-info">${sel ? `Wybrany: <b>${esc(sel.name)}</b> ×${sel.pays}${stake ? ` — wygrana ${fmt(Math.round(stake * sel.pays))}` : ""}` : "Kliknij konia, na którego stawiasz."}
           ${stake && csSpecialChance(Math.round(stake * (sel?.pays || 1))) ? ' <span class="rl-joker">🃏 Przy wygranej szansa na kartę specjalną</span>' : ""}</div>
         <div class="muted small">Wspólny wyścig startuje co ${Math.round(C.period / 60)} min (zakłady przyjmujemy do ${C.betClose} s przed startem, także w trakcie poprzedniego wyścigu), solo — od razu. Trwa 1–3 minuty. Jak w Mario Kart: konie zbierają skrzynki „?” i rzucają skórki od banana 🍌, strzelają rakietami 🚀, jedzą grzyby 🍄, zwalniają się ślimakiem 🐌 i piorunem ⚡ albo łapią gwiazdę ⭐. Uwaga na tęczowe turbo 🌈, konie, które zawracają, potykają się i padają… oraz na samochód 🚗: gdy wjedzie na tor, nikt nie wygrywa, a stawki wracają. Przegrana: postawione karty przepadają.</div>
@@ -225,13 +230,53 @@ function hrInterp(arr, T, dt, scale) {
   const f = Math.max(0, T) / dt, i = Math.min(arr.length - 1, Math.floor(f)), j = Math.min(arr.length - 1, i + 1), k = f - i;
   return (arr[i] + (arr[j] - arr[i]) * (f >= arr.length - 1 ? 0 : k)) / scale;
 }
+// samochód, nagrobek, wybuch i flaga rysowane kreską (bez czcionki z emoji - nie wszędzie jest dostępna), jak na canvasie 640 × 640
+function hrDrawCar(g) {   // przodem w lewo
+  g.save();
+  g.fillStyle = "#0005"; g.beginPath(); g.ellipse(0, 14, 28, 4.5, 0, 0, Math.PI * 2); g.fill();
+  g.lineJoin = "round"; g.lineWidth = 2; g.strokeStyle = "#5c0f0f";
+  g.fillStyle = "#e53935"; g.beginPath(); g.roundRect(-27, -5, 54, 18, 6); g.fill(); g.stroke();
+  g.fillStyle = "#c62828"; g.beginPath(); g.moveTo(-13, -5); g.lineTo(-7, -17); g.lineTo(12, -17); g.lineTo(19, -5); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = "#bfe8ff"; g.lineWidth = 1.2; g.strokeStyle = "#5c0f0f";
+  g.beginPath(); g.moveTo(-10, -6); g.lineTo(-5.5, -14.5); g.lineTo(2, -14.5); g.lineTo(2, -6); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.moveTo(5, -6); g.lineTo(5, -14.5); g.lineTo(11, -14.5); g.lineTo(15.5, -6); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = "#ffe066"; g.beginPath(); g.arc(-25, 2, 3.2, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#ffe06655"; g.beginPath(); g.moveTo(-28, 2); g.lineTo(-46, -4); g.lineTo(-46, 8); g.closePath(); g.fill();
+  g.fillStyle = "#ff1744"; g.fillRect(24, -1, 4, 6);
+  g.fillStyle = "#fff"; g.fillRect(-27, 8, 54, 2);
+  [-15, 15].forEach(x => { g.fillStyle = "#111"; g.beginPath(); g.arc(x, 13, 6.5, 0, Math.PI * 2); g.fill(); g.fillStyle = "#b0b6bd"; g.beginPath(); g.arc(x, 13, 2.8, 0, Math.PI * 2); g.fill(); });
+  g.restore();
+}
+function hrDrawGrave(g, color) {
+  g.save();
+  g.fillStyle = "#5a3a1a"; g.beginPath(); g.ellipse(0, 9, 11, 4, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#c3c7cf"; g.strokeStyle = "#4a4f57"; g.lineWidth = 1.5; g.lineJoin = "round";
+  g.beginPath(); g.moveTo(-7, 9); g.lineTo(-7, -4); g.arc(0, -4, 7, Math.PI, 0); g.lineTo(7, 9); g.closePath(); g.fill(); g.stroke();
+  g.strokeStyle = "#5d626b"; g.lineWidth = 1.8; g.beginPath(); g.moveTo(0, -9); g.lineTo(0, 2); g.moveTo(-3.5, -5.5); g.lineTo(3.5, -5.5); g.stroke();
+  g.fillStyle = color; g.strokeStyle = "#000b"; g.lineWidth = 1; g.beginPath(); g.arc(0, 6, 2.6, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.restore();
+}
+function hrDrawBoom(g, size) {
+  g.save();
+  g.beginPath();
+  for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, r = i % 2 ? size * 0.45 : size; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+  g.closePath(); g.fillStyle = "#ff9a1f"; g.strokeStyle = "#c62828"; g.lineWidth = 2; g.fill(); g.stroke();
+  g.fillStyle = "#ffe066"; g.beginPath(); g.arc(0, 0, size * 0.42, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+function hrDrawFlag(g) {
+  g.save();
+  g.strokeStyle = "#ddd"; g.lineWidth = 2; g.beginPath(); g.moveTo(-8, 10); g.lineTo(-8, -12); g.stroke();
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) { g.fillStyle = (r + c) % 2 ? "#fff" : "#111"; g.fillRect(-7 + c * 4.5, -12 + r * 4.5, 4.5, 4.5); }
+  g.restore();
+}
+
+// samochód: pozycja w okrążeniach od linii startu (jak konie), null - jeszcze go nie ma
 function hrCarX(race, T) {
   const a = race.car, f = Math.max(0, T) / race.dt, i = Math.min(a.length - 1, Math.floor(f)), j = Math.min(a.length - 1, i + 1);
   if (a[i] == null) return null;
   const x0 = a[i] / race.scale, x1 = (a[j] ?? a[i]) / race.scale;
-  let d = x1 - x0;
-  if (d > 0.5) d -= 1; else if (d < -0.5) d += 1;
-  return ((x0 + d * (f - i)) % 1 + 1) % 1;
+  return x0 + (x1 - x0) * (f >= a.length - 1 ? 0 : f - i);
 }
 
 // stan konia w chwili T, wyliczony ze zdarzeń
@@ -300,8 +345,8 @@ function hrFire(race, T, key) {
       else if (e.k === "bolt") { Sound.zap(); hrBubble("⚡ ZAP!", e.h, T, "#ffe11f"); }
       else if (e.k === "star") { Sound.starup(); hrBubble("⭐ Gwiazda!", e.h, T, "#ffb300"); }
       else if (e.k === "die") { if (e.by === "car") Sound.crash(); else { Sound.sadTrombone(); Sound.neigh(p * 0.7, 0.1, 1.4); hrBubble(hrPick(HR_BUBBLE.die), e.h, T); } }
-      else if (e.k === "car") { Sound.carHorn(); hrBubble("UWAGA! SAMOCHÓD!", null, T, "#ff5252", e.x, 3.2); }
-      else if (e.k === "car_end") hrBubble("…i pojechał", null, T, "#fff", null, 1.8);
+      else if (e.k === "car") { Sound.carHorn(); hrBubble("UWAGA! SAMOCHÓD!", null, T, "#ff5252", 0, 3.2); }
+      else if (e.k === "car_end") { Sound.carHorn(); Sound.win(); confetti(["#ff5252", "#fff", "#222"], 80); hrBubble("🏁 Samochód wygrywa!", null, T, "#ff5252", 0, 3); }
     }
     const fin = hrFinishTime(race);
     if (fin != null && from < fin && T >= fin) {
@@ -373,21 +418,35 @@ function hrDrawFrame(g, race, T, solo) {
   if (race?.car) {
     const cx = hrCarX(race, T);
     if (cx != null) {
-      const a = hrAng(cx), r = (HR_R0 + hrR(9)) / 2, px = HR_C + r * Math.cos(a), py = HR_C + r * Math.sin(a);
+      // zajeżdża spoza toru (od góry, na linię startu), potem jedzie z kierunkiem wyścigu i przejeżdża konie
+      const ev = race.events.find(e => e.k === "car"), entry = Math.min(1, Math.max(0, (T - ev.t) / (ev.go - ev.t)));
+      // tor jazdy samochodu: dojeżdża do toru konia, którego zaraz przejedzie (płynnie między kolejnymi ofiarami)
+      const kills = race.events.filter(e => e.k === "die" && e.by === "car");
+      const prevK = kills.filter(e => e.t <= T).pop(), nextK = kills.find(e => e.t > T);
+      const mid = (HR_R0 + hrR(9)) / 2, laneR = k => (k == null ? mid : hrR(k));
+      const fromR = prevK ? laneR(prevK.h) : mid, toR = nextK ? laneR(nextK.h) : mid;
+      const t0 = prevK ? prevK.t + 0.4 : ev.go, t1 = nextK ? nextK.t : (prevK ? prevK.t + 1.8 : ev.go + 1);
+      const u = Math.min(1, Math.max(0, (T - t0) / Math.max(0.3, t1 - t0))), lane = fromR + (toR - fromR) * (u * u * (3 - 2 * u));
+      const r = 360 + (lane - 360) * (1 - Math.pow(1 - entry, 2));
+      const a = hrAng(cx), px = HR_C + r * Math.cos(a), py = HR_C + r * Math.sin(a);
       carAt = [px, py];
-      const faceRight = Math.sin(a) > 0;      // jedzie pod prąd (przeciwnie do ruchu wskazówek zegara)
+      const fwd = hrCarX(race, T + 0.2) - cx;   // jedzie do przodu (zgodnie z ruchem wskazówek) czy wstecz
+      const right = fwd >= -1e-6 ? -Math.sin(a) > 0 : -Math.sin(a) < 0;
       g.save(); g.translate(px, py + Math.sin(now / 40) * 1.2);
-      if (faceRight) g.scale(-1, 1);          // 🚗 patrzy w lewo
-      g.font = `46px ${HR_FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText("🚗", 0, 0);
+      if (right) g.scale(-1, 1);              // 🚗 patrzy w lewo
+      if (entry >= 1 && cx < race.laps) {     // kłęby spalin z tyłu
+        g.fillStyle = "#ffffff55";
+        for (let k = 0; k < 3; k++) { g.beginPath(); g.arc(34 + k * 9 + ((now / 40) % 9), 6 - k * 2, 3 + k, 0, Math.PI * 2); g.fill(); }
+      }
+      hrDrawCar(g);
       g.restore();
+      if (cx >= race.laps) { g.save(); g.translate(px, py - 34); g.scale(1.4, 1.4); hrDrawFlag(g); g.restore(); }   // meta
     }
     // wybuchy w miejscu śmierci pod kołami
     race.events.forEach(e => {
       if (e.k !== "die" || e.by !== "car" || T < e.t || T > e.t + 1.1) return;
       const k = (T - e.t) / 1.1, x = hrInterp(race.x[e.h], e.t, race.dt, race.scale), [px, py] = hrPosXY(e.h, x);
-      g.save(); g.globalAlpha = 1 - k; g.font = `${24 + k * 22}px ${HR_FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText("💥", px, py - k * 8); g.restore();
+      g.save(); g.globalAlpha = 1 - k; g.translate(px, py - k * 8); g.rotate(k); hrDrawBoom(g, 13 + k * 12); g.restore();
     });
   }
   // dymki
@@ -474,14 +533,15 @@ function hrDrawHorse(g, s, T, race, now) {
   g.translate(px, py);
   g.textAlign = "center"; g.textBaseline = "middle";
   if (st.dead) {
-    const age = T - st.dead;
+    const age = T - st.dead, pop = Math.min(1, age / 0.35);
     g.font = `20px ${HR_FONT}`;
-    if (!st.carDeath) { g.fillText("🪦", 0, 0); }
-    else { g.globalAlpha = 0.9; g.save(); g.rotate(1.2); g.fillText("🐎", 0, 2); g.restore(); }
-    g.fillStyle = h.color; g.beginPath(); g.arc(0, 11, 4.5, 0, Math.PI * 2); g.fill();
-    if (age < 3.5) {   // duszek unosi się do nieba
+    g.save(); g.translate(0, (1 - pop) * 8); g.scale(pop, pop); hrDrawGrave(g, h.color); g.restore();   // nagrobek zostaje do końca wyścigu
+    if (age < 0.8) { g.fillStyle = `rgba(255,255,255,${0.6 - age * 0.7})`; for (let k = -1; k <= 1; k++) { g.beginPath(); g.arc(k * 8, 8 - age * 8, 3 + age * 5, 0, Math.PI * 2); g.fill(); } }
+    if (age < 3.5) {   // duszek z aureolą unosi się do nieba
       g.globalAlpha = Math.max(0, 1 - age / 3.5);
-      g.font = `16px ${HR_FONT}`; g.fillText("👼", Math.sin(age * 3) * 3, -10 - age * 14);
+      const ax = Math.sin(age * 3) * 3, ay = -12 - age * 14;
+      g.fillStyle = "#fff"; g.beginPath(); g.arc(ax, ay, 4, 0, Math.PI * 2); g.fill(); g.fillRect(ax - 3, ay + 2, 6, 6);
+      g.strokeStyle = "#ffd54f"; g.lineWidth = 1.5; g.beginPath(); g.ellipse(ax, ay - 6, 3.5, 1.4, 0, 0, Math.PI * 2); g.stroke();
     }
     g.restore();
     return;
@@ -551,16 +611,17 @@ function hrInfield(g, race, T, solo, sprites) {
     if (fin != null && T >= fin) {
       const w = H[race.winner];
       top = "🏆 WYGRYWA"; big = w.name; sub = `numer ${w.id + 1} · ×${w.pays}`; color = w.color;
+    } else if (race.car && race.events.some(e => e.k === "car_end" && e.t <= T)) {
+      top = "🚗 SAMOCHÓD WYGRYWA"; big = ""; sub = "nikt inny nie dojechał · stawki wracają";
     } else if (race.car && race.events.some(e => e.k === "car" && e.t <= T)) {
-      top = "🚨 NA TORZE SAMOCHÓD 🚨"; big = ""; sub = "";
+      top = "🚨 NA TORZE SAMOCHÓD 🚨"; big = ""; sub = lead ? `ostatni żywy: ${lead.h.name}` : "pędzi po zwycięstwo…";
     } else {
       const lap = lead ? Math.min(race.laps, Math.floor(Math.max(0, lead.x)) + 1) : 1;
       top = "WYŚCIG TRWA"; big = `Okrążenie ${lap}/${race.laps}`; sub = lead ? `prowadzi: ${lead.h.name}` : "";
     }
-    if (race.car && race.winner < 0 && T > race.dur - 6) { top = "🚗 NIKT NIE WYGRYWA"; big = ""; sub = "stawki wracają"; }
   } else {
     if (race.winner >= 0) { const w = H[race.winner]; top = "🏆 WYGRAŁ"; big = w.name; sub = `numer ${w.id + 1} · ×${w.pays}`; color = w.color; }
-    else { top = "🚗 NIKT NIE WYGRAŁ"; big = ""; sub = "samochód zrobił swoje · stawki wracają"; }
+    else { top = "🚗 SAMOCHÓD WYGRAŁ"; big = ""; sub = "nikt inny nie dojechał · stawki wracają"; }
   }
   g.save();
   g.textAlign = "center"; g.textBaseline = "middle";
@@ -696,12 +757,33 @@ async function hrSolo() {
   hrStart();
 }
 
+async function hrDebug() {
+  if (CS.spinning || HR.solo) return;
+  Sound.unlock();
+  let res;
+  try { res = await api("/api/casino/horses/debug", { force: [...HR.force] }); }
+  catch (e) { Sound.error(); toast(e.message, true); return; }
+  CS.spinning = true;
+  HR.last = null;
+  HR.solo = { race: res.race, res: { debug: true }, t0: performance.now(), done: false };
+  HR.bubbles = []; HR.nextNeigh = 1;
+  hrRenderPanel();
+  hrStart();
+}
+
 // koniec wyścigu solo: stosujemy wynik (serwer zapisał go od razu) i pokazujemy go pod torem
 async function hrSoloFinish(silent = false) {
   const S0 = HR.solo;
   if (!S0 || S0.done) return;
   S0.done = true;
-  const res = S0.res, h = hrHorses()[res.horse];
+  const res = S0.res;
+  if (res.debug) {   // wyścig testowy admina: nic się nie zmienia
+    HR.last = { kind: "debug", winner: S0.race.winner };
+    HR.solo = null; CS.spinning = false;
+    if (currentView() === "casino" && CS.tab === "horses") hrRenderPanel();
+    return;
+  }
+  const h = hrHorses()[res.horse];
   if (res.win) {
     S.items = [...res.items.slice().reverse(), ...S.items];
     noteCollected(res.items);
@@ -732,6 +814,10 @@ async function hrSoloFinish(silent = false) {
 
 function bindHorses() {
   const body = $("#casinoBody");
+  body.addEventListener("change", e => {
+    const f = e.target.dataset?.hrforce;
+    if (f) e.target.checked ? HR.force.add(f) : HR.force.delete(f);
+  });
   body.addEventListener("click", e => {
     if (CS.tab !== "horses") return;
     const t = e.target;
@@ -739,6 +825,7 @@ function bindHorses() {
     if (row && !CS.spinning) { HR.horse = +row.dataset.hrhorse; Sound.click(); Sound.neigh(hrHorses()[HR.horse].pitch, 0.06, 0.6); return hrRenderPanel(); }
     if (t.closest("#hrBet")) return hrBet();
     if (t.closest("#hrSolo")) return hrSolo();
+    if (t.closest("#hrDebug")) return hrDebug();
     if (t.closest("#hrSkip") && HR.solo) { HR.solo.t0 = performance.now() - (HR.solo.race.dur + HR_INTRO) * 1000; return; }
     const cancel = t.closest("[data-hrcancel]");
     if (cancel) return hrCancel(+cancel.dataset.hrcancel);

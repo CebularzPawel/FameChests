@@ -2926,6 +2926,14 @@ def admin_horses_save():
     return jsonify({"ok": True, "horses": horse_list()})
 
 
+@app.post("/api/casino/horses/debug")
+@admin_required
+def casino_horses_debug():
+    """Tryb debug (admin): wyścig testowy bez stawki, z zdarzeniami wymuszonymi na 100% (car / turbo / turn / die)."""
+    force = [f for f in (request.get_json(force=True) or {}).get("force") or [] if f in ("car", "turbo", "turn", "die")]
+    return jsonify({"race": horses.simulate(secrets.randbits(63), force), "force": force})
+
+
 def horse_forget_user(user_id):
     """Usuwany gracz: jego otwarte zakłady znikają razem z postawionymi kartami (są w ESCROW)."""
     for B in db().execute("SELECT * FROM horse_bets WHERE user_id = ? AND status IN ('open', 'settling')", (user_id,)).fetchall():

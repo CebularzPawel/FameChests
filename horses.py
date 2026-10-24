@@ -21,8 +21,10 @@ def _circ(d):
     return d % 1.0
 
 
-def simulate(seed):
+def simulate(seed, force=()):
+    """force (tryb debug, tylko admin): zdarzenia, które mają się wydarzyć na pewno - "car", "turbo", "turn", "die"."""
     rnd = random.Random(seed)
+    chance = lambda key, name: name in force or rnd.random() < R[key]
     n, dt, laps = len(HORSES), R["dt"], R["laps"]
     D = rnd.uniform(*R["duration"])          # mniej więcej tyle jedzie lider
     v0 = laps / D
@@ -31,17 +33,13 @@ def simulate(seed):
 
     # zaplanowane zdarzenia: (czas, rodzaj, koń) - wykonują się, jeśli koń jeszcze jedzie
     plan = []
-    if rnd.random() < R["turboChance"]:
-        h = rnd.randrange(n)
-        plan.append((D * rnd.uniform(0.1, 0.7), "turbo", h))
-        if rnd.random() < R["turboAgain"]:
-            plan.append((D * rnd.uniform(0.1, 0.7), "turbo", rnd.choice([i for i in range(n) if i != h])))
-    if rnd.random() < R["turnChance"]:
+    if "turbo" in force:     # turbo tylko ze skrzynki z przedmiotem; w trybie debug (admin) można je wymusić
+        plan.append((D * rnd.uniform(0.1, 0.7), "turbo", rnd.randrange(n)))
+    if chance("turnChance", "turn"):
         plan.append((D * rnd.uniform(0.1, 0.8), "turn", rnd.randrange(n)))
-    if rnd.random() < R["dieChance"]:
+    if chance("dieChance", "die"):
         plan.append((D * rnd.uniform(0.1, 0.9), "die", rnd.randrange(n)))
-    car_at = D * rnd.uniform(0.25, 0.65) if rnd.random() < R["carChance"] else None
-    car_x0 = rnd.random()
+    car_at = D * (rnd.uniform(0.12, 0.3) if "car" in force else rnd.uniform(0.15, 0.45)) if chance("carChance", "car") else None
     plan.sort()
 
     # skrzynki z przedmiotami: bx[koń][okrążenie][rząd] - czy jest (pierwsze okrążenie zawsze, potem losowo)
@@ -57,6 +55,15 @@ def simulate(seed):
     item_seq = 0
     item_names = list(HORSE_ITEMS)
 
+    def hurt(j, d, cause, t, **extra):
+        """Koń przewraca się na d sekund (banan, rakieta, potknięcie) - z szansą tripDeath ginie na torze (nagrobek)."""
+        if rnd.random() < R["tripDeath"]:
+            state[j] = "dead"
+            events.append({"t": round(t, 2), "k": "die", "h": j, "by": cause})
+        else:
+            down[j] = t + d
+            events.append({"t": round(t, 2), "k": "trip", "h": j, "by": cause, "d": d, **extra})
+
     x = [0.0] * n
     f = [0.0] * n                              # odchył formy (szum)
     dr = [1] * n                               # kierunek: 1 do przodu, -1 zawrócił
@@ -67,7 +74,7 @@ def simulate(seed):
     fin_t = [None] * n
     xs = [[] for _ in range(n)]
     events = []
-    car = None                                 # [pozycja, czas wjazdu]
+    car = None                                 # samochód: x = okrążenia od linii startu (jedzie od zera, jak konie), go = kiedy rusza
     car_xs = []
     car_dead = False
     winner, end_t = -1, None
@@ -77,7 +84,7 @@ def simulate(seed):
         t = i * dt
         for h in range(n):
             xs[h].append(round(x[h] * SCALE))
-        car_xs.append(round(car[0] * SCALE) if car else None)
+        car_xs.append(round(car["x"] * SCALE) if car else None)
         if end_t is not None and t >= end_t:
             break
         if t > max_t:
@@ -88,7 +95,7 @@ def simulate(seed):
             if state[h] != "run" or dr[h] < 0:
                 continue
             if kind == "turbo" and turbo[h] <= 0:
-                turbo[h] = rnd.uniform(*R["turboLaps"])
+                turbo[h] = R["turboLaps"]
                 events.append({"t": round(t, 2), "k": "turbo", "h": h})
             elif kind == "turn":
                 dr[h] = -1
@@ -98,8 +105,8 @@ def simulate(seed):
                 state[h] = "dead"
                 events.append({"t": round(t, 2), "k": "die", "h": h})
         if car_at is not None and car is None and t >= car_at:
-            car = [car_x0, t]
-            events.append({"t": round(t, 2), "k": "car", "x": round(car_x0, 3)})
+            car = {"x": 0.0, "t0": t, "go": t + R["carEntry"], "done": False}   # zajeżdża spoza toru na linię startu
+            events.append({"t": round(t, 2), "k": "car", "go": round(t + R["carEntry"], 2)})
         # --- ruch koni
         prev = x[:]
         for h in range(n):
@@ -187,6 +194,9 @@ def simulate(seed):
                 ev = {"t": round(t, 2), "k": "rocket", "h": h, "to": tgt, "id": item_seq, "x0": round(x[h], 4)}
                 events.append(ev)
                 rockets.append({"id": item_seq, "x": x[h], "to": tgt, "t": t, "ev": ev})
+            elif it == "turbo":      # tęczowe turbo: ok. ćwierć okrążenia bardzo szybko, nic nie ruszy konia
+                turbo[h] = R["turboLaps"]
+                events.append({"t": round(t, 2), "k": "turbo", "h": h})
             elif it == "mushroom":
                 d = round(rnd.uniform(2.5, 3.5), 1)
                 boost_until[h], boost_mult[h] = t + d, 2.2
@@ -215,9 +225,7 @@ def simulate(seed):
                 if immune(j):
                     ended = False
                 else:
-                    d = round(rnd.uniform(1.6, 2.6), 1)
-                    down[j] = t + d
-                    events.append({"t": round(t, 2), "k": "trip", "h": j, "by": "banana", "d": d})
+                    hurt(j, round(rnd.uniform(1.6, 2.6), 1), "banana", t)
                     ended = True
             elif t - b["t"] > 25 or state[j] != "run":
                 ended = False
@@ -238,9 +246,7 @@ def simulate(seed):
                 rk["ev"]["t1"] = round(t, 2)
                 rk["ev"]["res"] = res
                 if res == "hit":
-                    d = round(rnd.uniform(2.2, 3.6), 1)
-                    down[j] = t + d
-                    events.append({"t": round(t, 2), "k": "trip", "h": j, "by": "rocket", "d": d})
+                    hurt(j, round(rnd.uniform(2.2, 3.6), 1), "rocket", t)
         # --- potknięcia o siebie: koń tuż za innym koniem jadącym w tę samą stronę może upaść
         run = [h for h in range(n) if state[h] == "run" and dr[h] > 0 and t >= down[h]] if t > 10 else []   # na starcie tłok - bez upadków
         for a in run:
@@ -250,31 +256,35 @@ def simulate(seed):
                 gap = _circ(x[a] - x[b])          # b jest tuż za a
                 if 0 < gap < R["tripGap"] and turbo[a] <= 0 and turbo[b] <= 0 and rnd.random() < R["tripChance"]:
                     d = round(rnd.uniform(2.5, 4.5), 1)
-                    down[b] = t + d
-                    events.append({"t": round(t, 2), "k": "trip", "h": b, "o": a, "d": d})
-                    if rnd.random() < 0.3:
-                        down[a] = t + d * 0.7
-                        events.append({"t": round(t, 2), "k": "trip", "h": a, "o": b, "d": round(d * 0.7, 1)})
-        # --- samochód jedzie pod prąd i przejeżdża konie, które spotka
-        if car is not None:
-            old = car[0]
-            car[0] = (car[0] - 0.42 * dt) % 1.0
-            for h in range(n):
-                if state[h] == "dead":
-                    continue
-                u_old, u_new = _circ(old - prev[h]), _circ(car[0] - x[h])
-                if u_new > u_old or u_new < 0.025:
-                    state[h] = "dead"
-                    car_dead = True
-                    events.append({"t": round(t, 2), "k": "die", "h": h, "by": "car"})
-            if all(s == "dead" for s in state):
-                car_dead = True
-            if t - car[1] > 14 or all(s == "dead" for s in state):
+                    hurt(b, d, "horse", t, o=a)
+                    if rnd.random() < 0.3 and state[a] == "run":
+                        hurt(a, round(d * 0.7, 1), "horse", t, o=b)
+        # --- samochód zajeżdża na tor, jedzie do najbliższego żywego konia (do przodu albo wstecz), przejeżdża go i rusza do
+        # następnego; gdy wszystkie leżą - sam kończy wyścig, dojeżdżając do mety (nikt inny nie wygrywa, stawki wracają)
+        if car is not None and not car["done"] and t >= car["go"]:
+            step = R["carSpeed"] * v0 * dt
+            alive = [h for h in range(n) if state[h] not in ("dead", "fin")]
+            if alive:
+                if t >= car.get("hit", 0):
+                    tgt = min(alive, key=lambda k: abs(x[k] - car["x"]))
+                    dx = x[tgt] - car["x"]
+                    if abs(dx) <= max(step, 0.01):
+                        car["x"] = x[tgt]
+                        state[tgt] = "dead"
+                        car_dead = True
+                        car["hit"] = t + 0.4
+                        events.append({"t": round(t, 2), "k": "die", "h": tgt, "by": "car"})
+                    else:
+                        car["x"] += step if dx > 0 else -step
+            else:
+                car["x"] += step
+            if not alive and car["x"] >= laps:
+                car["x"], car["done"] = float(laps), True
                 events.append({"t": round(t, 2), "k": "car_end"})
-                car = None
-                car_at = None
+                if end_t is None:
+                    end_t = t + R["tail"]
         # --- koniec: nikt już nie jedzie do mety
-        if end_t is None and not any(s == "run" and dr[h] > 0 for h, s in enumerate(state)):
+        if end_t is None and car is None and not any(s == "run" and dr[h] > 0 for h, s in enumerate(state)):
             end_t = t + 4
         i += 1
     out = {h: s for h, s in enumerate(state) if s in ("dead", "left")}
