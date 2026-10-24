@@ -325,6 +325,31 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-silver img { filter: grayscale(1) brightness(1.1) contrast(1.1); }
 .pick.v-silver { box-shadow: inset 0 0 0 2px #dfe6f0, inset 0 -26px 26px -18px var(--rc); }
 
+/* Platynowa - najdroższy z metali (po Złotej): jaśniejsza i bielsza niż Srebrna, mocniejszy połysk, chłodny
+   błękitno-fioletowy refleks w ramce i na zdjęciu */
+.var-tag.vt-platinum, .ph.vt-platinum { background: linear-gradient(90deg, #8a93a6, #ffffff 35%, #dfe4ff 55%, #b3bccc); color: #1a2030; text-shadow: none; box-shadow: 0 0 .7em #eef2ff, 0 0 1.4em #c9d4ff88; }
+.vdot.vt-platinum { background: linear-gradient(135deg, #ffffff, #c9cfdc 50%, #e6e2ff); box-shadow: 0 0 5px #eef2ff; }
+.odd.odd-v.vt-platinum { border-left-color: #e6ebff; }
+.card.v-platinum {
+  --frame: linear-gradient(115deg, #8c93a8, #ffffff 14%, #cfe3ff 26%, #f6f6ff 38%, #e6d8ff 48%, #ffffff 54%, #a7b0c4 66%, #dff7f2 80%, #ffffff 90%, #8c93a8);
+  box-shadow: 0 6px 18px #000a, 0 0 26px #ffffffcc, 0 0 54px #c9d8ffaa;
+}
+.card.v-platinum::before { background: var(--frame); background-size: 250% 250%; animation: goldShift 2.8s ease-in-out infinite; }
+.card.v-platinum .card-inner {
+  background: linear-gradient(125deg, transparent 20%, #dbe8ff66 34%, #efe2ff55 44%, transparent 56%, #dcfbf355 72%, transparent 84%),
+              repeating-linear-gradient(90deg, #ffffff30 0 1px, transparent 1px 3px),
+              linear-gradient(160deg, #ffffff, #e9ecf4 30%, #ffffff 52%, #dde2ec 78%, #fafbff);
+  color: #1a2030;
+}
+.card.v-platinum .card-photo img, .r-secret.v-platinum .sc-art img { filter: grayscale(1) brightness(1.2) contrast(1.05) sepia(.3) hue-rotate(185deg) saturate(1.6); }
+.card.v-platinum .card-name { background: linear-gradient(180deg, #4a5266, #141826); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.v-platinum :is(.card-sub, .card-stats, .card-foot) { color: #262c3c; }
+.card.v-platinum .card-photo { border-image: linear-gradient(135deg, #ffffff, #cfe3ff, #a3abbd, #efe2ff, #ffffff) 1; box-shadow: 0 0 .7em #ffffffcc, 0 0 1.4em #c9d8ff88; }
+.card.v-platinum .gold-sheen { opacity: 1; filter: brightness(1.15); }
+.r-secret.v-platinum .sc-border { background: linear-gradient(135deg, #ffffff, #9aa3b6 40%, #f1eeff 60%, #7a8294); animation: none; }
+.pick.v-platinum img { filter: grayscale(1) brightness(1.15) contrast(1.1) sepia(.1) hue-rotate(195deg); }
+.pick.v-platinum { box-shadow: inset 0 0 0 2px #f2f4ff, 0 0 8px #e6ebff88, inset 0 -26px 26px -18px var(--rc); }
+
 /* Brązowa - jak Srebrna i Złota, ale z ciepłego, ciemniejszego brązu (najczęstsza z trzech metalowych) */
 .var-tag.vt-bronze, .ph.vt-bronze { background: linear-gradient(90deg, #6b3410, #f6c08e, #a65e2a); color: #2a1204; text-shadow: none; box-shadow: 0 0 .6em #e0985a; }
 .vdot.vt-bronze { background: #cd7f32; }
@@ -457,7 +482,7 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 @keyframes glint { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); } 45% { opacity: 1; transform: scale(1.15) rotate(45deg); } 60% { opacity: 0; } }
 .pick:is(.v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond) { box-shadow: inset 0 0 0 2px var(--gem-2), 0 0 10px color-mix(in srgb, var(--gem-2) 60%, transparent), inset 0 -26px 26px -18px var(--rc); }
 .pick:is(.v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond) img { filter: grayscale(.35) brightness(1.05) contrast(1.1) sepia(.4) hue-rotate(var(--gem-hue)) saturate(2.2); }
-.pick:is(.v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-silver)::after {
+.pick:is(.v-diamond, .v-emerald, .v-ruby, .v-amethyst, .v-sapphire, .v-blackdiamond, .v-silver, .v-platinum)::after {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(115deg, transparent 30%, #ffffff60 45%, transparent 60%); background-size: 250% 100%;
   animation: photoGlint 2.6s ease-in-out infinite;

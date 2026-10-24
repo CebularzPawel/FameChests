@@ -32,6 +32,8 @@ VARIANTS = {
     "pearl":   {"name": "Perłowa",      "chance": 0.015, "mult": 5.0, "off": True,
                 "desc": "Cała karta z masy perłowej - mleczna biel z różowo-miętowo-błękitnymi refleksami, które przesuwają się po karcie."},
     "gold":    {"name": "Złota",        "chance": 0.01,  "mult": 7.5},
+    "platinum": {"name": "Platynowa",   "chance": 0.006, "mult": 10.0, "off": True,   # metale: najdroższy po Złotej
+                "desc": "Karta z platyny - jasny, chłodny metal o mocniejszym połysku niż srebro, z delikatnym błękitno-fioletowym refleksem."},
     "vintage": {"name": "Vintage",      "chance": 0.008, "mult": 8.5, "off": True,
                 "desc": "Fotografia z XIX wieku: zdjęcie w sepii na kremowym kartonie ze złoconym brzegiem i pieczątką atelier."},
     # wyjątkowy: tylko ze skrzynek z tym wariantem, karta musi mieć ustawiony kraj (pole "country").

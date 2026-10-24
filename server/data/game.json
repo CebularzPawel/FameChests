@@ -54,6 +54,13 @@
    "chance": 0.01,
    "mult": 7.5
   },
+  "platinum": {
+   "name": "Platynowa",
+   "chance": 0.006,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Karta z platyny - jasny, chłodny metal o mocniejszym połysku niż srebro, z delikatnym błękitno-fioletowym refleksem."
+  },
   "vintage": {
    "name": "Vintage",
    "chance": 0.008,

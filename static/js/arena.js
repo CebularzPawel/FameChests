@@ -416,7 +416,7 @@ async function arKoFx(units) {
 
 // wejście karty na planszę - efekt zależy od wariantu (tylko wygląd)
 const AR_ENTER_COLORS = {
-  normal: ["#ffffff", "#c9d6ff"], bw: ["#000", "#fff", "#888"], reverse: RAINBOW, silver: ["#e6ebf2", "#b8c2d0", "#fff"],
+  normal: ["#ffffff", "#c9d6ff"], bw: ["#000", "#fff", "#888"], reverse: RAINBOW, silver: ["#e6ebf2", "#b8c2d0", "#fff"], platinum: ["#fff", "#e6ebff", "#c8cede"],
   bronze: ["#cd7f32", "#f0b27a", "#fff"], pearl: ["#fff", "#ffd1e4", "#d3fff1", "#d3e2ff"], vintage: ["#efe4cb", "#b8913d", "#6b4c22"],
   slime: ["#7dff3a", "#c6ff6c", "#3fbf1a"], matte: ["#2a2a2a", "#5c5c5c", "#fff"], racing: ["#c8202f", "#f2e6cf", "#161210"], bismuth: ["#ff4fb5", "#ffd23f", "#3fe0ff", "#7a5cff"],
   digital: ["#3dff6e", "#0f6a26", "#eaffea"], cyber: ["#ff2bd6", "#00e5ff", "#fcee0a"], fade: ["#f9e45b", "#f05ba5", "#5aa8f5"], wanted: ["#f2e2b8", "#b8955a", "#2a1608"],
@@ -440,7 +440,7 @@ async function arEnterFx(unit) {
   const [x, y] = arCenter(el);
   const special = v !== "normal";
   fx().burst(x, y, special ? 130 : 30, AR_ENTER_COLORS[v] || AR_ENTER_COLORS.normal, { speed: special ? 13 : 6, stars: special ? 0.4 : 0.1 });
-  if (["gold", "diamond", "emerald", "ruby", "amethyst", "sapphire", "blackdiamond", "negative", "royal", "flag", "rzulty"].includes(v)) Sound.gold(); else Sound.land(person(unit.pid).rarity === "secret" ? "ultra" : person(unit.pid).rarity);
+  if (["gold", "platinum", "diamond", "emerald", "ruby", "amethyst", "sapphire", "blackdiamond", "negative", "royal", "flag", "rzulty"].includes(v)) Sound.gold(); else Sound.land(person(unit.pid).rarity === "secret" ? "ultra" : person(unit.pid).rarity);
   await arWait(380);
   el.classList.remove("ar-enter", "ar-enter-" + v);
 }

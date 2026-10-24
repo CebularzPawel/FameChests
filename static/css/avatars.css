@@ -48,6 +48,7 @@
 .avv-glass img { filter: saturate(1.6) contrast(1.1); box-shadow: 0 0 0 2px #2a1d12, 0 0 0 4px #3fa0a0 !important; }
 .avv-pixel img { filter: url(#pxTile); image-rendering: pixelated; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #13226b !important; }
 .avv-popart img { filter: grayscale(1) contrast(2.2) brightness(1.1) sepia(1) hue-rotate(290deg) saturate(5); box-shadow: 0 0 0 2px #000, 0 0 0 4px #ffe100 !important; }
+.avv-platinum img { filter: grayscale(1) brightness(1.15) contrast(1.12) sepia(.12) hue-rotate(195deg); box-shadow: 0 0 0 2px #f2f4ff, 0 0 12px #e6ebff !important; }
 .avv-silver img { filter: grayscale(1) brightness(1.1) contrast(1.15) sepia(.15) hue-rotate(180deg); box-shadow: 0 0 0 2px #e6ebf2, 0 0 10px #dfe6f0 !important; }
 .avv-holo::after {
   background: linear-gradient(115deg, #ff000066, #ffff0066, #00ff0066, #00ffff66, #0000ff66, #ff00ff66, #ff000066);
@@ -60,7 +61,7 @@
 .avv-clear img { opacity: .62; box-shadow: 0 0 0 2px #ffffffb0, 0 0 10px #bfefffaa !important; }
 .avv-negative img { filter: invert(1); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000, 0 0 12px #00e5ff !important; }
 .av-vname { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: #000a; }
-.av-vname.vt-gold { color: #ffcf3f; } .av-vname:is(.vt-diamond, .vt-emerald, .vt-ruby, .vt-amethyst, .vt-sapphire, .vt-blackdiamond) { color: var(--gem-3); } .av-vname.vt-silver { color: #dfe6f0; } .av-vname.vt-steel { color: #b8c2ca; } .av-vname.vt-bronze { color: #e0985a; }
+.av-vname.vt-gold { color: #ffcf3f; } .av-vname:is(.vt-diamond, .vt-emerald, .vt-ruby, .vt-amethyst, .vt-sapphire, .vt-blackdiamond) { color: var(--gem-3); } .av-vname.vt-silver { color: #dfe6f0; } .av-vname.vt-platinum { color: #f2f4ff; } .av-vname.vt-steel { color: #b8c2ca; } .av-vname.vt-bronze { color: #e0985a; }
 .av-vname.vt-pearl { color: #f6dbe7; } .av-vname.vt-vintage { color: #efe2c2; } .av-vname.vt-marble { color: #f3efe6; } .av-vname.vt-toxic { color: #b6ff3a; }
 .av-vname.vt-slime { color: #7dff3a; } .av-vname.vt-matte { color: #8a8a8a; } .av-vname.vt-racing { color: #ff5a64; } .av-vname.vt-bismuth { color: #ff8ad0; }
 .av-vname.vt-digital { color: #3dff6e; } .av-vname.vt-cyber { color: #ff2bd6; } .av-vname.vt-fade { color: #f9a0d0; } .av-vname.vt-wanted { color: #ddc28a; }
