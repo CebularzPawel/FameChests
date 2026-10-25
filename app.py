@@ -706,9 +706,11 @@ def item_json(row):
 
 def note_collected(user_id, person_id, variant, source="transfer"):
     """Karta trafia na stałe do klasera gracza (zostaje tam także po sprzedaży). Zapamiętujemy, kiedy i skąd gracz zdobył
-    ją pierwszy raz (drop / contract / upgrade / casino; transfer = rynek, jackpot; trade = wymiana) - do Hall of Fame."""
-    db().execute("INSERT INTO user_collected (user_id, person_id, variant, at, source) VALUES (?, ?, ?, ?, ?) "
-                 "ON CONFLICT DO NOTHING", (user_id, person_id, variant, time.time(), source))
+    ją pierwszy raz (drop / contract / upgrade / casino; transfer = rynek, jackpot; trade = wymiana) - do Hall of Fame.
+    Zwraca True, gdy gracz ma ją pierwszy raz."""
+    cur = db().execute("INSERT INTO user_collected (user_id, person_id, variant, at, source) VALUES (?, ?, ?, ?, ?) "
+                       "ON CONFLICT DO NOTHING", (user_id, person_id, variant, time.time(), source))
+    return cur.rowcount == 1
 
 
 def collected_list(user_id):
@@ -720,12 +722,12 @@ def insert_item(person_id, variant, source="drop"):
     """Nowa karta gracza (source: drop = ze skrzynki, contract, upgrade, joker = karta specjalna z kasyna, link = z linku
     od admina - do Hall of Fame; casino - zwykła wygrana w kasynie, bez Hall of Fame)."""
     now = time.time()
-    note_collected(uid(), person_id, variant, source)
+    new_for_me = note_collected(uid(), person_id, variant, source)
     new_id = db().execute("INSERT INTO items (person_id, holo, variant, created_at, user_id) VALUES (?, ?, ?, ?, ?) "
                           "RETURNING id", (person_id, int(variant != "normal"), variant, now, uid())).fetchone()[0]
     return {"id": new_id, "person": person_id, "variant": variant,
             "value": card_value(catalog.PEOPLE[person_id], variant), "created": now, "fav": False,
-            "first": note_hall_of_fame(person_id, variant, source, now) if source != "casino" else False}
+            "first": note_hall_of_fame(person_id, variant, source, now, new_for_me) if source != "casino" else False}
 
 
 def hidden_from_ranking(u):
@@ -733,9 +735,10 @@ def hidden_from_ranking(u):
     return bool(u["banned"] or u["ranking_hidden"] or u["money_generated"])
 
 
-def note_hall_of_fame(person_id, variant, source, now):
+def note_hall_of_fame(person_id, variant, source, now, new_for_me=True):
     """Hall of Fame: kto pierwszy zdobył tę kartę w tym wariancie (i kiedy) + ile ich w ogóle wypadło.
-    Zwraca True, gdy gracz trafia do Hall of Fame jako pierwszy (ukryci gracze się nie liczą - liczy się pierwszy widoczny)."""
+    Zwraca True, gdy gracz trafia do Hall of Fame jako pierwszy (ukryci gracze się nie liczą - liczy się pierwszy widoczny).
+    new_for_me: gracz nie miał wcześniej tej karty w tym wariancie (note_collected)."""
     cur = db().execute("INSERT INTO hall_of_fame (person_id, variant, first_user_id, first_at, source, drops) "
                        "VALUES (?, ?, ?, ?, ?, 0) ON CONFLICT (person_id, variant) DO NOTHING",
                        (person_id, variant, uid(), now, source))
@@ -744,9 +747,16 @@ def note_hall_of_fame(person_id, variant, source, now):
         return False
     if cur.rowcount == 1:
         return True
-    # pierwszy był gracz ukryty w rankingu - jestem pierwszym widocznym, jeśli nikt widoczny nie miał jej wcześniej
+    # karta jest już w Hall of Fame - tak samo jak strona Hall of Fame (hall_of_fame()): pierwszy jest gracz z tabeli,
+    # a tylko gdy to gracz ukryty w rankingu, pierwszy widoczny z user_collected (hof_first)
+    row = db().execute("SELECT first_user_id FROM hall_of_fame WHERE person_id = ? AND variant = ?", (person_id, variant)).fetchone()
+    holder = row and row["first_user_id"] and db().execute("SELECT * FROM users WHERE id = ?", (row["first_user_id"],)).fetchone()
+    # gracz, który miał już tę kartę (choćby z kasyna albo z rynku), nie jest "pierwszy" przy kolejnej sztuce
+    if not new_for_me or not (holder and hidden_from_ranking(holder)):
+        return False
+    # brak widocznego wpisu (stare wpisy bez daty, karta tylko z kasyna / rynku) NIE znaczy, że jestem pierwszy
     first = hof_first(person_id, variant)
-    return first is None or first[0] == uid()
+    return first is not None and first[0] == uid()
 
 
 def note_drops(items, kind="drop"):
@@ -3784,7 +3794,7 @@ def unique_id(base, taken):
 def admin_card_json(p):
     return dict({k: p.get(k) for k in ("id", "name", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2",
                                        "kind1", "kind2", "abilities", "arena", "country", "source", "fixedVariant", "style",
-                                       "subtitle", "desc", "texts", "crate", "crates", "number", "builtin", "modified")},
+                                       "subtitle", "desc", "texts", "crate", "crates", "exclusive", "number", "builtin", "modified")},
                 wiki=list(p["wiki"]) if p.get("wiki") else None,
                 hasImage=bool(images.find(p["id"])), hasAlt=bool(images.find(p["id"], True)),
                 cardVariants=catalog.photo_variants(p["id"]), variantPhotos=variant_photos(p["id"]),
@@ -4037,6 +4047,8 @@ def admin_save_card():
     wiki_title = (f.get("wiki_title") or "").strip()
     fields = {
         "name": name[:60], "crate": crate, "crates": crates, "rarity": f["rarity"], "type": f["type"],
+        # skrzynki, w których karta jest ekskluzywna (nie wypada z kasyna, ulepszacza, kuźni, wyścigów)
+        "exclusive": [c for c in dict.fromkeys(f.getlist("exclusive")) if c in crates],
         "hp": max(0, min(9999, hp)), "dmg": max(0, min(9999, dmg)),
         "attack": (f.get("attack") or "Atak").strip()[:40],
         "attack2": (f.get("attack2") or "").strip()[:40] or None,

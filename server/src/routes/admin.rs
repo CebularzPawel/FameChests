@@ -595,6 +595,9 @@ pub async fn admin_save_card(State(st): State<AppState>, Admin(me): Admin, mp: M
     fields.insert("name".into(), json!(name.truncate_chars(60)));
     fields.insert("crate".into(), json!(main_crate));
     fields.insert("crates".into(), json!(crates));
+    // skrzynki, w których karta jest ekskluzywna (nie wypada z kasyna, ulepszacza, kuźni, wyścigów)
+    let exclusive: Vec<&str> = form.list("exclusive").filter(|c| crates.iter().any(|x| x == c)).collect();
+    fields.insert("exclusive".into(), json!(exclusive));
     fields.insert("rarity".into(), json!(rarity));
     fields.insert("type".into(), json!(type_));
     fields.insert("hp".into(), json!(hp.clamp(0, 9999)));

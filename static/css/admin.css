@@ -101,6 +101,10 @@ fieldset .chk { display: flex; margin: 4px 0; color: var(--text); font-size: 14p
 .a-user-checks, .a-crate-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
 .a-crate-checks { flex-direction: column; gap: 4px; }
 .a-crate-checks .chk { color: var(--text); font-size: 14px; }
+.a-crate-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.a-crate-row .a-excl { font-size: 13px; gap: 3px; filter: grayscale(1); opacity: .6; }
+.a-crate-row .a-excl:has(input:checked) { filter: none; opacity: 1; }
+.a-crate-row .a-excl:has(input:disabled) { opacity: .4; }
 .a-weights label { border-left: 3px solid var(--rc); padding-left: 8px; }
 .a-wname { color: var(--rc); font-weight: 700; }
 .a-user.banned { opacity: .7; background: repeating-linear-gradient(45deg, #3a1520 0 10px, var(--panel2) 10px 20px); }

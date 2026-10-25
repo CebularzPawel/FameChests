@@ -154,6 +154,10 @@ VARIANTS = {
                 "desc": "Płynne srebro: przelewające się lustrzane plamy, chromowe sople, z których kapią krople, i kałuża rtęci na dole."},
     "californium": {"name": "Kalifornowa", "chance": 0.003, "mult": 16.0, "off": True,
                 "desc": "Źródło neutronów: za zdjęciem rozżarzony do białości rdzeń, z którego na wszystkie strony lecą srebrne smugi neutronów."},
+    "files":   {"name": "Akta",         "chance": 0.009, "mult": 7.5, "off": True,
+                "desc": "Tekturowa teczka ze ściśle tajnymi aktami: zakładka z sygnaturą, zdjęcie przypięte spinaczem, czerwona pieczątka ŚCIŚLE TAJNE i napisy z maszyny do pisania."},
+    "copper":  {"name": "Miedziana",    "chance": 0.012, "mult": 6.5, "off": True,
+                "desc": "Szczotkowana miedź, która na oczach pokrywa się patyną: ciemnieje, wykwitają zielone plamy, a ramka i zdjęcie zielenieją razem z nią - i znów lśni."},
     "reflective": {"name": "Odblaskowa", "chance": 0.014, "mult": 5.5, "off": True,
                 "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
@@ -780,6 +784,13 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 15, "date": "2026-10-25", "title": "Jednoręki bandyta",
+     "items": [
+         "🎰 Nowa gra w 🎰 <b>Kasynie</b>: <b>Jednoręki bandyta</b>. Postaw karty, chwyć kulkę dźwigni i <b>pociągnij ją w dół</b> - bębny ruszą.",
+         "🍒 Liczy się środkowa linia: trzy takie same symbole wygrywają od <b>×4</b> (wisienki) do <b>×150</b> (siódemki), a dwie wisienki zwracają stawkę. "
+         "Przy wygranej możesz też dostać kartę specjalną 🃏 Jokerową.",
+         "🥇 Poprawka: komunikat „Pierwsza taka karta w grze” nie pokazuje się już przy kartach, które ktoś zdobył wcześniej.",
+     ]},
     {"v": 14, "date": "2026-10-24", "title": "Wyścigi konne w kasynie",
      "items": [
          "🐎 Nowa gra w 🎰 <b>Kasynie</b>: <b>Wyścigi konne</b>. 10 koni na okrągłym torze, każdy z innym mnożnikiem wygranej.",

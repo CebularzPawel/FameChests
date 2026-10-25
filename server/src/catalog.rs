@@ -76,6 +76,8 @@ pub struct Person {
     #[serde(rename = "crate")]
     pub crate_: Option<String>,
     pub crates: Vec<String>,
+    /// skrzynki, w których karta jest ekskluzywna: z nich nie trafia do kasyna, ulepszacza, kuźni ani wyścigów
+    pub exclusive: Vec<String>,
     pub number: i64,
     pub value_mult: f64,
     pub country: String,
@@ -235,6 +237,8 @@ pub struct RawCard {
     pub crate_: Option<String>,
     #[serde_as(as = "DefaultOnError<VecSkipError<_>>")]
     pub crates: Vec<String>,
+    #[serde_as(as = "DefaultOnError<VecSkipError<_>>")]
+    pub exclusive: Vec<String>,
     #[serde_as(as = "DefaultOnError")]
     pub country: Option<String>,
     #[serde_as(as = "DefaultOnError")]
@@ -419,7 +423,7 @@ pub fn build(crate_rows: &[OverrideRow], card_rows: &[OverrideRow]) -> Catalog {
             let mut p = persons.swap_remove(&id)?;
             let cheapest = p.crates.iter().map(|c| out_crates[c].price).min().unwrap_or(g.crate_price);
             p.value_mult = (cheapest as f64 / g.crate_price as f64).max(1.0);
-            p.forge = p.crates.iter().any(|c| out_crates[c].shop);
+            p.forge = p.crates.iter().any(|c| out_crates[c].shop && !p.exclusive.contains(c));
             Some((id, Arc::new(p)))
         })
         .collect();
@@ -553,6 +557,12 @@ fn check_card(id: String, p: RawCard, crates: &IndexMap<String, RawCrate>) -> Pe
     let attack2 = p.attack2.as_deref().map(str::trim).filter(|a| !a.is_empty()).map(str::to_owned);
     let crates: Vec<String> =
         p.crates.into_iter().filter(|c| crates.contains_key(c)).collect::<IndexSet<_>>().into_iter().collect();
+    // ekskluzywna w skrzynce - tajna i specjalna mają własne zasady
+    let exclusive: Vec<String> = if rarity == "secret" || rarity == "special" {
+        Vec::new()
+    } else {
+        p.exclusive.into_iter().filter(|c| crates.contains(c)).collect::<IndexSet<_>>().into_iter().collect()
+    };
     // karta specjalna: skąd (kasyno / link), jedyny wariant i wygląd
     let (source, fixed_variant, style) = if rarity == "special" {
         let source = p.source.filter(|x| g.special_sources.contains_key(x)).unwrap_or_else(|| "casino".into());
@@ -585,6 +595,7 @@ fn check_card(id: String, p: RawCard, crates: &IndexMap<String, RawCrate>) -> Pe
         arena: clean_arena(&p.arena),
         crate_: crates.first().cloned(),
         crates,
+        exclusive,
         rarity,
         number: 0,
         value_mult: 1.0,

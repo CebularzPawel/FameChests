@@ -2,10 +2,13 @@
 // Jednoręki bandyta (zakładka w Kasynie): 3 bębny, jedna linia (środkowy rząd), stawką są karty - jak w ruletce.
 // Losuje serwer (/api/casino/slots), przeglądarka kręci bębnami i zatrzymuje je po kolei na wylosowanych symbolach.
 // Wygrana: karty zostają + karty o wartości stawka × mnożnik (i szansa na kartę specjalną z kasyna); przegrana: przepadają.
+// Grę zaczyna tylko pociągnięcie dźwigni w dół (przeciągnięcie myszą / palcem albo strzałka w dół) - nie ma przycisku.
 
 const SL = { sel: new Set(), q: "", last: null, reels: null, history: [] };
 const SL_ROWS = 3;          // widoczne rzędy na bębnie (środkowy = linia wygranej)
 const SL_STRIP = 34;        // ile symboli przewija się na bębnie (ostatnie trzy = wynik)
+const SL_TRAVEL = 110;      // droga kulki dźwigni w px (jak w casino.css)
+const SL_PULL = .75;        // jak daleko trzeba pociągnąć dźwignię, żeby zagrać
 
 const slSym = id => S.cfg.slots.symbols.find(s => s.id === id) || S.cfg.slots.symbols[0];
 function slRandom() {
@@ -34,7 +37,7 @@ function drawSlots() {
           ${reels.map((ids, k) => `<div class="sl-reel"><div class="sl-strip" id="slStrip${k}">${ids.slice(-SL_ROWS).map(slSymHTML).join("")}</div></div>`).join("")}
           <i class="sl-line"></i>
         </div>
-        <button class="sl-lever" id="slLever" title="Pociągnij dźwignię"${SL.sel.size && !CS.spinning ? "" : " disabled"}><i></i><b></b></button>
+        <button class="sl-lever${SL.sel.size && !CS.spinning ? " ready" : ""}" id="slLever" title="Chwyć kulkę i pociągnij dźwignię w dół"${SL.sel.size && !CS.spinning ? "" : " disabled"}><i></i><b></b></button>
       </div>
       <div class="rl-result" id="slResult">${last ? slResultHTML(last) : '<span class="muted">Postaw karty i pociągnij za dźwignię!</span>'}</div>
       <div class="rl-history">${SL.history.map(h => `<span class="sl-h ${h.win ? "win" : ""}">${h.reels.map(id => esc(slSym(id).icon)).join("")}</span>`).join("") || '<span class="muted small">Tu pojawią się ostatnie wyniki</span>'}</div>
@@ -45,7 +48,7 @@ function drawSlots() {
         <div class="sl-pays">${C.symbols.slice().reverse().map(s => `<div><span>${[0, 1, 2].map(() => slSymHTML(s.id)).join("")}</span><b>×${s.pays}</b>${stake ? `<small>${fmt(stake * s.pays)}</small>` : ""}</div>`).join("")}
           <div><span>${slSymHTML(C.pair)}${slSymHTML(C.pair)}<i class="sl-sym sl-any">?</i></span><b>×${C.pairPays}</b>${stake ? `<small>${fmt(stake * C.pairPays)}</small>` : ""}</div></div>
         ${stake && csSpecialChance(stake) ? `<div class="rl-bet-info"><span class="rl-joker">🃏 Przy wygranej szansa na kartę specjalną (rośnie z wygraną)</span></div>` : ""}
-        <button class="big-btn rl-spin" id="slSpin"${SL.sel.size && !CS.spinning ? "" : " disabled"}>🎰 ZAGRAJ${stake ? ` · stawka ${fmt(stake)}` : ""}</button>
+        <div class="sl-howto${SL.sel.size ? " ready" : ""}">${SL.sel.size ? `⬇️ Pociągnij dźwignię w dół, żeby zagrać · stawka <b>${fmt(stake)}</b>` : "Wybierz karty na stawkę, potem pociągnij dźwignię automatu"}</div>
         <div class="muted small">Wygrana: twoje karty zostają, a dostajesz karty o wartości stawki × mnożnik (losowe karty ze skrzynek w sklepie, przy większych wygranych w droższych wariantach). Przegrana: postawione karty przepadają.</div>
       </div>
       <div class="panel cs-pick">${csPickerHTML(SL.sel, SL.q, C.maxCards, "sl")}</div>
@@ -132,8 +135,36 @@ async function spinSlots() {
 }
 
 function bindSlots() {
-  $("#casinoBody").addEventListener("click", e => {
-    if (CS.tab !== "slots" || CS.spinning) return;
-    if (e.target.closest("#slSpin, #slLever")) spinSlots();
+  // dźwignia: chwyć kulkę i pociągnij w dół; puszczona za wysoko wraca na miejsce
+  $("#casinoBody").addEventListener("pointerdown", e => {
+    const lever = e.target.closest("#slLever");
+    if (CS.tab !== "slots" || CS.spinning || !lever || lever.disabled) return;
+    e.preventDefault();
+    const y0 = e.clientY;
+    let pull = 0;
+    lever.setPointerCapture(e.pointerId);
+    lever.classList.add("dragging");
+    const move = ev => {
+      pull = Math.max(0, Math.min(1, (ev.clientY - y0) / SL_TRAVEL));
+      lever.style.setProperty("--pull", pull.toFixed(3));
+    };
+    const up = () => {
+      lever.removeEventListener("pointermove", move);
+      lever.removeEventListener("pointerup", up);
+      lever.removeEventListener("pointercancel", up);
+      lever.classList.remove("dragging");
+      lever.style.removeProperty("--pull");
+      if (pull >= SL_PULL) spinSlots();
+      else if (pull > .1) toast("Pociągnij dźwignię do samego dołu");
+    };
+    lever.addEventListener("pointermove", move);
+    lever.addEventListener("pointerup", up);
+    lever.addEventListener("pointercancel", up);
+  });
+  // klawiatura: strzałka w dół na dźwigni pociąga ją
+  $("#casinoBody").addEventListener("keydown", e => {
+    if (CS.tab !== "slots" || CS.spinning || e.key !== "ArrowDown" || !e.target.closest("#slLever")) return;
+    e.preventDefault();
+    spinSlots();
   });
 }

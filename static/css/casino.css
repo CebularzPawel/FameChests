@@ -221,14 +221,25 @@
 @keyframes slBounce { 40% { translate: 0 6px; } }
 .sl-line { position: absolute; left: 6px; right: 6px; top: 50%; height: 3px; translate: 0 -50%; background: #e8202fcc; box-shadow: 0 0 6px #e8202f; pointer-events: none; }
 .sl-machine.won .sl-window { animation: wonPulse .8s ease-out; box-shadow: inset 0 2px 0 #fff, 0 0 26px #ffcf3f, 0 6px 16px #000a; }
-/* dźwignia: kulka na drążku z boku automatu - klik pociąga ją w dół */
-.sl-lever { position: absolute; right: 0; top: 70px; width: 30px; height: 150px; padding: 0; border: none; background: none; cursor: pointer; }
+/* dźwignia: kulka na drążku z boku automatu - trzeba ją chwycić i pociągnąć w dół (--pull 0..1, slots.js) */
+.sl-lever { position: absolute; right: 0; top: 70px; width: 30px; height: 150px; padding: 0; border: none; background: none; cursor: grab; touch-action: none; }
+.sl-lever.dragging { cursor: grabbing; }
 .sl-lever i { position: absolute; left: 11px; top: 18px; width: 8px; height: 110px; border-radius: 4px; background: linear-gradient(90deg, #6a7078, #e4e8ee, #6a7078);
-  transform-origin: 50% 100%; transition: transform .25s; }
+  transform-origin: 50% 100%; transform: scaleY(calc(1 - var(--pull, 0) * 1.2)); transition: transform .25s; }
 .sl-lever b { position: absolute; left: 1px; top: 0; width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff8a94, #e8202f 55%, #7a0a12);
-  box-shadow: 0 3px 6px #0008; transition: transform .25s; }
-.sl-lever.pulled i { transform: scaleY(-.2); } .sl-lever.pulled b { transform: translateY(110px); }
+  box-shadow: 0 3px 6px #0008; transform: translateY(calc(var(--pull, 0) * 110px)); transition: transform .25s; }
+.sl-lever.dragging :is(i, b) { transition: none; }
+.sl-lever.pulled { --pull: 1; }
 .sl-lever:disabled { cursor: default; opacity: .75; }
+/* gotowa do gry: kulka zachęcająco podskakuje w dół, obok strzałka */
+.sl-lever.ready:not(.dragging) b { animation: slHint 1.6s ease-in-out infinite; }
+@keyframes slHint { 0%, 60%, 100% { translate: 0 0; } 75% { translate: 0 14px; } }
+.sl-lever.ready::after { content: "⬇"; position: absolute; left: 50%; top: 36px; translate: -50% 0; font-size: 16px; color: #ffe08a;
+  text-shadow: 0 0 6px #ffb02a; pointer-events: none; animation: slHintArrow 1.6s ease-in-out infinite; }
+.sl-lever.dragging::after { display: none; }
+@keyframes slHintArrow { 0%, 100% { opacity: .2; transform: translateY(0); } 70% { opacity: 1; transform: translateY(10px); } }
+.sl-howto { margin: 4px 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel2); border: 1px dashed var(--line); color: var(--muted); text-align: center; }
+.sl-howto.ready { color: var(--text); border-color: #ffcf3f88; }
 .sl-title { margin: 0 0 8px; font-family: Bungee, Rubik, sans-serif; font-weight: 400; font-size: 17px; }
 .sl-pays { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; margin-bottom: 10px; }
 .sl-pays > div { display: flex; align-items: center; gap: 8px; padding: 4px 10px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--line); }

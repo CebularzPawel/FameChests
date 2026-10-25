@@ -426,7 +426,7 @@ const AR_ENTER_COLORS = {
   moro: ["#4a4f2e", "#6a5a3a", "#a89a6a"], beer: ["#f7bf3a", "#fffdf6", "#cf7a0c"],
   electric: ["#9fdcff", "#fff", "#4fb8ff"], synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
   chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8"], candy: ["#ff5aa8", "#3ddc84", "#fff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8"], banana: ["#ffe14a", "#9ab82a", "#7a5414"],
-  uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#fff", "#c8d0d8", "#6a7480"], californium: ["#fff", "#dfe6f2", "#9aa2b0"], reflective: ["#e6ff2a", "#d8dde2", "#fff"],
+  uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#fff", "#c8d0d8", "#6a7480"], californium: ["#fff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e"], reflective: ["#e6ff2a", "#d8dde2", "#fff"],
   marble: ["#fff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400"], holo: RAINBOW, gold: GOLDS, clear: ["#ffffff", "#e0f7ff", "#bfefff"], emerald: ["#00c853", "#6dffb0", "#fff"],
   pixel: ["#3a5bd0", "#fff", "#7dff5a", "#ffe13b"], glass: ["#2f7fc0", "#3fa0a0", "#6a5aa8", "#e8a33a"], neon: ["#ff3df0", "#3de0ff", "#ffe63c"], thermal: ["#d8303a", "#f07a1a", "#ffd23f"], blueprint: ["#1f3a7a", "#e8f4ff", "#4a8ad8"], glitch: ["#ff2b5a", "#00e5ff", "#fff"], mosaic: ["#c91a09", "#f2cd37", "#0055bf"], noir: ["#e8e8e8", "#2a2a2a", "#fff"], popart: ["#ffe100", "#e8202f", "#ff4fa0", "#2fd0ff"], holo: RAINBOW, gold: GOLDS, clear: ["#ffffff", "#e0f7ff", "#bfefff"], emerald: ["#00c853", "#6dffb0", "#fff"],
   ruby: ["#ff1744", "#ff8a9c", "#fff"], amethyst: ["#9b3dff", "#c99bff", "#fff"], sapphire: ["#1c46d8", "#5a86ff", "#fff"],

@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", reflective: "🦺 HI-VIS", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", files: "🗂️ AKTA", copper: "🟠 Cu", reflective: "🦺 HI-VIS", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -845,7 +845,15 @@ const hgFalls = n => Array.from({ length: n }, () =>
 // Kalifornowa: smugi neutronów z rdzenia za zdjęciem
 const cfNeutrons = n => Array.from({ length: n }, () =>
   `<i class="cf-n" style="--r:${vxN(0, 360)}deg;animation-delay:-${vxN(0, 2, 2)}s;animation-duration:${vxN(1, 2.2, 2)}s"></i>`).join("");
+// Akta: spinacz biurowy (viewBox 0 0 12 30)
+const AK_CLIP = `<path d="M4 26 V6 a3 3 0 0 1 6 0 V24 a4.5 4.5 0 0 1 -9 0 V9" fill="none" stroke="#9aa2ac" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M4.4 25.6 V6 a2.6 2.6 0 0 1 5.2 0" fill="none" stroke="#e8ecf0" stroke-width=".5" stroke-linecap="round"/>`;
+// Miedziana: plamy patyny pojawiające się kolejno w drugiej połowie cyklu (CSS cuSpot, opóźnienia 0-3 s)
+const cuSpots = n => Array.from({ length: n }, () =>
+  `<i class="cu-spot" style="left:${vxN(-6, 90)}%;top:${vxN(-4, 92)}%;--s:${vxN(.7, 1.8, 2)};animation-delay:${vxN(0, 3, 2)}s"></i>`).join("");
 const VX_BG = {
+  copper: () => `<i class="cu-brush"></i><i class="cu-dark"></i>${cuSpots(16)}<i class="cu-full"></i>`,
+  files: () => '<i class="ak-paper"></i>',
   banana: () => `<i class="bn-fibers"></i><i class="bn-green"></i>${bnSpots(22)}<i class="bn-brown"></i>`,
   uranium: () => `${Array.from({ length: 12 }, () => `<i class="ur-bubble" style="left:${vxN(2, 96)}%;top:${vxN(2, 96)}%;--s:${vxN(.4, 1.4, 2)}"></i>`).join("")}<i class="ur-uv"></i><i class="ur-streak"></i>`,
   mercury: () => Array.from({ length: 6 }, (_, k) => `<i class="hg-blob b${k}"></i>`).join(""),
@@ -875,6 +883,8 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  copper: '<i class="vx-photo cu-ph"></i>',
+  files: '<i class="vx-photo ak-old"></i><b class="ak-stamp">ŚCIŚLE<br>TAJNE</b>',
   banana: '<i class="vx-photo bn-warm"></i><b class="bn-sticker"><small>DZIEŃ</small>1 → 7<small>SCAMBOX</small></b>',
   uranium: '<i class="vx-photo ur-pulse"></i>',
   cobalt: '<i class="vx-photo cb-blue"></i>',
@@ -893,6 +903,9 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  copper: () => '<div class="vx-deco vx-clip"><i class="cu-shine"></i></div>',
+  // Akta: zakładka teczki z sygnaturą nad kartą i spinacz na zdjęciu
+  files: () => `<div class="vx-deco"><i class="ak-tab"><b>AKTA · K-2137</b></i><i class="ak-clip">${vxSvg(AK_CLIP, "0 0 12 30")}</i></div>`,
   uranium: () => '<div class="vx-deco"><i class="ur-halo"></i></div>',
   // Rtęciowa: połysk, krople spadające z sopli, sople u góry (nazwa nad nimi), kałuża z kręgami na dole
   mercury: () => `<div class="vx-deco vx-clip"><i class="hg-shine"></i>${hgFalls(5)}</div><div class="vx-deco hg-drip">${vxSvg(hgDrips())}</div>` +
@@ -1038,6 +1051,9 @@ function variantSub(variant, pid) {
   if (parts.includes("uranium")) return "U · 92 · 238,03";
   if (parts.includes("mercury")) return "Hg · 80 · 200,59";
   if (parts.includes("californium")) return "Cf-252 · 2,3 MLN NEUTRONÓW/s/µg";
+  if (parts.includes("files")) return "SPRAWA NR 2137/K · ŚLEDZTWO W TOKU";
+  // Miedziana: etap patyny zmienia się razem z kolorem karty (CSS cuStage)
+  if (parts.includes("copper")) return '<span class="cu-stages"><b>Cu · 29 · NOWA MIEDŹ</b><b>Cu · 29 · CIEMNIEJE</b><b>Cu · 29 · ZIELENIEJE</b><b>Cu · 29 · PATYNA</b></span>';
   // Glitch: kod błędu
   if (parts.includes("glitch")) { const p = person(pid); return `${S.cfg.types[p.type].name} · ${esc(crateOf(p.crate).short)} <b>▓ERR 0x2137</b>`; }
   if (parts.includes("digital")) return "$ ./access --target <b>ACCESS GRANTED</b>";
@@ -2025,7 +2041,7 @@ function showResults(afterEpic = false) {
       electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
       chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8", "#3a1a08"], candy: ["#ff5aa8", "#3ddc84", "#ffffff", "#ffd23f", "#4fb8ff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a", "#1a2048"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8", "#ffffff"], banana: ["#ffe14a", "#9ab82a", "#7a5414", "#fff6b0"],
-      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"],
+      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e", "#8fd8c0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],
       lantern: ["#ffb347", "#ff7a00", "#fff1c1", "#3a1a06"], devil: ["#ff1a1a", "#b3001b", "#ffcf5a", "#120002"],

@@ -18,7 +18,7 @@ import data
 CRATE_FIELDS = ("name", "short", "code", "emoji", "color1", "color2", "price", "desc", "shop", "restricted", "weights",
                 "variants")
 CARD_FIELDS = ("name", "wiki", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2", "kind1", "kind2", "abilities",
-               "arena", "crate", "crates", "country", "source", "fixedVariant", "style", "subtitle", "desc", "texts")
+               "arena", "crate", "crates", "exclusive", "country", "source", "fixedVariant", "style", "subtitle", "desc", "texts")
 SUBTITLE_MAX, DESC_MAX = 40, 1000   # podtytuł (krótki tekst na karcie) i opis (obok karty w podglądzie) - z panelu admina
 COUNTRY_RE = re.compile(r"^[a-z]{2}(-[a-z0-9]{1,3})?$")   # kod kraju ISO 3166 (np. pl, de, gb-eng) - do wariantu flagowego
 STICKER_ID_RE = re.compile(r"^[a-f0-9]{8}$")
@@ -530,6 +530,10 @@ def rebuild(conn):
             p["type"] = "tv"
         p["crates"] = [c for c in dict.fromkeys(p.get("crates") or []) if c in crates]
         p["crate"] = p["crates"][0] if p["crates"] else None
+        # ekskluzywna w skrzynce (panel admina): z tej skrzynki karta nie trafia do kasyna, ulepszacza, kuźni ani wyścigów;
+        # tajna i specjalna mają już własne zasady
+        p["exclusive"] = ([c for c in dict.fromkeys(p.get("exclusive") or []) if c in p["crates"]]
+                          if p["rarity"] not in ("secret", "special") else [])
         if p["rarity"] == "special":   # karta specjalna: skąd (kasyno / link), jedyny wariant i wygląd (1-6, makiety)
             p["source"] = p.get("source") if p.get("source") in data.SPECIAL_SOURCES else "casino"
             p["fixedVariant"] = (p.get("fixedVariant") if p.get("fixedVariant") in data.SPECIAL_VARIANTS
@@ -570,7 +574,8 @@ def rebuild(conn):
         cheapest = min((crates[c]["price"] for c in p["crates"]), default=data.CRATE_PRICE)
         p["valueMult"] = max(1.0, cheapest / data.CRATE_PRICE)
         # kuźnia (kontrakt, ulepszacz) i wygrane w kasynie: tylko karty ze skrzynek, które są teraz w sklepie
-        p["forge"] = any(crates[c]["shop"] for c in p["crates"])
+        # i w których karta nie jest ekskluzywna
+        p["forge"] = any(crates[c]["shop"] and c not in p["exclusive"] for c in p["crates"])
 
     CRATES, PEOPLE, VARIANT_CFG = crates, final_people, variant_cfg
     HIDDEN_CRATES, HIDDEN_CARDS = hidden_crates, hidden_cards
