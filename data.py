@@ -49,10 +49,10 @@ VARIANTS = {
     "halloween": {"name": "Halloweenowa", "chance": 0.0, "mult": 1.0, "exclusive": True, "layer": True, "always": True,
                   "weight": 85, "photo": True,
                   "desc": "Noc z księżycem, dynie-lampiony, czaszka i nietoperze. Najczęstszy z wariantów halloweenowych."},
-    "lantern":   {"name": "Lampionowa", "chance": 0.0, "mult": 6.0, "exclusive": True, "layer": True, "always": True,
+    "lantern":   {"name": "Lampionowa", "chance": 0.0, "mult": 2.0, "exclusive": True, "layer": True, "always": True,
                   "weight": 12, "photo": True, "photoFallback": "halloween", "noCombo": True,
                   "desc": "Karta w blasku świecy z dyni: zdjęcie w pomarańczowym świetle, migoczący blask, iskry."},
-    "devil":     {"name": "Diabelska", "chance": 0.0, "mult": 15.0, "exclusive": True, "layer": True, "always": True,
+    "devil":     {"name": "Diabelska", "chance": 0.0, "mult": 4.0, "exclusive": True, "layer": True, "always": True,
                   "weight": 3, "photo": True, "photoFallback": "halloween", "noCombo": True,
                   "desc": "Najrzadszy wariant halloweenowy - piekielny ogień, rogi i czerwona poświata."},
     "popart":  {"name": "Pop-art",      "chance": 0.007, "mult": 8.0, "off": True,
@@ -783,6 +783,7 @@ PATCH_NOTES = [
     {"v": 15, "date": "2026-10-25", "title": "Poprawka Skrzyni Halloween",
      "items": [
          "🎃 Wariant <b>Halloweenowa</b> sam w sobie nie zwiększa już wartości karty (×1) - liczy się tylko drugi wariant, np. Halloweenowa + Złota = wartość Złotej.",
+         "🏮 <b>Lampionowa</b> ma teraz mnożnik ×2 (było ×6), a <b>Diabelska</b> ×4 (było ×15) - nadal najrzadsze i najładniejsze, ale już nie psują cen.",
      ]},
     {"v": 14, "date": "2026-10-24", "title": "Wyścigi konne w kasynie",
      "items": [

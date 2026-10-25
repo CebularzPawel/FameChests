@@ -91,7 +91,7 @@
   "lantern": {
    "name": "Lampionowa",
    "chance": 0.0,
-   "mult": 6.0,
+   "mult": 2.0,
    "exclusive": true,
    "layer": true,
    "always": true,
@@ -104,7 +104,7 @@
   "devil": {
    "name": "Diabelska",
    "chance": 0.0,
-   "mult": 15.0,
+   "mult": 4.0,
    "exclusive": true,
    "layer": true,
    "always": true,
@@ -3398,7 +3398,8 @@
    "date": "2026-10-25",
    "title": "Poprawka Skrzyni Halloween",
    "items": [
-    "🎃 Wariant <b>Halloweenowa</b> sam w sobie nie zwiększa już wartości karty (×1) - liczy się tylko drugi wariant, np. Halloweenowa + Złota = wartość Złotej."
+    "🎃 Wariant <b>Halloweenowa</b> sam w sobie nie zwiększa już wartości karty (×1) - liczy się tylko drugi wariant, np. Halloweenowa + Złota = wartość Złotej.",
+    "🏮 <b>Lampionowa</b> ma teraz mnożnik ×2 (było ×6), a <b>Diabelska</b> ×4 (było ×15) - nadal najrzadsze i najładniejsze, ale już nie psują cen."
    ]
   },
   {
