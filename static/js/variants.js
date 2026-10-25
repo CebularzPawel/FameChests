@@ -8,7 +8,7 @@
 const VR = { tab: "settings", variant: "bronze", pid: "pl_tusk", combo: "", zoom: null, bound: false };
 const VR_GROUPS = [
   ["Zwykłe warianty", v => !vrV(v).exclusive],
-  ["Wyjątkowe (tylko ze skrzynek, w których są włączone)", v => vrV(v).exclusive && !vrV(v).always && !vrV(v).cards && !vrV(v).special],
+  ["Wyjątkowe (nie z kontraktu, ulepszacza ani kasyna)", v => vrV(v).exclusive && !vrV(v).always && !vrV(v).cards && !vrV(v).special],
   ["Halloweenowe (każda karta w skrzynce ma jeden z nich)", v => vrV(v).always],
   ["Warianty jednej karty", v => !!vrV(v).cards],
   ["Karty specjalne (tylko podgląd)", v => !!vrV(v).special],
@@ -34,7 +34,7 @@ function vrStatus(v) {
   const V = vrV(v), cfg = vrCfg(v), now = vrNow();
   if (V.special) return { cls: "special", txt: "🃏 karta specjalna" };
   const live = cfg.events.some(e => vrEventState(e, now) === "live"), planned = cfg.events.filter(e => vrEventState(e, now) === "planned").length;
-  const crates = V.exclusive && !V.cards && !V.always ? vrShopCrates().filter(c => (c.variants || []).includes(v)).length : null;
+  const crates = vrPinnable(v) ? vrShopCrates().filter(c => (c.variants || []).includes(v)).length : null;
   return {
     cls: live ? "live" : cfg.enabled ? "on" : "off",
     txt: live ? "⏰ wydarzenie trwa" : cfg.enabled ? "✅ włączony" : "⛔ wyłączony",
@@ -60,7 +60,8 @@ function renderVariants() {
       <h2>✨ Warianty</h2>
       <p class="muted">Podgląd każdego wariantu na przykładowej karcie, włączanie i wyłączanie, szanse i <b>wydarzenia</b> — wariant
         na określony czas we wszystkich albo w wybranych skrzynkach. Wyłączony wariant nie wypada ze skrzynek, kontraktu, ulepszacza
-        ani kasyna — karty, które gracze już mają, zostają. Wyjątkowe warianty w skrzynkach włączasz w <a href="/admin">panelu admina</a>.</p>
+        ani kasyna — karty, które gracze już mają, zostają. Każdy wariant wypada tylko ze skrzynek, do których jest
+        <b>przypięty</b> (📌 w sekcji „Gdzie wypada teraz” albo w edycji skrzynki w <a href="/admin">panelu admina</a>).</p>
     </div>
     <div class="seg vr-tabs">
       <button type="button" data-tab="settings" class="${VR.tab === "settings" ? "active" : ""}">⚙️ Ustawienia wariantów</button>
@@ -152,24 +153,48 @@ function vrFormHTML(v) {
   </form>`;
 }
 
-// gdzie wariant może wypaść TERAZ: każda skrzynka (bez skrzynki kart specjalnych) z powodem
+// wariant przypinany do skrzynek (wszystkie poza wariantami konkretnych kart i kart specjalnych - data.CRATE_VARIANTS)
+function vrPinnable(v) { const V = vrV(v); return !V.cards && !V.special && !V.combo; }
+
+// gdzie wariant może wypaść TERAZ: każda skrzynka (bez skrzynki kart specjalnych) z powodem i przełącznikiem "przypięty"
+// - każdy wariant wypada tylko ze skrzynek, do których jest przypięty (catalog.drop_variants)
 function vrWhereHTML(v) {
-  const V = vrV(v), on = vrCfg(v).enabled;
+  const V = vrV(v), on = vrCfg(v).enabled, pin = vrPinnable(v);
   const rows = vrShopCrates().map(c => {
     const ev = variantEvent(v, c.id), inCrate = (c.variants || []).includes(v);
     const people = c.people.map(person).filter(p => !V.cards || V.cards.includes(p.id));
     const drops = people.length > 0 && crateVariants(c, V.cards ? people[0] : null).includes(v);
     let why = ev ? `⏰ wydarzenie do ${vrWhen(ev.end)}${ev.boost !== 1 ? ` · szansa ×${String(ev.boost).replace(".", ",")}` : ""}`
-      : !on ? "wariant wyłączony"
-      : V.cards ? (people.length ? `tylko ${people.map(p => esc(p.name)).join(", ")}` : "nie ma tu tej karty")
-      : !V.exclusive ? "jak każdy zwykły wariant"
-      : inCrate ? "włączony w tej skrzynce" : "niewłączony w tej skrzynce";
+      : V.cards ? (!on ? "wariant wyłączony" : people.length ? `tylko ${people.map(p => esc(p.name)).join(", ")}` : "nie ma tu tej karty")
+      : !inCrate ? "nieprzypięty do tej skrzynki"
+      : !on ? "przypięty, ale wariant wyłączony" : "przypięty do tej skrzynki";
     if (v === "flag" && drops) why += ` · ${people.filter(p => p.country).length} kart z krajem`;
-    return `<div class="vr-crate${drops ? " yes" : ""}"><span class="vr-cico" style="${crateStyle(c)}">${esc(c.emoji)}</span>
+    return `<div class="vr-crate${drops ? " yes" : ""}${inCrate ? " pinned" : ""}"><span class="vr-cico" style="${crateStyle(c)}">${esc(c.emoji)}</span>
       <span class="vr-cname"><b>${esc(c.name)}</b>${c.shop ? "" : ' <small class="muted">(poza sklepem)</small>'}<small>${why}</small></span>
-      <span class="vr-cpct">${drops ? (V.always ? "✔" : vrPct(vChance(v, c))) : "—"}</span></div>`;
+      <span class="vr-cpct">${drops ? (V.always ? "✔" : vrPct(vChance(v, c))) : "—"}</span>
+      ${pin ? `<label class="vr-pin" title="${inCrate ? "Odepnij wariant od tej skrzynki" : "Przypnij wariant do tej skrzynki"}">
+        <input type="checkbox" data-pin="${c.id}"${inCrate ? " checked" : ""}><span>📌</span></label>` : ""}</div>`;
   }).join("");
-  return `<h3 class="stk-h">📦 Gdzie wypada teraz</h3><div class="vr-crates">${rows}</div>`;
+  const pinned = vrShopCrates().filter(c => (c.variants || []).includes(v)).length;
+  return `<div class="vr-where-head"><h3 class="stk-h">📦 Gdzie wypada teraz</h3>${pin ? `<span class="vr-pin-all">
+      <span class="muted small">📌 przypięty do <b>${pinned}</b> z ${vrShopCrates().length}</span>
+      <button class="btn tiny" type="button" data-pinall="1">📌 Przypnij do wszystkich</button>
+      <button class="btn tiny" type="button" data-pinall="0">Odepnij od wszystkich</button></span>` : ""}</div>
+    ${pin ? `<p class="muted small">Wariant wypada tylko ze skrzynek, do których jest przypięty (📌) — i tylko gdy jest włączony.
+      Nowy wariant nie jest przypięty nigdzie.</p>` : ""}
+    <div class="vr-crates">${rows}</div>`;
+}
+
+// przypięcie / odpięcie wariantu w skrzynkach (crates - lista id), po kolei; serwer zwraca nowe listy wariantów skrzynek
+async function vrPin(crates, on) {
+  try {
+    for (const cid of crates) {
+      const res = await api(`/api/admin/variants/${VR.variant}/crates`, { crate: cid, on });
+      Object.entries(res.crates).forEach(([id, vs]) => { if (crateOf(id)) crateOf(id).variants = vs; });
+    }
+    toast(`📌 ${vrV(VR.variant).name}: ${on ? "przypięty" : "odpięty"}${crates.length > 1 ? ` (${crates.length} skrzynek)` : ""}`);
+  } catch (e) { toast(e.message, true); }
+  renderVariants();
 }
 
 function vrEventsHTML(v) {
@@ -179,7 +204,7 @@ function vrEventsHTML(v) {
   const start = Math.ceil(now / 300) * 300;   // najbliższe pełne 5 minut
   return `<h3 class="stk-h">⏰ Wydarzenia — ${esc(vrV(v).name)} na czas</h3>
     <p class="muted small">W czasie wydarzenia wariant wypada z wybranych skrzynek (albo ze wszystkich) — także gdy jest wyłączony
-      albo to wariant wyjątkowy niewłączony w tej skrzynce. Mnożnik zwiększa szansę na czas wydarzenia. Godziny według Twojego zegara.</p>
+      albo nieprzypięty do tej skrzynki. Mnożnik zwiększa szansę na czas wydarzenia. Godziny według Twojego zegara.</p>
     <div class="vr-events">${events.length ? events.map(e => {
       const st = vrEventState(e, now);
       return `<div class="vr-ev ev-${st}"><span class="vr-ev-st">${label[st]}</span>
@@ -326,12 +351,21 @@ function vrBind() {
     }
     const prop = t.closest("[data-prop]");
     if (prop) { Sound.click(); vrOpenZoom(prop.dataset.prop, +prop.dataset.look); }
+    const all = t.closest("[data-pinall]");
+    if (all) {
+      const on = all.dataset.pinall === "1";
+      const todo = vrShopCrates().filter(c => (c.variants || []).includes(VR.variant) !== on).map(c => c.id);
+      if (!todo.length) return toast(on ? "Już przypięty do wszystkich skrzynek" : "Nie jest przypięty do żadnej skrzynki");
+      if (!confirm(`${on ? "Przypiąć" : "Odpiąć"} „${vrV(VR.variant).name}” ${on ? "do" : "od"} ${todo.length} skrzynek?`)) return;
+      Sound.click(); return vrPin(todo, on);
+    }
   };
   body.onchange = e => {
     const t = e.target;
     if (t.matches('[data-vr="card"]')) { VR.pid = t.value; renderVariants(); }
     if (t.matches('[data-vr="combo"]')) { VR.combo = t.value; renderVariants(); }
     if (t.name === "crates" && t.checked) { const r = $('#vrEvForm input[name="scope"][value="some"]'); if (r) r.checked = true; }
+    if (t.matches("[data-pin]")) { Sound.click(); vrPin([t.dataset.pin], t.checked); }
   };
   body.onsubmit = e => {
     e.preventDefault();

@@ -118,10 +118,14 @@ function crateFormHTML(c) {
       <p class="muted small">Skrzynki, które gracz ma w ekwipunku, zawsze może otworzyć — nawet gdy skrzynki nie ma w sklepie.</p>
     </fieldset>
     <fieldset ${c.special ? "hidden" : ""}>
-      <legend>✨ Wyjątkowe warianty <small class="muted">(wypadają tylko ze skrzynek, w których są włączone)</small></legend>
-      ${A.cat.exclusiveVariants.map(v => { const V = A.cat.variants[v]; return `<label class="chk"><input type="checkbox" name="variants" value="${v}" ${(c.variants || []).includes(v) ? "checked" : ""}>
-        <b>${esc(V.name)}</b> <span class="muted small">· szansa ${+(V.chance * 100).toFixed(2)}% · wartość ×${V.mult} — ${esc(V.desc || "")}</span></label>`; }).join("")}
-      <p class="muted small">Nie da się ich zrobić w kontrakcie ani ulepszaczu. Przy wariancie Flagowym ustaw każdej karcie tej skrzynki kraj (np. PL) w jej edycji.</p>
+      <legend>📌 Warianty w tej skrzynce <small class="muted">(każdy wariant wypada tylko ze skrzynek, do których jest przypięty)</small></legend>
+      ${[["Zwykłe", V => !V.exclusive], ["Wyjątkowe — nie z kontraktu ani ulepszacza", V => V.exclusive && !V.always], ["Halloweenowe — każda karta ma jeden z nich", V => V.always]]
+        .map(([title, fits]) => { const vs = A.cat.exclusiveVariants.filter(v => fits(A.cat.variants[v])); return vs.length ? `<div class="a-vgroup"><div class="muted small"><b>${title}</b></div>${vs.map(v => {
+          const V = A.cat.variants[v], off = A.cat.variantEnabled && A.cat.variantEnabled[v] === false;
+          return `<label class="chk"><input type="checkbox" name="variants" value="${v}" ${(c.variants || []).includes(v) ? "checked" : ""}>
+          <b>${esc(V.name)}</b>${off ? ' <span class="a-voff">wyłączony</span>' : ""} <span class="muted small">· szansa ${+(V.chance * 100).toFixed(2)}% · wartość ×${V.mult}</span></label>`; }).join("")}</div>` : ""; }).join("")}
+      <p class="muted small">Wyłączone warianty (włączasz je na stronie <a href="/variants" target="_blank">Warianty</a>) nie wypadają, nawet przypięte.
+        Przy wariancie Flagowym ustaw każdej karcie tej skrzynki kraj (np. PL) w jej edycji.</p>
     </fieldset>
     <fieldset ${c.special ? "hidden" : ""}>
       <legend>🎲 Szanse rzadkości (puste = domyślne)</legend>
@@ -543,7 +547,7 @@ const LOG_ACTIONS = {
   message_add: "📢 Nowa wiadomość do graczy", message_delete: "📢 Usunięcie wiadomości",
   stickers_save: "🎨 Naklejki wariantu", stickers_card: "🎨 Naklejki jednej karty",
   egg_save: "🥚 Easter egg w bębnie", egg_delete: "🥚 Usunięcie easter egga",
-  variant_save: "✨ Ustawienia wariantu", variant_event: "⏰ Wydarzenie wariantu", variant_event_stop: "⏰ Koniec wydarzenia wariantu",
+  variant_save: "✨ Ustawienia wariantu", variant_crate: "📦 Wariant w skrzynce", variant_event: "⏰ Wydarzenie wariantu", variant_event_stop: "⏰ Koniec wydarzenia wariantu",
 };
 
 async function loadLog() {

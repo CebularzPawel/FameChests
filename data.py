@@ -199,12 +199,13 @@ VARIANT_DEFAULTS = {v: {"chance": x["chance"], "weight": x.get("weight"), "desc"
 VARIANT_EVENT_MAX = 40      # najwięcej wydarzeń (wariant na czas) zapisanych przy jednym wariancie
 VARIANT_BOOST_MAX = 50      # najwyższy mnożnik szansy w wydarzeniu
 VARIANT_CHANCE_MAX = 0.2    # najwyższa szansa na jeden wariant ustawiana w panelu (20%)
-# Warianty wyjątkowe ("exclusive"): wypadają TYLKO ze skrzynek, w których admin je włączył (pole skrzynki "variants"),
-# nie da się ich dostać z kontraktu ani z ulepszacza.
+# Warianty wyjątkowe ("exclusive"): nie da się ich dostać z kontraktu, ulepszacza ani kasyna.
 EXCLUSIVE_VARIANTS = [v for v, x in VARIANTS.items() if x.get("exclusive")]
-# te można włączać w skrzynkach (panel admina); warianty z polem "cards" należą do konkretnych kart
-CRATE_VARIANTS = [v for v in EXCLUSIVE_VARIANTS if not VARIANTS[v].get("cards") and not VARIANTS[v].get("combo")
-                  and not VARIANTS[v].get("special")]
+# Warianty przypinane do skrzynek (strona Warianty i edycja skrzynki w panelu admina): KAŻDY wariant wypada tylko ze
+# skrzynek, do których jest przypięty (pole skrzynki "variants") - poza połączeniami, wariantami kart specjalnych
+# i wariantami konkretnych kart ("cards"). Nowy wariant nie jest przypięty nigdzie.
+CRATE_VARIANTS = [v for v, x in VARIANTS.items() if v != "normal" and not x.get("cards") and not x.get("combo")
+                  and not x.get("special")]
 SPECIAL_VARIANTS = [v for v, x in VARIANTS.items() if x.get("special")]   # warianty kart specjalnych (do wyboru w panelu)
 STICKER_VARIANTS = [v for v, x in VARIANTS.items() if x.get("stickers")]  # warianty z naklejkami od admina (/stickers)
 # Naklejki: wbudowane grafiki (static/img/mlg/<id>.svg) - do wyboru obok własnych plików PNG
@@ -243,8 +244,8 @@ def register_custom_variants(designs):
                 "layers": [layer, base]}
     VARIANT_ORDER[:] = sorted(VARIANTS, key=lambda v: VARIANTS[v]["mult"])
     EXCLUSIVE_VARIANTS[:] = [v for v, x in VARIANTS.items() if x.get("exclusive")]
-    CRATE_VARIANTS[:] = [v for v in EXCLUSIVE_VARIANTS if not VARIANTS[v].get("cards") and not VARIANTS[v].get("combo")
-                         and not VARIANTS[v].get("special")]
+    CRATE_VARIANTS[:] = [v for v, x in VARIANTS.items() if v != "normal" and not x.get("cards") and not x.get("combo")
+                         and not x.get("special")]
     STICKER_VARIANTS[:] = [v for v, x in VARIANTS.items() if x.get("stickers")]
     CASINO_VARIANTS[:] = [v for v in VARIANT_ORDER if v == "normal" or (VARIANTS[v]["chance"] > 0 and not VARIANTS[v].get("exclusive"))]
 
@@ -257,8 +258,9 @@ def combine_variant(layer, base):
 def card_variants(pid):
     """Warianty przypisane tylko do tej karty (np. Rzulty dla Jana Pawła II) - mogą mieć własne zdjęcie."""
     return [v for v, x in VARIANTS.items() if pid in (x.get("cards") or [])]
-# domyślne warianty wyjątkowe skrzynek - dopóki admin nie zapisze w panelu własnego wyboru
-DEFAULT_CRATE_VARIANTS = {"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"]}
+# domyślne warianty wyjątkowe skrzynek - dopóki admin nie zapisze w panelu własnego wyboru (skrzynka bez "variantsAll"
+# dostaje do nich jeszcze włączone zwykłe warianty - catalog.chosen_crate_variants)
+DEFAULT_CRATE_VARIANTS ={"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"]}
 # wbudowane skrzynki dodane po tym, jak admini zaczęli edytować karty (catalog.rebuild dopisuje ich karty "shared"
 # także do kart zapisanych wcześniej w panelu)
 CRATES_ADDED_LATER = {"halloween"}

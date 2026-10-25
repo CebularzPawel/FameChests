@@ -167,6 +167,8 @@ def init_db():
         print("  Wczytano karty i skrzynki z catalog_export.json")
     export_catalog.copy_custom_images()
     catalog.rebuild(conn)
+    if catalog.migrate_crate_variants(conn):   # jednorazowo: warianty przypięte do skrzynek zapisane na stałe
+        catalog.rebuild(conn)
     backfill_hall_of_fame(conn)
     conn.close()
 
@@ -3898,7 +3900,8 @@ def admin_catalog():
                     "types": TYPES, "abilityKinds": ABILITY_KINDS, "maxExtraAbilities": MAX_EXTRA_ABILITIES,
                     "arena": {"effects": ARENA_EFFECTS, "visuals": ARENA_VISUALS, "targets": ARENA_TARGETS,
                               "effectTargets": ARENA_EFFECT_TARGETS, "maxEffects": MAX_ABILITY_EFFECTS},
-                    "variants": VARIANTS, "exclusiveVariants": CRATE_VARIANTS,
+                    "variants": VARIANTS, "exclusiveVariants": CRATE_VARIANTS,   # warianty przypinane do skrzynek
+                    "variantEnabled": {v: catalog.variant_enabled(v) for v in CRATE_VARIANTS},
                     "specialVariants": SPECIAL_VARIANTS, "specialSources": SPECIAL_SOURCES, "specialCrate": SPECIAL_CRATE,
                     "cardTextSlots": CARD_TEXT_SLOTS, "easterEgg": easter_egg_json(), "eggChance": EASTER_EGG["chance"],
                     "defaultPrice": CRATE_PRICE, "users": users})
@@ -3957,8 +3960,8 @@ def admin_save_crate():
         "desc": (body.get("desc") or "").strip()[:120],
         "shop": bool(body.get("shop", True)),
         "restricted": bool(body.get("restricted", False)),
-        # warianty wyjątkowe (Królewski, Flagowy...) - wypadają tylko ze skrzynek, w których są włączone
-        "variants": [v for v in CRATE_VARIANTS if v in (body.get("variants") or [])],
+        # warianty przypięte do skrzynki - każdy wariant wypada tylko ze skrzynek, do których jest przypięty
+        "variants": [v for v in CRATE_VARIANTS if v in (body.get("variants") or [])], "variantsAll": True,
     }
     weights = {}
     for r, w in (body.get("weights") or {}).items():
@@ -4229,6 +4232,29 @@ def admin_variant_save(variant):
                                       + (f" · waga {s['weight']}" if s["weight"] is not None else ""))
     db().commit()
     return jsonify(admin_variant_json(variant))
+
+
+@app.post("/api/admin/variants/<variant>/crates")
+@admin_required
+def admin_variant_crate(variant):
+    """Przypina wariant do skrzynki albo go od niej odpina: {crate, on}. Wariant wypada tylko ze skrzynek, do których jest
+    przypięty (catalog.drop_variants). Zwraca nowe listy wariantów zmienionych skrzynek."""
+    err = admin_variant_or_404(variant)
+    if err:
+        return err
+    if variant not in CRATE_VARIANTS:
+        return bad("Tego wariantu nie przypina się do skrzynek")
+    body = request.get_json(force=True) or {}
+    crate = catalog.CRATES.get(body.get("crate"))
+    if crate is None or crate["special"]:
+        return bad("Nie ma takiej skrzynki")
+    on = bool(body.get("on"))
+    variants = [v for v in CRATE_VARIANTS if (v in crate["variants"] and v != variant) or (on and v == variant)]
+    catalog.save_override(db(), "catalog_crates", crate["id"], {"variants": variants, "variantsAll": True})
+    log_admin("variant_crate", details=f"{VARIANTS[variant]['name']}: {'przypięty do' if on else 'odpięty od'} {crate['name']}")
+    db().commit()
+    refresh_catalog()
+    return jsonify({"ok": True, "crates": {crate["id"]: catalog.CRATES[crate["id"]]["variants"]}})
 
 
 @app.post("/api/admin/variants/<variant>/events")

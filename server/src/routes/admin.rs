@@ -407,8 +407,9 @@ pub async fn admin_save_crate(State(st): State<AppState>, Admin(me): Admin, Json
     fields.insert("desc".into(), json!(clean(&req.desc, 120)));
     fields.insert("shop".into(), json!(req.shop));
     fields.insert("restricted".into(), json!(req.restricted));
-    // warianty wyjątkowe (Królewski, Flagowy...) - wypadają tylko ze skrzynek, w których są włączone
+    // warianty przypięte do skrzynki - każdy wariant wypada tylko ze skrzynek, do których jest przypięty
     fields.insert("variants".into(), json!(g.crate_variants.iter().filter(|v| req.variants.contains(v)).collect::<Vec<_>>()));
+    fields.insert("variantsAll".into(), json!(true));
     fields.insert("weights".into(), Value::Object(weights));
     let given = req.id.filter(|id| !id.is_empty());
     let cid = given.clone().unwrap_or_else(|| unique_id(&slug(&name), cat.crates.keys().chain(cat.hidden_crates.keys())));

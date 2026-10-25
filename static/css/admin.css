@@ -147,6 +147,10 @@ fieldset .chk { display: flex; margin: 4px 0; color: var(--text); font-size: 14p
 .a-vphoto-row .a-grid { flex: 1; min-width: 220px; }
 
 /* karty specjalne i linki do nich */
+/* warianty przypięte do skrzynki (edycja skrzynki) */
+.a-vgroup { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-bottom: 10px; }
+.a-vgroup > .muted { flex-basis: 100%; }
+.a-voff { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: #3a3f4a; color: #cfd6e2; }
 .a-special-note { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid #19e6ff66; background: linear-gradient(90deg, #19e6ff1a, #ff2bd61a); font-size: 13px; }
 fieldset.a-special { border-color: #19e6ff66; }
 .a-link-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; margin: 6px 0 14px; }
