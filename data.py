@@ -46,7 +46,7 @@ VARIANTS = {
     # "noCombo": ten wariant NIE łączy się z innymi (Lampionowa / Diabelska są zawsze same - tylko Halloweenowa łączy się).
     # "photo": karta może mieć własne zdjęcie w tym wariancie (panel admina); "photoFallback": gdy go brak - zdjęcie
     # z tamtego wariantu (Lampionowa / Diabelska -> Halloweenowa), a gdy i tego brak - zwykłe.
-    "halloween": {"name": "Halloweenowa", "chance": 0.0, "mult": 3.0, "exclusive": True, "layer": True, "always": True,
+    "halloween": {"name": "Halloweenowa", "chance": 0.0, "mult": 1.0, "exclusive": True, "layer": True, "always": True,
                   "weight": 85, "photo": True,
                   "desc": "Noc z księżycem, dynie-lampiony, czaszka i nietoperze. Najczęstszy z wariantów halloweenowych."},
     "lantern":   {"name": "Lampionowa", "chance": 0.0, "mult": 6.0, "exclusive": True, "layer": True, "always": True,
@@ -780,6 +780,10 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 15, "date": "2026-10-25", "title": "Poprawka Skrzyni Halloween",
+     "items": [
+         "🎃 Wariant <b>Halloweenowa</b> sam w sobie nie zwiększa już wartości karty (×1) - liczy się tylko drugi wariant, np. Halloweenowa + Złota = wartość Złotej.",
+     ]},
     {"v": 14, "date": "2026-10-24", "title": "Wyścigi konne w kasynie",
      "items": [
          "🐎 Nowa gra w 🎰 <b>Kasynie</b>: <b>Wyścigi konne</b>. 10 koni na okrągłym torze, każdy z innym mnożnikiem wygranej.",
