@@ -17,12 +17,15 @@ const vmStar = (x, y, r, fill) => `<path fill="${fill}" d="M${Array.from({ lengt
   const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .4 : r;
   return `${(x + Math.cos(a) * rr).toFixed(2)} ${(y + Math.sin(a) * rr).toFixed(2)}`;
 }).join(" L")}Z"/>`;
+// unikalne id dla filtrów / gradientów SVG (na stronie jest wiele kart naraz)
+let vmIdN = 0;
+const vmId = p => `${p}${++vmIdN}`;
 
-// ---------------------------------------------------------------- CZARNO-BIAŁA Z FLAGĄ USA (nazwa robocza)
-// Estetyka plakatów filmowych z lat 70 (jak plakaty „BlacKkKlansman”): kontrastowe czarno-białe zdjęcie, flaga USA,
-// grube napisy, jeden mocny akcent koloru. Klasy z prefiksem ub-.
+// ---------------------------------------------------------------- CZARNO-BIAŁA Z FLAGĄ USA (nazwa robocza) - runda 2
+// Połączenie makiet 3 (flaga nachodzi na zdjęcie) i 1 (flaga powiewa w tle) z pierwszej rundy: przekrzywiona flaga
+// faluje w tle, a na zdjęciu - różne sposoby nałożenia flagi. Kontrastowe czarno-białe zdjęcie. Klasy z prefiksem ub-.
 
-// flaga USA 76 x 40: 13 pasów, granatowe pole z 50 gwiazdami (kolory do podania - w czerni i bieli albo z czerwienią)
+// flaga USA 76 x 40: 13 pasów, pole z 50 gwiazdami (kolory do podania - czerń i biel albo z czerwienią)
 function ubFlag(red = "#1a1a1a", white = "#f2f2f2", blue = "#0c0c0c", star = "#f2f2f2") {
   let s = `<rect width="76" height="40" fill="${white}"/>`;
   for (let k = 0; k < 13; k += 2) s += `<rect y="${(k * 40 / 13).toFixed(2)}" width="76" height="${(40 / 13).toFixed(2)}" fill="${red}"/>`;
@@ -31,164 +34,166 @@ function ubFlag(red = "#1a1a1a", white = "#f2f2f2", blue = "#0c0c0c", star = "#f
     s += vmStar(2.53 + c * 5.07 + (r % 2 ? 2.53 : 0), 2.15 + r * 2.15, .95, star);
   return s;
 }
+// samo pole z gwiazdami (do rogu zdjęcia)
+const ubCanton = (blue, star) => vmSvg(ubFlag("#000", "#000", blue, star), "0 0 30.4 21.54", "", "xMinYMin slice");
+// powiewająca flaga w tle, przekrzywiona (kąt w CSS), z przesuwającymi się cieniami fal i światłem z góry
+const ubWaving = (cls = "", c = ["#3a3a3a", "#d0d0d0", "#141414", "#e4e4e4"]) =>
+  `<i class="ub-tilt ${cls}"><i class="ub-flagbox">${vmSvg(ubFlag(...c), "0 0 76 40")}</i><i class="ub-ripple"></i></i><i class="ub-spot"></i>`;
 const ubStars = (n, cls) => vmScatter(n, cls, () => `--s:${vmN(.6, 1.4, 2)}`);
-// pasek z gwiazdami przesuwający się w poprzek karty (jak taśma na plakacie)
-const ubMarquee = txt => `<span class="ub-marquee"><b>${(txt + " ").repeat(8)}</b><b>${(txt + " ").repeat(8)}</b></span>`;
 
 const VM_USBW = {
   key: "usbw", icon: "★", name: "Czarno-biała z flagą USA (nazwa robocza)", tag: "★ U.S.A. ★",
-  about: "plakat filmowy z lat 70: kontrastowe czarno-białe zdjęcie, flaga USA, grube napisy i jeden mocny akcent koloru",
+  about: "runda 2: przekrzywiona flaga powiewa w tle (jak w 1.), a na zdjęciu różne sposoby nałożenia flagi (jak w 3.)",
   looks: [
     {
-      name: "Flaga na wietrze",
-      desc: "Cała karta w czerni i bieli. Za zdjęciem wielka szara flaga faluje na wietrze (cienie fal przesuwają się po pasach), od góry pada światło reflektora, a po zdjęciu sypie się ziarno taśmy.",
-      bg: () => `<div class="vm-bg"><i class="ub-flagbox">${vmSvg(ubFlag("#3a3a3a", "#d8d8d8", "#161616", "#e8e8e8"), "0 0 76 40", "ub-flag")}</i><i class="ub-ripple"></i><i class="ub-spot"></i></div>`,
-      photo: () => '<i class="vm-photo ub-grain"></i>',
-      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame1"></i><i class="ub-dust"></i></div>',
-      sub: () => "★ OPARTE NA FAKTACH ★",
+      name: "Szara flaga przez twarz",
+      desc: "Jak 3., ale cała w czerni i bieli: szare pasy płyną przez połowę zdjęcia, w rogu czarne pole z białymi gwiazdami. W tle przekrzywiona flaga faluje na wietrze, ramka w czarno-białe ukośne pasy.",
+      bg: () => `<div class="vm-bg">${ubWaving()}</div>`,
+      photo: () => `<i class="vm-photo ub-stripes bw"></i><i class="vm-photo ub-canton">${ubCanton("#0c0c0c", "#f2f2f2")}</i><i class="vm-photo ub-grain"></i>`,
+      deco: () => '<div class="vm-deco ub-clip"><i class="ub-hazard"></i><i class="ub-dust"></i></div>',
+      sub: () => "TO PRAWDZIWA HISTORIA",
     },
     {
-      name: "Czerwony tytuł",
-      desc: "Czarno-biały plakat z jednym kolorem: nazwa wielkimi czerwonymi literami, czerwony pas z przesuwającymi się gwiazdami pod zdjęciem, zdjęcie w drukarskim rastrze, nad nazwą napis jak z czołówki.",
-      top: () => '<div class="ub-credit">SCAMBOX PRZEDSTAWIA</div>',
-      bg: () => `<div class="vm-bg"><i class="ub-paper"></i>${ubStars(10, "ub-tw dark")}</div>`,
-      photo: () => '<i class="vm-photo ub-halftone"></i><i class="vm-photo ub-burn"></i>',
-      sub: () => ubMarquee("★ OPARTE NA PRAWDZIWYCH WYDARZENIACH ★"),
-      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame2"></i></div>',
-    },
-    {
-      name: "Flaga przez twarz",
-      desc: "Jak na plakacie: pasy flagi przechodzą przez połowę zdjęcia (wypłowiała czerwień na czarno-białej twarzy), w rogu zdjęcia pole z gwiazdami, ramka w czarno-białe ukośne pasy, pasy powoli płyną.",
-      bg: () => '<div class="vm-bg"><i class="ub-dark"></i></div>',
-      photo: () => `<i class="vm-photo ub-stripes"></i><i class="vm-photo ub-canton">${vmSvg(ubFlag("#b3263a", "#f2f2f2", "#141414", "#f2f2f2"), "0 0 30.4 21.54", "", "xMinYMin slice")}</i><i class="vm-photo ub-grain"></i>`,
+      name: "Czerwień tylko na twarzy",
+      desc: "Tło całe szare (powiewająca przekrzywiona flaga), a jedyny kolor na karcie to wypłowiała czerwień pasów na zdjęciu i czerwony cień pod nazwą.",
+      bg: () => `<div class="vm-bg">${ubWaving()}</div>`,
+      photo: () => `<i class="vm-photo ub-stripes"></i><i class="vm-photo ub-canton">${ubCanton("#141414", "#f2f2f2")}</i><i class="vm-photo ub-grain"></i>`,
       deco: () => '<div class="vm-deco ub-clip"><i class="ub-hazard"></i></div>',
       sub: () => "TO PRAWDZIWA HISTORIA",
     },
     {
-      name: "Polaroid 1972",
-      desc: "Zdjęcie jako wyblakły polaroid przyklejony taśmą, nazwa jak z maszyny do pisania, przypinka z flagą, co kilka sekund błysk flesza, kurz i rysy.",
-      bg: () => `<div class="vm-bg"><i class="ub-cork"></i>${vmScatter(6, "ub-pin")}</div>`,
-      photo: () => '<i class="vm-photo ub-fade"></i><i class="vm-photo ub-flash"></i>',
-      deco: p => `<div class="vm-deco"><i class="ub-tape a"></i><i class="ub-tape b"></i><i class="ub-badge">${vmSvg(ubFlag("#c8283c", "#f4f4f4", "#1d2a5a", "#f4f4f4"), "0 0 76 40", "", "xMidYMid slice")}</i></div>`,
-      sub: () => "COLORADO · JESIEŃ 1972",
+      name: "Flaga na skos",
+      desc: "Pasy flagi idą po skosie przez całe zdjęcie i zanikają w stronę twarzy, a w tle druga flaga powiewa pod przeciwnym kątem - dwie flagi się krzyżują. Dookoła migoczą gwiazdy.",
+      bg: () => `<div class="vm-bg">${ubWaving("rev")}${ubStars(8, "ub-tw")}</div>`,
+      photo: () => '<i class="vm-photo ub-diag"></i><i class="vm-photo ub-grain"></i>',
+      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame1"></i><i class="ub-dust"></i></div>',
+      sub: () => "★ OPARTE NA FAKTACH ★",
     },
     {
-      name: "Funk '70s",
-      desc: "Groovy lata 70 w szarościach: za zdjęciem powoli obracają się promienie, nazwa grubą funkową czcionką z warstwowym cieniem, migoczące gwiazdy, a pod zdjęciem łopocze wstęga flagi.",
-      bg: () => `<div class="vm-bg"><i class="ub-rays"></i>${ubStars(14, "ub-tw")}</div>`,
-      photo: () => '<i class="vm-photo ub-grain"></i>',
-      sub: () => `<span class="ub-ribbon">${vmSvg(ubFlag("#5a5a5a", "#efefef", "#1a1a1a", "#efefef"), "0 0 76 40", "", "none")}</span><b class="ub-ribbon-t">DIG IT!</b>`,
-      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame5"></i></div>',
+      name: "Światło przez flagę",
+      desc: "Flaga jak rzucone na twarz światło projektora: jasne i ciemne pasy (falujące) i świetliste gwiazdy w rogu, z boku snop światła. W tle ciemna, przekrzywiona flaga powiewa w mroku.",
+      bg: () => `<div class="vm-bg">${ubWaving("dim")}<i class="ub-beam"></i></div>`,
+      photo: () => `<i class="vm-photo ub-light"></i><i class="vm-photo ub-lstars">${vmSvg(ubFlag("#0000", "#0000", "#0000", "#fff"), "0 0 30.4 21.54", "", "xMinYMin slice")}</i><i class="vm-photo ub-grain"></i>`,
+      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame1"></i><i class="ub-vignette"></i></div>',
+      sub: () => "NOC · COLORADO · 1972",
     },
     {
-      name: "Gazeta",
-      desc: "Pierwsza strona gazety: papier gazetowy z kolumnami tekstu w tle, winieta z tytułem i flagą nad nazwą, zdjęcie w rastrze, czerwona pieczątka EXTRA! pulsuje w rogu.",
-      top: () => `<div class="ub-mast"><span>THE SCAMBOX TIMES</span><i>${vmSvg(ubFlag("#222", "#f4f0e6", "#111", "#f4f0e6"), "0 0 76 40", "", "xMidYMid slice")}</i><small>WTOREK · 10 PAŹDZIERNIKA 1972 · 25¢</small></div>`,
-      bg: () => '<div class="vm-bg"><i class="ub-news"></i><i class="ub-cols"></i></div>',
-      photo: () => '<i class="vm-photo ub-halftone dense"></i>',
-      deco: () => '<div class="vm-deco"><i class="ub-extra">EXTRA!</i><i class="ub-fold"></i></div>',
-      sub: () => "„NIKT BY W TO NIE UWIERZYŁ”",
+      name: "Podwójna ekspozycja",
+      desc: "Flaga prześwituje przez całe zdjęcie jak druga klatka naświetlona na tej samej kliszy i lekko faluje. W tle przekrzywiona flaga, nazwa z czerwonym cieniem, ramka jak brzeg odbitki.",
+      bg: () => `<div class="vm-bg">${ubWaving()}</div>`,
+      photo: () => `<i class="vm-photo ub-expo">${vmSvg(ubFlag("#2a2a2a", "#f2f2f2", "#0c0c0c", "#f2f2f2"), "0 0 76 40", "", "xMidYMid slice")}</i><i class="vm-photo ub-grain"></i>`,
+      deco: () => '<div class="vm-deco ub-clip"><i class="ub-print"></i><i class="ub-dust"></i></div>',
+      sub: () => "TO PRAWDZIWA HISTORIA",
+    },
+    {
+      name: "Zdarty plakat",
+      desc: "Na zdjęciu przyklejony szary plakat z flagą, zdarty po skosie - spod niego wychodzi twarz, oderwany róg się zawija. Zszywki w rogach zdjęcia, w tle przekrzywiona flaga powiewa.",
+      bg: () => `<div class="vm-bg">${ubWaving()}</div>`,
+      photo: () => `<i class="vm-photo ub-torn">${vmSvg(ubFlag("#3a3a3a", "#e8e8e8", "#141414", "#e8e8e8"), "0 0 76 40", "", "xMinYMin slice")}</i><i class="vm-photo ub-curl"></i><i class="vm-photo ub-grain"></i>`,
+      deco: () => '<div class="vm-deco ub-clip"><i class="ub-frame1"></i></div><div class="vm-deco"><i class="ub-staple a"></i><i class="ub-staple b"></i></div>',
+      sub: () => "★ OPARTE NA FAKTACH ★",
     },
   ],
 };
 
-// ---------------------------------------------------------------- RETRO KOSMOS (nazwa robocza)
-// Wczesna eksploracja kosmosu, lata 60 i 70: złoto i srebro, ziarniste nagrania i zdjęcia z misji (krzyżyki na zdjęciach
-// z aparatów misji, telewizja z Księżyca), folia termiczna lądownika, pulpity kontroli lotów. Klasy z prefiksem ap-.
+// ---------------------------------------------------------------- RETRO KOSMOS (nazwa robocza) - runda 2
+// Realistyczny Księżyc (faktura z filtrów SVG: szum + oświetlenie = kratery i nierówności, ciemne morza, cień
+// terminatora) i cała karta jak nagranie albo transmisja telewizyjna z lat 60/70: złoty filtr na całej karcie, ziarno,
+// linie obrazu, zakłócenia, migotanie. Klasy z prefiksem ap-.
 
+// Księżyc w pełni albo w fazie (shade 0 - pełnia, 1 - mocny cień z lewej), seed - inny rozkład nierówności,
+// crescent - sierp (ciemna strona zakrywa większość tarczy, zostaje ledwo widoczna poświata Ziemi)
+function apMoon(shade = .55, seed = 7, crescent = false) {
+  const f = vmId("apMf"), b = vmId("apMb"), c = vmId("apMc"), s = vmId("apMs");
+  const maria = [[38, 34, 13, 9], [56, 28, 9, 7], [62, 48, 11, 8], [44, 56, 9, 7], [27, 50, 7, 9], [70, 64, 6, 5], [50, 74, 7, 4]]
+    .map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join("");
+  const craters = Array.from({ length: 14 }, () => {
+    const x = rand(14, 86), y = rand(14, 86), r = rand(1, 3.4);
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#0003" stroke="#fff6" stroke-width=".35"/>`;
+  }).join("") + '<circle cx="34" cy="82" r="3" fill="#fff4"/><path d="M34 82 L20 98 M34 82 L48 97 M34 82 L30 99 M34 82 L10 86" stroke="#fff2" stroke-width=".7"/>';
+  return vmSvg(`<defs>
+      <filter id="${f}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="5" seed="${seed}" result="t"/>
+        <feDiffuseLighting in="t" lighting-color="#f4f2ea" surfaceScale="2.6"><feDistantLight azimuth="20" elevation="52"/></feDiffuseLighting></filter>
+      <filter id="${b}"><feGaussianBlur stdDeviation="1.6"/></filter>
+      <radialGradient id="${s}" cx="${70 - shade * 25}%" cy="38%" r="${78 - shade * 18}%"><stop offset="${.55 - shade * .25}" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${.55 + shade * .43}"/></radialGradient>
+      <clipPath id="${c}"><circle cx="50" cy="50" r="48"/></clipPath></defs>
+    <g clip-path="url(#${c})"><rect width="100" height="100" filter="url(#${f})"/>
+      <g fill="#20201e" opacity=".5" filter="url(#${b})">${maria}</g>${craters}
+      <circle cx="50" cy="50" r="48" fill="url(#${s})"/>${crescent ? `<circle cx="36" cy="46" r="47" fill="#05060a" opacity=".9" filter="url(#${b})"/>` : ""}</g>
+    <circle cx="50" cy="50" r="48" fill="none" stroke="#fff3" stroke-width=".5"/>`, "0 0 100 100", "ap-moon-svg", "xMidYMid meet");
+}
+// powierzchnia Księżyca (horyzont z kraterami, faktura jak u Księżyca) - w jednostkach karty 63 x 88
+function apSurface(seed = 3) {
+  const f = vmId("apSf"), g = vmId("apSg");
+  const craters = Array.from({ length: 9 }, () => {
+    const x = rand(2, 61), y = rand(66, 86), rx = rand(1.5, 5);
+    return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx.toFixed(1)}" ry="${(rx * .3).toFixed(1)}" fill="#0005" stroke="#fff5" stroke-width=".3"/>`;
+  }).join("");
+  return vmSvg(`<defs><filter id="${f}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".09 .3" numOctaves="4" seed="${seed}" result="t"/>
+      <feDiffuseLighting in="t" lighting-color="#e8e6de" surfaceScale="2"><feDistantLight azimuth="10" elevation="30"/></feDiffuseLighting></filter>
+      <linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".7"/></linearGradient>
+      <clipPath id="${f}c"><path d="M-2 66 Q10 61 22 64 T44 62 T66 65 V90 H-2Z"/></clipPath></defs>
+    <g clip-path="url(#${f}c)"><rect y="55" width="63" height="35" filter="url(#${f})"/>${craters}<rect y="58" width="63" height="32" fill="url(#${g})"/></g>`);
+}
+// gwiazdy (migoczą) i linia telemetrii zmieniająca liczby (CSS steps)
 const apStars = n => vmScatter(n, "ap-star", () => `--s:${vmN(.4, 1.3, 2)};animation-duration:${vmN(1.6, 4, 1)}s`);
-// krzyżyki na kliszy (płytka z siatką w aparacie z misji): siatka 5 x 5 małych "+"
-const apReseau = (c = "#fff") => vmSvg(Array.from({ length: 25 }, (_, k) => {
-  const x = 6 + (k % 5) * 12, y = 6 + Math.floor(k / 5) * 12;
-  return `<path d="M${x - 1.6} ${y}H${x + 1.6}M${x} ${y - 1.6}V${y + 1.6}" stroke="${c}" stroke-width=".35"/>`;
-}).join(""), "0 0 60 60", "ap-reseau");
-// "mapa pulsarów" ze złotej płyty: linie z jednego punktu z kreskami (zapis binarny) - w jednostkach karty 63 x 88
-function apPulsars() {
-  let s = "";
-  for (let k = 0; k < 14; k++) {
-    const a = k * 25.7 * Math.PI / 180 + .2, len = 18 + (k * 7) % 22, x2 = 31.5 + Math.cos(a) * len, y2 = 44 + Math.sin(a) * len;
-    s += `<path d="M31.5 44 L${x2.toFixed(1)} ${y2.toFixed(1)}" class="ap-pl"/>`;
-    for (let t = 1; t < 7; t++) {
-      if ((k * 3 + t * 5) % 3 === 0) continue;
-      const px = 31.5 + Math.cos(a) * len * t / 7, py = 44 + Math.sin(a) * len * t / 7, nx = -Math.sin(a) * 1.1, ny = Math.cos(a) * 1.1;
-      s += `<path d="M${(px - nx).toFixed(1)} ${(py - ny).toFixed(1)} L${(px + nx).toFixed(1)} ${(py + ny).toFixed(1)}" class="ap-pl"/>`;
-    }
-  }
-  return s;
-}
-// folia termiczna lądownika: losowe trójkątne fasety w odcieniach złota (za każdym razem inne zgniecenia)
-function apFoil() {
-  const golds = ["#f5d27a", "#e8b84a", "#c8902a", "#fff0b0", "#b07818", "#ffe08a", "#d9a63c"];
-  const pts = [];
-  for (let r = 0; r <= 8; r++) for (let c = 0; c <= 6; c++)
-    pts.push([c * 10.5 + (c && c < 6 ? rand(-3, 3) : 0), r * 11 + (r && r < 8 ? rand(-3, 3) : 0)]);
-  let s = "";
-  for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) {
-    const a = pts[r * 7 + c], b = pts[r * 7 + c + 1], d = pts[(r + 1) * 7 + c], e = pts[(r + 1) * 7 + c + 1];
-    const f = (p, q, t) => `<path d="M${p[0].toFixed(1)} ${p[1].toFixed(1)}L${q[0].toFixed(1)} ${q[1].toFixed(1)}L${t[0].toFixed(1)} ${t[1].toFixed(1)}Z" fill="${vmPick(golds)}"/>`;
-    s += f(a, b, e) + f(a, e, d);
-  }
-  return s;
-}
-// lampki pulpitu kontroli lotów (każda miga w swoim rytmie)
-const apLamps = n => Array.from({ length: n }, () =>
-  `<i class="ap-lamp ${vmPick(["amber", "green", "red", "white", "amber"])}" style="animation-delay:-${vmN(0, 3, 1)}s;animation-duration:${vmN(.8, 3.2, 1)}s"></i>`).join("");
-// odliczanie T-minus: kolumna cyfr przewijana w CSS (apCount)
-const apCount = () => `<span class="ap-count">T−00:00:<span class="ap-digits"><b>10</b><b>09</b><b>08</b><b>07</b><b>06</b><b>05</b><b>04</b><b>03</b><b>02</b><b>01</b><b>00</b><b>10</b></span></span>`;
+const apTelemetry = () => `<span class="ap-tele"><span>ALT</span><span class="ap-roll">${[" 102 400", " 101 950", " 101 310", " 100 820", " 100 260", " 99 870", " 102 400"].map(x => `<b>${x}</b>`).join("")}</span><span>STOPY</span></span>`;
+// znaczniki klatki z kroniki filmowej (kółko w rogu pod koniec rolki), rysy na taśmie
+const apScratches = n => vmScatter(n, "ap-scratch", () => `animation-duration:${vmN(1.2, 3, 1)}s`, [0, 0]);
+// filtry całej karty: złoty odcień, ziarno, migotanie, winieta (wspólne dla wszystkich makiet tej grupy)
+const apFilm = (extra = "") => `<div class="vm-deco ap-clip"><i class="ap-gold"></i><i class="ap-grain"></i><i class="ap-flicker"></i>${extra}<i class="ap-vignette"></i></div>`;
 
 const VM_APOLLO = {
-  key: "apollo", icon: "🚀", name: "Retro kosmos (nazwa robocza)", tag: "◉ MISJA 69",
-  about: "wczesna eksploracja kosmosu w latach 60 i 70: złoto i srebro, ziarniste nagrania i zdjęcia z misji, folia lądownika, pulpity kontroli lotów",
+  key: "apollo", icon: "🌕", name: "Retro kosmos (nazwa robocza)", tag: "◉ MISJA 69",
+  about: "runda 2: realistyczny Księżyc i cała karta jak nagranie albo transmisja telewizyjna z lat 60/70 - złoty filtr, ziarno, linie obrazu, zakłócenia",
   looks: [
     {
-      name: "Złota płyta",
-      desc: "Czarna karta jak złota płyta wysłana w kosmos: za zdjęciem powoli obraca się wygrawerowany rowek płyty i mapa pulsarów, ramka mieni się złotem, zdjęcie w złotym tonie, po karcie przesuwa się połysk metalu.",
-      bg: () => `<div class="vm-bg"><i class="ap-record"></i><i class="ap-pulsars">${vmSvg(apPulsars())}</i>${apStars(10)}</div>`,
-      photo: () => '<i class="vm-photo ap-goldtone"></i>',
-      deco: () => '<div class="vm-deco ap-clip"><i class="ap-sheen"></i><i class="ap-engrave"></i></div>',
-      sub: () => "WIADOMOŚĆ DLA GWIAZD · 1977",
+      name: "Księżyc na kliszy",
+      desc: "Wielki realistyczny Księżyc (kratery, morza, cień) wschodzi za zdjęciem, cała karta w złotym tonie starej kliszy: ziarno, migotanie projektora, rysy na taśmie i winieta.",
+      bg: () => `<div class="vm-bg"><i class="ap-space"></i>${apStars(18)}<i class="ap-moon big">${apMoon(.35, 7)}</i></div>`,
+      deco: () => apFilm(apScratches(2)),
+      sub: () => "8 MM · KOLOR · BEZ DŹWIĘKU",
     },
     {
-      name: "Transmisja z Księżyca",
-      desc: "Ziarnisty czarno-biały obraz z telewizji z Księżyca: linie obrazu, przewijający się pasek zakłóceń, duch obrazu, szum, nad nazwą migające ● NA ŻYWO, srebrna obudowa telewizora.",
-      top: () => '<div class="ap-live"><b>● NA ŻYWO</b><span>KSIĘŻYC → ZIEMIA · 10 KL/S</span></div>',
-      bg: () => '<div class="vm-bg"><i class="ap-tvbg"></i></div>',
-      photo: () => '<i class="vm-photo ap-ghost"></i><i class="vm-photo ap-scan"></i><i class="vm-photo ap-roll"></i><i class="vm-photo ap-noise"></i>',
-      deco: () => '<div class="vm-deco ap-clip"><i class="ap-tvframe"></i></div>',
+      name: "Transmisja TV 1969",
+      desc: "Cała karta jak obraz z czarno-białego telewizora z lekko złotym odcieniem: horyzont Księżyca pod zdjęciem, linie obrazu, przewijający się pasek zakłóceń, co jakiś czas szum, zaokrąglony ekran kineskopu i migające ● NA ŻYWO.",
+      top: () => '<div class="ap-live"><b>● NA ŻYWO</b><span>KSIĘŻYC → ZIEMIA</span></div>',
+      bg: () => `<div class="vm-bg"><i class="ap-space"></i>${apStars(10)}<i class="ap-earth-s"></i>${apSurface(3)}</div>`,
+      photo: () => '<i class="vm-photo ap-ghost"></i>',
+      deco: () => apFilm('<i class="ap-scan"></i><i class="ap-roll-bar"></i><i class="ap-static"></i><i class="ap-crt"></i>'),
       sub: () => "TRANSMISJA SATELITARNA · 20.07.1969",
     },
     {
-      name: "Hasselblad",
-      desc: "Klatka z aparatu z misji: na zdjęciu siatka krzyżyków z kliszy, po bokach perforacja filmu, na brzegu numer klatki i dane misji, po zdjęciu przesuwa się odblask słońca w obiektywie.",
-      photo: () => `<i class="vm-photo ap-moonfilm"></i><i class="vm-photo">${apReseau()}</i><i class="vm-photo ap-flare"></i>`,
-      bg: () => '<div class="vm-bg"><i class="ap-filmbase"></i></div>',
-      deco: () => '<div class="vm-deco ap-clip"><i class="ap-sprk l"></i><i class="ap-sprk r"></i><i class="ap-edge l">SCAMBOX 69 · 2137 · KODAK EKTACHROME</i><i class="ap-edge r">KLATKA 40-5903 ▸ 40-5904</i></div>',
-      sub: () => "SB-69-2137 · 70 MM",
+      name: "Kronika filmowa 16 mm",
+      desc: "Sepiowo-złota kronika filmowa: obraz lekko podskakuje jak w projektorze, rysy i kurz na taśmie, co kilka sekund kółko znacznika zmiany rolki. Z rogu karty wychodzi Księżyc w fazie.",
+      bg: () => `<div class="vm-bg"><i class="ap-space warm"></i>${apStars(10)}</div>`,
+      deco: () => `<div class="vm-deco"><i class="ap-moon corner">${apMoon(.7, 11)}</i></div>${apFilm(`${apScratches(3)}<i class="ap-dust"></i><i class="ap-cue"></i>`)}`,
+      cls: "ap-jitter",
+      sub: () => "KRONIKA · LĄDOWANIE NA KSIĘŻYCU",
     },
     {
-      name: "Folia termiczna",
-      desc: "Cała karta w zgniecionej złotej folii lądownika księżycowego (za każdym razem inaczej pognieciona), po fasetach przesuwa się błysk słońca, panele jak czarne płyty pojazdu z nitami, zdjęcie z ciepłym złotym odblaskiem.",
-      bg: () => `<div class="vm-bg"><i class="ap-foil">${vmSvg(apFoil())}</i><i class="ap-foilsheen"></i></div>`,
-      photo: () => '<i class="vm-photo ap-goldtone soft"></i>',
-      deco: () => `<div class="vm-deco">${["tl", "tr", "bl", "br"].map(c => `<i class="ap-rivet ${c}"></i>`).join("")}</div>`,
-      sub: () => "LĄDOWNIK · ORZEŁ WYLĄDOWAŁ",
+      name: "Sierp i telemetria",
+      desc: "Ogromny sierp Księżyca z poświatą Ziemi za zdjęciem, na zdjęciu lekko złote nakładki telemetrii (wysokość spada jak przy lądowaniu) i krzyżyki z kliszy, całość jak nagranie z kamery lądownika.",
+      bg: () => `<div class="vm-bg"><i class="ap-space"></i>${apStars(16)}<i class="ap-moon crescent">${apMoon(.3, 4, true)}</i></div>`,
+      photo: () => `<i class="vm-photo ap-reticle"></i>${apTelemetry()}`,
+      deco: () => apFilm('<i class="ap-scan soft"></i>'),
+      sub: () => "LĄDOWNIK · 500 STÓP · W PORZĄDKU",
     },
     {
-      name: "Kontrola lotów",
-      desc: "Srebrny pulpit z centrum kontroli lotów: rzędy mrugających lampek, wskaźniki z drgającymi wskazówkami, odliczanie T-minus w podpisie, zdjęcie jak na monitorze kontrolnym.",
-      top: () => `<div class="ap-panel">${apLamps(12)}</div>`,
-      bg: () => '<div class="vm-bg"><i class="ap-brushed"></i></div>',
-      photo: () => '<i class="vm-photo ap-monitor"></i><i class="vm-photo ap-scan"></i>',
-      deco: () => '<div class="vm-deco"><i class="ap-gauge a"><i></i></i><i class="ap-gauge b"><i></i></i></div>',
-      sub: () => apCount(),
+      name: "Odbicie w wizjerze",
+      desc: "Zdjęcie jak przez złoty wizjer hełmu astronauty: złoty połysk, w szybce odbija się Księżyc i horyzont. W tle powierzchnia Księżyca i wisząca nad nią Ziemia, całość w ziarnie starej kliszy.",
+      bg: () => `<div class="vm-bg"><i class="ap-space"></i>${apStars(12)}<i class="ap-earth-s high"></i>${apSurface(9)}</div>`,
+      photo: () => `<i class="vm-photo ap-visor"></i><i class="vm-photo ap-reflect">${apMoon(.2, 5)}</i><i class="vm-photo ap-visor-hi"></i>`,
+      deco: () => apFilm(),
+      sub: () => "SPACER PO KSIĘŻYCU · EVA 1",
     },
     {
-      name: "Wschód Ziemi",
-      desc: "Czarny kosmos z migoczącymi gwiazdami, z rogu karty wschodzi Ziemia ze złotą poświatą, dookoła karty krąży mały satelita z antenami, zdjęcie w szarym świetle Księżyca, srebrna ramka.",
-      bg: () => `<div class="vm-bg"><i class="ap-space"></i>${apStars(28)}<i class="ap-horizon"></i></div>`,
-      photo: () => '<i class="vm-photo ap-lunar"></i>',
-      deco: () => '<div class="vm-deco"><i class="ap-earth"></i><i class="ap-orbit"><i class="ap-sat"></i></i><i class="ap-silver"></i></div>',
-      sub: () => "WSCHÓD ZIEMI · ORBITA KSIĘŻYCA",
+      name: "Atlas Księżyca",
+      desc: "Złota tablica z atlasu: realistyczny Księżyc w pełni z siatką współrzędnych i podpisami mórz, powoli się obraca, a cała karta drga jak obraz z telewizora - linie obrazu i złoty odcień.",
+      bg: () => `<div class="vm-bg"><i class="ap-space"></i><i class="ap-moon atlas">${apMoon(.08, 2)}<i class="ap-grid"></i>
+        <b class="ap-lbl" style="left:20%;top:24%">MARE IMBRIUM</b><b class="ap-lbl" style="left:50%;top:20%">MARE SERENITATIS</b><b class="ap-lbl" style="left:44%;top:32%">MARE TRANQUILLITATIS</b><b class="ap-lbl" style="left:6%;top:40%">OCEANUS PROCELLARUM</b></i></div>`,
+      deco: () => apFilm('<i class="ap-scan soft"></i>'),
+      sub: () => "ATLAS · STRONA WIDOCZNA · 1:10 000 000",
     },
   ],
 };
