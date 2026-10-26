@@ -175,6 +175,7 @@ function renderCards() {
           ${c.builtin ? '<i>wbudowana</i>' : '<i class="own">własna</i>'}
           ${c.modified ? '<i class="mod">zmieniona</i>' : ""}
           ${c.hidden ? '<i class="hid">ukryta</i>' : ""}
+          ${(c.exclusive || []).includes(A.crate) ? '<i class="mod" title="Nie wypada z kasyna, ulepszacza, kuźni ani wyścigów">🔒 ekskluzywna</i>' : ""}
           ${!c.hasImage ? '<i class="warn">brak zdjęcia</i>' : ""}
           ${(c.crates || []).length > 1 ? `<i class="own">też w: ${(c.crates || []).filter(k => k !== A.crate).map(k => esc(A.cat.crates.find(x => x.id === k)?.short || k)).join(", ")}</i>` : ""}
           ${c.owned ? `<i>gracze mają ×${c.owned}</i>` : ""}
@@ -214,7 +215,9 @@ function openCardForm(id) {
         <label class="wide">Opis <small class="muted">(dłuższy tekst obok karty w podglądzie, max 1000 znaków)</small>
           <textarea name="desc" rows="3" maxlength="1000" placeholder="Kim jest ta osoba, ciekawostki…">${esc(c.desc || "")}</textarea></label>
         <div class="wide a-crate-checks" ${c.rarity === "special" ? "hidden" : ""}><span class="muted small">Skrzynki (karta może być w kilku; pierwsza zaznaczona to skrzynka główna — jej kod jest na karcie):</span>
-          ${A.cat.crates.filter(x => !x.hidden && !x.special).map(x => `<label class="chk"><input type="checkbox" name="crates" value="${esc(x.id)}" ${(c.crates || [c.crate]).includes(x.id) ? "checked" : ""}> ${esc(x.emoji)} ${esc(x.name)}${(x.variants || []).includes("flag") ? ' <small title="Skrzynka z wariantem Flagowym">🏳️</small>' : ""}</label>`).join("")}</div>
+          ${A.cat.crates.filter(x => !x.hidden && !x.special).map(x => `<span class="a-crate-row"><label class="chk"><input type="checkbox" name="crates" value="${esc(x.id)}" ${(c.crates || [c.crate]).includes(x.id) ? "checked" : ""}> ${esc(x.emoji)} ${esc(x.name)}${(x.variants || []).includes("flag") ? ' <small title="Skrzynka z wariantem Flagowym">🏳️</small>' : ""}</label>
+            <label class="chk a-excl" title="Ekskluzywna w tej skrzynce: karta nie wypada z kasyna, ulepszacza, kuźni ani wyścigów (tylko ze skrzynki)" ${c.rarity === "secret" ? "hidden" : ""}><input type="checkbox" name="exclusive" value="${esc(x.id)}" ${(c.exclusive || []).includes(x.id) ? "checked" : ""} ${(c.crates || [c.crate]).includes(x.id) ? "" : "disabled"}>🔒</label></span>`).join("")}
+          <span class="muted small a-excl" ${c.rarity === "secret" ? "hidden" : ""}>🔒 = ekskluzywna w tej skrzynce: karta nie wypada z kasyna, ulepszacza, kuźni ani wyścigów (tajna karta ma to zawsze).</span></div>
         <label class="wide a-country" ${countryNeeded(c.crates || [c.crate]) || c.country ? "" : "hidden"}>🏳️ Kraj <small class="muted">(kod ISO, np. PL, DE, US, GB-ENG — flaga do wariantu Flagowego)</small>
           <span class="a-country-row"><input type="text" name="country" value="${esc((c.country || "").toUpperCase())}" maxlength="6" placeholder="PL">
           <img class="a-flag" src="${c.country ? `/flag/${esc(c.country)}.svg` : ""}" alt="" ${c.country ? "" : "hidden"}></span></label>
@@ -879,6 +882,7 @@ function bind() {
       const sp = inp.value === "special";
       $("#cardForm .a-special").hidden = !sp;
       $("#cardForm .a-crate-checks").hidden = sp;
+      $$("#cardForm .a-excl").forEach(x => { x.hidden = inp.value === "secret"; });   // tajna i tak nie wypada poza skrzynkami
     }
     if (inp.name === "source") $("#cardForm [data-act=ufo-test]").hidden = inp.value !== "ufo";
     if (inp.name === "fixed_variant") {   // wariant z jednym wyglądem (Dżinsowa) - bez wyboru wyglądu
@@ -886,6 +890,8 @@ function bind() {
       $("#cardForm .a-style").hidden = (A.cat.variants[inp.value]?.styles || []).length < 2;
     }
     if (inp.name === "crates") {
+      const ex = $(`#cardForm [name=exclusive][value="${CSS.escape(inp.value)}"]`);
+      if (ex) { ex.disabled = !inp.checked; if (!inp.checked) ex.checked = false; }
       const box = $("#cardForm .a-country");
       box.hidden = !countryNeeded($$("#cardForm [name=crates]:checked").map(x => x.value)) && !$("#cardForm [name=country]").value;
     }

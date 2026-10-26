@@ -264,8 +264,9 @@ pub async fn item_by_id(c: &mut Conn, id: i64) -> sqlx::Result<Option<ItemRow>> 
 
 /// Karta trafia na stałe do klasera gracza (zostaje tam także po sprzedaży). Zapamiętujemy, kiedy i skąd gracz
 /// zdobył ją pierwszy raz (drop / contract / upgrade / casino; transfer = rynek, jackpot; trade = wymiana).
-pub async fn note_collected(c: &mut Conn, uid: i64, pid: &str, variant: &str, source: &str) -> sqlx::Result<()> {
-    sqlx::query!(
+/// true, gdy gracz ma ją pierwszy raz.
+pub async fn note_collected(c: &mut Conn, uid: i64, pid: &str, variant: &str, source: &str) -> sqlx::Result<bool> {
+    let added = sqlx::query!(
         "INSERT INTO user_collected (user_id, person_id, variant, at, source) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING",
         uid,
         pid,
@@ -274,8 +275,9 @@ pub async fn note_collected(c: &mut Conn, uid: i64, pid: &str, variant: &str, so
         source
     )
     .execute(c)
-    .await?;
-    Ok(())
+    .await?
+    .rows_affected();
+    Ok(added == 1)
 }
 
 pub async fn collected_list(c: &mut Conn, cat: &Catalog, uid: i64) -> sqlx::Result<Vec<(String, String)>> {
@@ -287,7 +289,7 @@ pub async fn collected_list(c: &mut Conn, cat: &Catalog, uid: i64) -> sqlx::Resu
 /// od admina - do Hall of Fame; casino - zwykła wygrana w kasynie, bez Hall of Fame)
 pub async fn insert_item(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, source: &str) -> sqlx::Result<NewItem> {
     let now = now();
-    note_collected(c, cx.uid(), pid, variant, source).await?;
+    let new_for_me = note_collected(c, cx.uid(), pid, variant, source).await?;
     let id = sqlx::query_scalar!(
         "INSERT INTO items (person_id, holo, variant, created_at, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
         pid,
@@ -298,7 +300,8 @@ pub async fn insert_item(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, sourc
     )
     .fetch_one(&mut *c)
     .await?;
-    let first = if source != "casino" { note_hall_of_fame(c, cx, pid, variant, source, now).await? } else { false };
+    let first =
+        if source != "casino" { note_hall_of_fame(c, cx, pid, variant, source, now, new_for_me).await? } else { false };
     Ok(NewItem {
         id,
         person: pid.into(),
@@ -312,7 +315,16 @@ pub async fn insert_item(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, sourc
 
 /// Hall of Fame: kto pierwszy zdobył tę kartę w tym wariancie (i kiedy) + ile ich w ogóle wypadło.
 /// true, gdy gracz trafia do Hall of Fame jako pierwszy (ukryci gracze się nie liczą - liczy się pierwszy widoczny).
-async fn note_hall_of_fame(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, source: &str, now: f64) -> sqlx::Result<bool> {
+/// new_for_me: gracz nie miał wcześniej tej karty w tym wariancie (note_collected).
+async fn note_hall_of_fame(
+    c: &mut Conn,
+    cx: &Ctx,
+    pid: &str,
+    variant: &str,
+    source: &str,
+    now: f64,
+    new_for_me: bool,
+) -> sqlx::Result<bool> {
     let inserted = sqlx::query!(
         "INSERT INTO hall_of_fame (person_id, variant, first_user_id, first_at, source, drops) \
          VALUES ($1, $2, $3, $4, $5, 0) ON CONFLICT (person_id, variant) DO NOTHING",
@@ -334,9 +346,22 @@ async fn note_hall_of_fame(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, sou
     if inserted == 1 {
         return Ok(true);
     }
-    // pierwszy był gracz ukryty w rankingu - jestem pierwszym widocznym, jeśli nikt widoczny nie miał jej wcześniej
+    // karta jest już w Hall of Fame - tak samo jak strona Hall of Fame: pierwszy jest gracz z tabeli, a tylko gdy to
+    // gracz ukryty w rankingu, pierwszy widoczny z user_collected (hof_first). Gracz, który miał już tę kartę (choćby
+    // z kasyna albo z rynku), nie jest "pierwszy" przy kolejnej sztuce.
+    let holder: Option<i64> =
+        sqlx::query_scalar::<_, Option<i64>>("SELECT first_user_id FROM hall_of_fame WHERE person_id = $1 AND variant = $2")
+            .bind(pid)
+            .bind(variant)
+            .fetch_one(&mut *c)
+            .await?;
+    let hidden = hidden_users(&mut *c).await?;
+    if !new_for_me || !holder.is_some_and(|u| hidden.contains(&u)) {
+        return Ok(false);
+    }
+    // brak widocznego wpisu (stare wpisy bez daty, karta tylko z kasyna / rynku) NIE znaczy, że jestem pierwszy
     let first = hof_first(c, pid, variant, None).await?;
-    Ok(first.is_none_or(|f| f.0 == cx.uid()))
+    Ok(first.is_some_and(|f| f.0 == cx.uid()))
 }
 
 pub async fn hidden_users(c: &mut Conn) -> sqlx::Result<HashSet<i64>> {
