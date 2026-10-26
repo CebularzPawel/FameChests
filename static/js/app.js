@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", reflective: "🦺 HI-VIS", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", reflective: "🦺 HI-VIS", usa: "★ U.S.A. ★", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -845,7 +845,26 @@ const hgFalls = n => Array.from({ length: n }, () =>
 // Kalifornowa: smugi neutronów z rdzenia za zdjęciem
 const cfNeutrons = n => Array.from({ length: n }, () =>
   `<i class="cf-n" style="--r:${vxN(0, 360)}deg;animation-delay:-${vxN(0, 2, 2)}s;animation-duration:${vxN(1, 2.2, 2)}s"></i>`).join("");
+// Amerykańska: flaga USA 76 x 40 (13 pasów, pole z 50 gwiazdami) w szarościach; powiewa przekrzywiona w tle
+// (us-tilt obraca całość, us-flagbox faluje, cienie fal us-ripple przesuwają się po pasach), w rogu zdjęcia samo pole z gwiazdami
+const usStar = (x, y, r, fill) => `<path fill="${fill}" d="M${Array.from({ length: 10 }, (_, k) => {
+  const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .4 : r;
+  return `${(x + Math.cos(a) * rr).toFixed(2)} ${(y + Math.sin(a) * rr).toFixed(2)}`;
+}).join(" L")}Z"/>`;
+function usFlag(red, white, blue, star) {
+  let s = `<rect width="76" height="40" fill="${white}"/>`;
+  for (let k = 0; k < 13; k += 2) s += `<rect y="${(k * 40 / 13).toFixed(2)}" width="76" height="${(40 / 13).toFixed(2)}" fill="${red}"/>`;
+  s += `<rect width="30.4" height="21.54" fill="${blue}"/>`;
+  for (let r = 0; r < 9; r++) for (let c = 0; c < (r % 2 ? 5 : 6); c++) s += usStar(2.53 + c * 5.07 + (r % 2 ? 2.53 : 0), 2.15 + r * 2.15, .95, star);
+  return s;
+}
+let usFlagCache = null;   // SVG flagi jest taki sam na każdej karcie
+const usFlags = () => usFlagCache ||= {
+  wave: vxSvg(usFlag("#3a3a3a", "#d0d0d0", "#141414", "#e4e4e4"), "0 0 76 40"),
+  canton: `<svg viewBox="0 0 30.4 21.54" preserveAspectRatio="xMinYMin slice" aria-hidden="true">${usFlag("#000", "#000", "#0c0c0c", "#f2f2f2")}</svg>`,
+};
 const VX_BG = {
+  usa: () => `<i class="us-tilt"><i class="us-flagbox">${usFlags().wave}</i><i class="us-ripple"></i></i><i class="us-spot"></i>`,
   banana: () => `<i class="bn-fibers"></i><i class="bn-green"></i>${bnSpots(22)}<i class="bn-brown"></i>`,
   uranium: () => `${Array.from({ length: 12 }, () => `<i class="ur-bubble" style="left:${vxN(2, 96)}%;top:${vxN(2, 96)}%;--s:${vxN(.4, 1.4, 2)}"></i>`).join("")}<i class="ur-uv"></i><i class="ur-streak"></i>`,
   mercury: () => Array.from({ length: 6 }, (_, k) => `<i class="hg-blob b${k}"></i>`).join(""),
@@ -875,6 +894,7 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  usa: () => `<i class="vx-photo us-stripes"></i><i class="vx-photo us-canton">${usFlags().canton}</i>`,
   banana: '<i class="vx-photo bn-warm"></i><b class="bn-sticker"><small>DZIEŃ</small>1 → 7<small>SCAMBOX</small></b>',
   uranium: '<i class="vx-photo ur-pulse"></i>',
   cobalt: '<i class="vx-photo cb-blue"></i>',
@@ -893,6 +913,7 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  usa: () => '<div class="vx-deco vx-clip"><i class="us-hazard"></i></div>',
   uranium: () => '<div class="vx-deco"><i class="ur-halo"></i></div>',
   // Rtęciowa: połysk, krople spadające z sopli, sople u góry (nazwa nad nimi), kałuża z kręgami na dole
   mercury: () => `<div class="vx-deco vx-clip"><i class="hg-shine"></i>${hgFalls(5)}</div><div class="vx-deco hg-drip">${vxSvg(hgDrips())}</div>` +
@@ -1032,6 +1053,7 @@ function variantSub(variant, pid) {
   if (parts.includes("vintage")) return VINTAGE_STAMP;
   if (parts.includes("noir")) return "— Ta sprawa śmierdziała od początku.";
   if (parts.includes("hollywood")) return "SEANS O ZMIERZCHU · 1969";
+  if (parts.includes("usa")) return "TO PRAWDZIWA HISTORIA";
   if (parts.includes("cobalt")) return "Co-60 · T½ 5,27 LAT";
   // Bananowa: etap dojrzewania zmienia się razem z kolorem karty (CSS bnStage)
   if (parts.includes("banana")) return '<span class="bn-stages"><b>ZIELONY · JESZCZE TWARDY</b><b>IDEALNY</b><b>SŁODZIUTKI</b><b>NA CHLEBEK BANANOWY</b></span>';
@@ -2025,7 +2047,7 @@ function showResults(afterEpic = false) {
       electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
       chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8", "#3a1a08"], candy: ["#ff5aa8", "#3ddc84", "#ffffff", "#ffd23f", "#4fb8ff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a", "#1a2048"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8", "#ffffff"], banana: ["#ffe14a", "#9ab82a", "#7a5414", "#fff6b0"],
-      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"],
+      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"], usa: ["#f2f2f2", "#141414", "#8a8a8a"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],
       lantern: ["#ffb347", "#ff7a00", "#fff1c1", "#3a1a06"], devil: ["#ff1a1a", "#b3001b", "#ffcf5a", "#120002"],

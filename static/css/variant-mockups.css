@@ -20,112 +20,66 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 @keyframes vmBlink { 50% { opacity: .15; } }
 @keyframes vmSpin { to { transform: rotate(360deg); } }
 
-/* ============================================================ CZARNO-BIAŁA Z FLAGĄ USA (vm-usbw, klasy ub-) - runda 2
-   Przekrzywiona flaga powiewa w tle, na zdjęciu - różne sposoby nałożenia flagi; kontrastowe czarno-białe zdjęcie. */
-.card.vm-usbw { --frame: repeating-linear-gradient(45deg, #f2f2f2 0 3cqw, #111 3cqw 6cqw); box-shadow: 0 6px 18px #000c; }
-.card.vm-usbw .card-inner { background: #141414; color: #f2f2f2; }
-.card.vm-usbw :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp, .card-value) { color: #f2f2f2; }
-.card.vm-usbw :is(.card-sub, .card-attack, .card-stats) { background: #000c; border: none; border-radius: .25em; }
-.card.vm-usbw .card-attack { padding-inline: .35em; margin-top: 1.5%; }
-.card.vm-usbw .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; text-shadow: 0 0 .3em #000; }
-.card.vm-usbw .card-sub { font: 700 .5em/1.3 Rubik, sans-serif; letter-spacing: .14em; font-style: normal; margin-bottom: auto; }
-/* krótsze zdjęcie i panele zepchnięte w dół - powiewająca flaga widać między zdjęciem a zdolnościami */
-.card.vm-usbw .card-photo { aspect-ratio: 1 / .8; border: none; border-image: none; box-shadow: 0 0 0 .14em #f2f2f2, 0 .3em .8em #000; }
-.card.vm-usbw .card-photo > img { filter: grayscale(1) contrast(1.55) brightness(1.04); }
-.card.vm-usbw :is(.card-type, .atk-cost, :where(.card-stats b), .gem) { filter: grayscale(1); }
-.card.vm-usbw .vm-tag { background: #f2f2f2; color: #111; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; }
-.ub-clip { overflow: hidden; border-radius: inherit; }
-.ub-grain { background: var(--tx-grain) 0 0 / 120px; opacity: .35; mix-blend-mode: overlay; animation: vpGrain .5s steps(3) infinite; }
-.ub-dust { inset: 0; opacity: .6; animation: ubDust .35s steps(2) infinite;
-  background: radial-gradient(circle, #fff 0 .22cqw, transparent .32cqw) 20% 30% / 37% 41%, radial-gradient(circle, #000 0 .25cqw, transparent .35cqw) 70% 60% / 31% 47%; }
-@keyframes ubDust { 50% { background-position: 65% 15%, 15% 85%; } }
-.ub-tw { width: calc(2.4cqw * var(--s, 1)); aspect-ratio: 1; background: #f2f2f2; animation: ubTwinkle 2.2s ease-in-out infinite;
-  clip-path: polygon(50% 0, 61% 38%, 100% 38%, 69% 61%, 80% 100%, 50% 76%, 20% 100%, 31% 61%, 0 38%, 39% 38%); }
-@keyframes ubTwinkle { 50% { scale: .5; opacity: .35; rotate: 36deg; } }
-.ub-hazard { inset: 3.6%; border-radius: 3%/2.2%; box-shadow: inset 0 0 0 .35cqw #111, inset 0 0 1.5cqw #000; }
-.ub-frame1 { inset: 2%; border: .4cqw solid #f2f2f2; border-radius: 3.4%/2.4%; box-shadow: inset 0 0 0 1cqw #0006; }
-
-/* powiewająca flaga w tle, przekrzywiona (ub-tilt obraca całość, w środku flaga faluje, a cienie fal przesuwają się po pasach) */
-.ub-tilt { inset: -30% -45%; rotate: -14deg; }
-.ub-tilt.rev { rotate: 18deg; }
-/* runda 3: ustawienia flagi, żeby pole z gwiazdami (lewe górne 40% x 54% flagi) trafiło w widoczne miejsce karty */
-.ub-tilt.pos-a { inset: auto; left: -8%; top: 49%; width: 150%; height: 72%; rotate: -8deg; }                 /* gwiazdy w pasie pod zdjęciem, po lewej */
-.ub-tilt.pos-b { inset: auto; left: 18%; top: 38%; width: 160%; height: 86%; rotate: -10deg; }                /* duże gwiazdy na środku */
-.ub-tilt.pos-c { inset: auto; left: -52%; top: -6%; width: 155%; height: 80%; rotate: 14deg; scale: -1 1; }   /* gwiazdy w górnym prawym rogu */
-.ub-tilt.pos-d { inset: auto; left: -62%; top: 22%; width: 155%; height: 82%; rotate: 196deg; }               /* flaga odwrócona: gwiazdy w prawym dolnym rogu */
-.ub-tilt.dim { opacity: .45; }
-.ub-tilt > i { position: absolute; display: block; }
-.ub-flagbox { inset: 0; opacity: .8; animation: ubWave 6s ease-in-out infinite; transform-origin: 0 50%; }
-@keyframes ubWave { 50% { transform: skewY(3deg) translateY(1.5%) scaleX(1.03); } }
-.ub-ripple { top: 0; bottom: 0; left: -50%; width: 200%; will-change: transform; animation: ubRipple 3.2s linear infinite;
-  background: repeating-linear-gradient(100deg, transparent 0 4cqw, #0006 8cqw, transparent 12cqw, #fff2 15cqw, transparent 18cqw); }
-@keyframes ubRipple { to { transform: translateX(18cqw); } }
-.ub-spot { inset: 0; background: radial-gradient(70% 45% at 50% 0%, #fff5, transparent 70%), radial-gradient(120% 90% at 50% 60%, transparent 40%, #000c); }
-
-/* pasy flagi na zdjęciu (płyną w dół) i pole z gwiazdami w rogu */
-.ub-stripes { top: -20%; height: 140%; will-change: transform; animation: ubStripes 7s linear infinite; mix-blend-mode: multiply;
-  background: repeating-linear-gradient(180deg, #b3263a 0 4.6%, #f2f2f2 4.6% 9.2%);
-  -webkit-mask: linear-gradient(100deg, transparent 38%, #000c 62%, #000); mask: linear-gradient(100deg, transparent 38%, #000c 62%, #000); }
-.ub-stripes.bw { background: repeating-linear-gradient(180deg, #3a3a3a 0 4.6%, #f2f2f2 4.6% 9.2%); }
-@keyframes ubStripes { to { transform: translateY(13.14%); } }
-.ub-canton { inset: 0 auto auto 0; width: 34%; aspect-ratio: 30.4 / 21.54; box-shadow: .2cqw .2cqw 1cqw #000a; opacity: .92; overflow: hidden; }
-.ub-canton svg, .ub-lstars svg, .ub-torn svg, .ub-expo svg { overflow: hidden; }
-
-/* ============================================================ RETRO KOSMOS (vm-apollo, klasy ap-) - runda 4
-   Prawdziwe zdjęcia z misji w tle (static/img/space/, NASA - domena publiczna), powolny ruch kamery, na całej karcie
-   filtr starej złotej kliszy (ap-gold mix-blend color, ziarno, migotanie, rysy, winieta; ap-jitter - podskakujący obraz). */
-.card.vm-apollo { --frame: linear-gradient(115deg, #6a6e78, #e8ecf2 20%, #9aa0aa 40%, #f6f8fb 55%, #7a808a 75%, #dfe3ea); box-shadow: 0 6px 18px #000c; }
+/* ============================================================ RETRO KOSMOS (vm-apollo, klasy ap-) - runda 5
+   Tło: zdjęcie z misji (static/img/space/) albo krótka pętla prawdziwego filmu (static/video/space/), oba z archiwum NASA
+   (domena publiczna). Na całej karcie złoto-srebrna klisza: srebrny obraz, złote smugi ap-gs,
+   ziarno, migotanie, rysy, winieta; ap-jitter - podskakujący obraz. */
+.card.vm-apollo { --frame: linear-gradient(115deg, #8a6a20, #f6e3a8 16%, #9aa0aa 34%, #f4f6f9 50%, #8a909a 64%, #f6e3a8 82%, #8a6a20); box-shadow: 0 6px 18px #000c; }
 .card.vm-apollo .card-inner { background: #050508; color: #ecebe4; }
 .card.vm-apollo :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp, .card-value) { color: #ecebe4; }
 .card.vm-apollo :is(.card-sub, .card-attack, .card-stats) { background: #000a; border: none; border-radius: .25em; }
 .card.vm-apollo .card-attack { padding-inline: .35em; margin-top: 1.5%; background: #000b; }
-.card.vm-apollo .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: .9em; text-shadow: 0 0 .4em #000; }
+.card.vm-apollo .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: .9em;
+  background: linear-gradient(180deg, #fff6d8 0 35%, #e8c870 50%, #e8ecf2 65%, #b8bec8); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 .3em #000); }
 .card.vm-apollo .card-sub { font: 700 .44em/1.3 "Share Tech Mono", monospace; letter-spacing: .1em; font-style: normal; margin-bottom: auto; }
-/* krótsze zdjęcie - scena ze zdjęcia z misji widać w pasie pod nim */
-.card.vm-apollo .card-photo { aspect-ratio: 1 / .7; border: none; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .14em #cfd4dc, 0 .3em .8em #000; }
-.card.vm-apollo .card-photo > img { filter: grayscale(.55) sepia(.3) contrast(1.2) brightness(1.03); }
-.card.vm-apollo .vm-tag { background: linear-gradient(90deg, #8a6200, #fff1c1, #c9952c); color: #2a1c00; border: 1px solid #2a1c00; font-family: Orbitron, sans-serif; letter-spacing: .1em; }
+/* krótsze zdjęcie - scena widać w pasie pod nim */
+.card.vm-apollo .card-photo { aspect-ratio: 1 / .7; border: none; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .1em #e8c870, 0 0 0 .2em #c8ccd4, 0 .3em .8em #000; }
+.card.vm-apollo .vm-tag { background: linear-gradient(90deg, #8a6200, #fff1c1 30%, #c8ccd4 60%, #f4f6f9 80%, #8a909a); color: #1a1a1a; border: 1px solid #1a1a1a; font-family: Orbitron, sans-serif; letter-spacing: .1em; }
 .ap-clip { overflow: hidden; border-radius: inherit; }
-.ap-star { width: calc(1cqw * var(--s, 1)); aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: 0 0 1cqw #fff; animation: apTwinkle 2.6s ease-in-out infinite; }
-@keyframes apTwinkle { 50% { opacity: .2; scale: .5; } }
 
-/* filtr starej złotej kliszy */
-.ap-gold { inset: 0; background: linear-gradient(160deg, #f8dc8a, #c08a2a 60%, #8a5a10); mix-blend-mode: color; opacity: .34; }
-.ap-grain { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .45; mix-blend-mode: overlay; animation: vpGrain .4s steps(3) infinite; }
-.ap-flicker { inset: 0; background: #fff6d8; opacity: 0; mix-blend-mode: overlay; animation: apFlicker .3s steps(3) infinite; }
-@keyframes apFlicker { 33% { opacity: .07; } 66% { opacity: .02; } }
+/* złoto-srebrna klisza: zdjęcie osoby srebrne, scena w tle (zdjęcie z misji / film) złotawa, ramka złoto-srebrna,
+   po karcie ukośne pasy złotego i srebrnego światła (ap-gs). Tylko zwykłe filtry CSS i przezroczystość - mix-blend-mode i filtry SVG nad filmem / na filmie Chrome psuje
+   (obraz robi się jasnoszary jak negatyw albo czarny). */
+.card.vm-apollo .card-photo > img { filter: grayscale(1) sepia(.08) contrast(1.2) brightness(1.04); }   /* srebrne zdjęcie */
+.ap-scene :is(.ap-ph, .ap-film) { filter: grayscale(1) sepia(.55) contrast(1.15) brightness(1.02); }      /* złotawa scena w tle */
+.ap-scene .ap-film { filter: grayscale(1) sepia(.55) contrast(1.35) brightness(1.15); }   /* filmy są ciemniejsze niż zdjęcia */
+.ap-gs { inset: 0; background: linear-gradient(150deg, #f2c45a40 0%, #f2c45a10 14%, transparent 22%, #eef2f814 34%, transparent 44%,
+  #e0a83a38 56%, #e0a83a0c 68%, transparent 76%, #eef2f812 88%, #f2c45a30 100%); }
+.ap-grain { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .14; animation: vpGrain .4s steps(3) infinite; }
+.ap-flicker { inset: 0; background: #f4f0e4; opacity: 0; animation: apFlicker .3s steps(3) infinite; }
+@keyframes apFlicker { 33% { opacity: .05; } 66% { opacity: .015; } }
 .ap-vignette { inset: 0; background: radial-gradient(95% 80% at 50% 45%, transparent 55%, #000c); }
 .ap-scratch { top: 0 !important; bottom: 0; width: .25cqw; background: linear-gradient(transparent, #fff8 20%, #fff5 70%, transparent); opacity: 0; animation: apScratch steps(1) infinite; }
 @keyframes apScratch { 0% { opacity: .8; } 30% { opacity: 0; } 55% { opacity: .5; translate: 4cqw 0; } 70% { opacity: 0; } }
-.ap-dust { inset: 0; opacity: .7; animation: ubDust .3s steps(2) infinite;
+.ap-dust { inset: 0; opacity: .7; animation: apDustMove .3s steps(2) infinite;
   background: radial-gradient(circle, #fff 0 .25cqw, transparent .35cqw) 20% 30% / 37% 41%, radial-gradient(circle, #000 0 .3cqw, transparent .4cqw) 70% 60% / 31% 47%; }
+@keyframes apDustMove { 50% { background-position: 65% 15%, 15% 85%; } }
 .card.ap-jitter .card-inner { animation: apJitter 2.4s steps(1) infinite; }
 @keyframes apJitter { 0%, 100% { translate: 0 0; } 10% { translate: 0 -.4%; } 20% { translate: .2% .2%; } 45% { translate: 0 .5%; } 46% { translate: 0 0; } 70% { translate: -.2% -.3%; } }
+/* licznik taśmy w prawym górnym rogu zdjęcia */
+.ap-rec { right: 7%; top: 13.5%; font: 700 2.4cqw/1 "Share Tech Mono", monospace; letter-spacing: .1em; color: #f4f0e4; text-shadow: 0 0 .6cqw #000; display: flex !important; align-items: center; gap: .8cqw; }
+.ap-rec i { width: 1.6cqw; aspect-ratio: 1; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 1cqw #ff3b30; animation: apRec 1s steps(1) infinite; }
+@keyframes apRec { 50% { opacity: 0; } }
 
-/* zdjęcie z misji w tle karty: ustawione tak, żeby obiekt był w pasie pod zdjęciem karty (ok. 52-68% wysokości) */
-.ap-scene .ap-ph { position: absolute; display: block; max-width: none; object-fit: cover; will-change: transform; }
+/* zdjęcie / film w tle karty: ustawione tak, żeby obiekt był w pasie pod zdjęciem karty (ok. 52-68% wysokości) */
+.ap-scene :is(.ap-ph, .ap-film) { position: absolute; display: block; max-width: none; object-fit: cover; will-change: transform; }
 .ap-shade { inset: 0; background: linear-gradient(180deg, #000c 0%, #0006 14%, transparent 30%, transparent 64%, #0008 80%, #000d); }
-/* 1. Wschód Ziemi: Ziemia (55%, 53% zdjęcia) wschodzi w pasie pod zdjęciem */
+/* Wschód Ziemi: Ziemia wschodzi w pasie pod zdjęciem */
 .ap-ph.earthrise { left: -71%; top: -16%; width: 220%; height: auto; animation: apEarthrise 14s ease-in-out infinite; }
 @keyframes apEarthrise { 0%, 100% { transform: translateY(6%); } 50% { transform: translateY(-3%); } }
-/* 2. Orzeł nad Księżycem: kamera zjeżdża od Ziemi do lądownika */
+/* Orzeł nad Księżycem: kamera zjeżdża od Ziemi do lądownika */
 .ap-ph.eagle { left: -45%; top: -34%; width: 190%; height: auto; animation: apEagle 16s ease-in-out infinite; }
 @keyframes apEagle { 0%, 100% { transform: translateY(9%); } 50% { transform: translateY(-2%); } }
-/* 3. Lądownik na powierzchni: przybliżenie */
-.ap-ph.lm { left: -20%; top: 30%; width: 140%; height: auto; transform-origin: 50% 40%; animation: apZoom 18s ease-in-out infinite; }
-@keyframes apZoom { 50% { transform: scale(1.12); } }
-/* 4. Saturn V: rakieta po skosie przez kadr */
+/* Saturn V (zdjęcie): rakieta po skosie przez kadr */
 .ap-ph.saturn { left: -30%; top: 34%; width: 170%; height: auto; animation: apSaturn 12s linear infinite; }
 @keyframes apSaturn { 0% { transform: translate(10%, 12%); } 100% { transform: translate(-6%, -10%); } }
-/* 5. Sputnik: kamera krąży (napis z rogu zdjęcia poza kadrem) */
-.ap-ph.sputnik { left: -8%; top: 34%; width: 200%; height: auto; transform-origin: 20% 50%; animation: apOrbitCam 20s ease-in-out infinite; }
-@keyframes apOrbitCam { 0%, 100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(5deg) scale(1.1); } }
-.ap-beep { left: 22%; top: 62%; width: 5cqw; aspect-ratio: 1; border-radius: 50%; border: .3cqw solid #fff; translate: -50% -50%; opacity: 0; animation: apBeep 1.4s ease-out infinite; }
-.ap-beep.b { animation-delay: .7s; }
-@keyframes apBeep { 0% { opacity: .9; scale: .5; } 100% { opacity: 0; scale: 5; } }
-/* 6. Łazik: kamera przesuwa się w bok */
-.ap-ph.rover { left: -55%; top: -12%; width: 200%; height: auto; animation: apPan 18s ease-in-out infinite; }
-@keyframes apPan { 50% { transform: translateX(14%); } }
-/* 7. Pełnia: Księżyc wschodzi zza panelu i lekko się obraca */
-.ap-ph.moon { left: 50%; top: 52%; width: 92%; height: auto; translate: -50% 0; mix-blend-mode: screen; animation: apMoonRise 16s ease-in-out infinite; }
-@keyframes apMoonRise { 0%, 100% { transform: translateY(14%) rotate(-3deg); } 50% { transform: translateY(-2%) rotate(3deg); } }
+/* filmy: pas na środku karty (od nazwy do zdolności), szerszy niż karta - widać środek kadru */
+.ap-film { left: -60%; top: 30%; width: 220%; height: 52%; }
+.ap-film.f-saturn { left: -40%; top: 24%; width: 180%; height: 72%; object-position: 50% 50%; }
+.ap-film.f-lm { left: -85%; top: 27%; width: 180%; height: auto; }   /* cały kadr, lądownik (78%, 45% kadru) w pasie pod zdjęciem */
+.ap-film.f-eva { left: -13%; top: 32%; width: 150%; height: 56%; object-position: 50% 50%; }
+.ap-film.f-descent { left: -20%; top: 30%; width: 140%; height: 58%; }
+/* Kronika: cztery filmy jeden na drugim, co 4 s widać następny (twarde cięcie) */
+.ap-film.f-cut { left: -30%; top: 30%; width: 160%; height: 56%; opacity: 0; animation: apCut 16s step-end infinite; }
+.ap-film.f-cut.c1 { animation-delay: -12s; } .ap-film.f-cut.c2 { animation-delay: -8s; } .ap-film.f-cut.c3 { animation-delay: -4s; }
+@keyframes apCut { 0% { opacity: 1; } 25% { opacity: 0; } }
