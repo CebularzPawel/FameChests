@@ -40,10 +40,39 @@ async function api(path, body) {
   finally { if (body !== undefined) S.inflight--; }
   const data = await res.json().catch(() => null);
   if (res.status === 401 && data?.login) { location.href = "/login"; throw new Error("Zaloguj się"); }
+  if (res.headers.get("X-Bibi")) bibiQueue();
+  if (res.headers.get("X-Ach")) achPoll();
   if (!res.ok) throw new Error(data?.error || "Błąd serwera");
   // ucięta odpowiedź (zerwane połączenie) - błąd zamiast pustych danych (start gry spróbuje jeszcze raz)
   if (data === null) throw new Error("Błąd połączenia z serwerem — spróbuj jeszcze raz");
   return data;
+}
+
+// Easter egg: wypadnięcie karty Netanjahu (z dowolnego źródła, serwer wysyła nagłówek X-Bibi) - obrazek wjeżdża z boku + gwiazdy Dawida
+// Obrazek pokazujemy dopiero, gdy gracz widzi kartę: przy skrzynkach - po odsłonięciu (bibiPlay w wynikach), przy reszcie
+// źródeł (kontrakt, kasyno, link...) - gdy nie ma już odsłonięcia ani otwierania skrzynki (najwyżej po 60 s odpada).
+function bibiQueue() {
+  S.bibiPending = Date.now();
+  if (S.bibiTimer) return;
+  S.bibiTimer = setInterval(() => {
+    if (!S.bibiPending || Date.now() - S.bibiPending > 60000) { S.bibiPending = 0; clearInterval(S.bibiTimer); S.bibiTimer = 0; return; }
+    if (!S.opening && !epicOpen() && Date.now() - S.bibiPending > 2500) bibiPlay();
+  }, 400);
+}
+function bibiPlay() {
+  if (!S.bibiPending) return;
+  S.bibiPending = 0;
+  if (document.querySelector(".bibi-wrap")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "bibi-wrap";
+  const stars = Array.from({ length: 140 }, (_, i) => {
+    const wave = i % 3, dx = (Math.random() - 0.4) * 1400, dy = (Math.random() - 0.5) * 1000, sz = 14 + Math.random() * (wave === 2 ? 90 : 40);
+    return `<span class="bibi-star" style="left:${Math.random() * 100}%;top:${Math.random() * 100}%;font-size:${sz}px;` +
+      `--dx:${dx}px;--dy:${dy}px;--rot:${Math.round(Math.random() * 720 - 360)}deg;animation-delay:${(wave * 0.5 + Math.random() * 1.2).toFixed(2)}s">✡</span>`;
+  }).join("");
+  wrap.innerHTML = `<img class="bibi-img" src="/static/img/bibi.png" alt="">${stars}`;
+  document.body.appendChild(wrap);
+  setTimeout(() => wrap.remove(), 4200);
 }
 
 async function refreshConfig() {
@@ -2038,6 +2067,7 @@ function showResults(afterEpic = false) {
     if (rare) toast(`✨ ${variantName(top.variant).toUpperCase()}: ${person(top.person).name}!`);
   }
 
+  bibiPlay();
   updateStageBar();
   autoNext(o);
 }

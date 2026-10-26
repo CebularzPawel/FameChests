@@ -17,6 +17,7 @@ from flask import (Flask, Response, g, jsonify, redirect, render_template, reque
                    url_for)
 from werkzeug.security import check_password_hash, generate_password_hash
 
+import achievements
 import arena
 import catalog
 import data as data_module
@@ -86,6 +87,8 @@ def asset(filename):
 
 @app.after_request
 def no_cache_pages(resp):
+    if g.get("bibi"):
+        resp.headers["X-Bibi"] = "1"
     # strony HTML i odpowiedzi API nie mogą być brane z pamięci przeglądarki (stara wersja gry)
     if resp.mimetype in ("text/html", "application/json"):
         resp.headers["Cache-Control"] = "no-store"
@@ -136,6 +139,9 @@ def init_db():
         init_sqlite(conn)
     catalog.init_tables(conn)
     drop_removed_variants(conn)
+    for i, d in enumerate(achievements.DEFAULTS):   # wbudowane osiągnięcia: raz (admin może je zmienić albo usunąć)
+        conn.execute("INSERT INTO achievements (id, data, pos) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING",
+                     (d["id"], json.dumps({k: v for k, v in d.items() if k != "id"}, ensure_ascii=False), i))
     # klaser pamięta karty, które gracz kiedykolwiek miał: uzupełniamy z obecnych kart i z aktywności
     # (wszystko, co ktoś wylosował / pokazał, kiedyś było jego) - bezpieczne przy każdym starcie
     conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT DISTINCT user_id, person_id, variant "
@@ -168,7 +174,26 @@ def init_db():
     export_catalog.copy_custom_images()
     catalog.rebuild(conn)
     backfill_hall_of_fame(conn)
+    backfill_achievements(conn)
     conn.close()
+
+
+def backfill_achievements(conn):
+    """Gracze bez liczników osiągnięć (stare konta) dostają je z tego, co mają: karty w ekwipunku i otwarte skrzynki."""
+    have = {r[0] for r in conn.execute("SELECT DISTINCT user_id FROM user_counters")}
+    buf = {}
+    for uid_, pid, variant, n in conn.execute("SELECT user_id, person_id, variant, COUNT(*) FROM items WHERE user_id > 0 "
+                                              "GROUP BY user_id, person_id, variant").fetchall():
+        if uid_ in have or pid not in catalog.PEOPLE:
+            continue
+        for k in achievements.card_events(catalog.PEOPLE[pid], variant):
+            buf[(uid_, k)] = buf.get((uid_, k), 0) + n
+    for uid_, n in conn.execute("SELECT user_id, value FROM user_state WHERE key = 'opened' AND value > 0").fetchall():
+        if uid_ not in have:
+            buf[(uid_, "open")] = n
+    for (uid_, k), n in buf.items():
+        conn.execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", (uid_, k, n))
+    conn.commit()
 
 
 # tabele z wariantem karty (kolumna) - przy usuwaniu wariantu z gry
@@ -370,6 +395,15 @@ def init_sqlite(conn):
         CREATE TABLE IF NOT EXISTS horse_settings (
             horse INTEGER PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pays REAL NOT NULL DEFAULT 0
         );
+        -- osiągnięcia: definicje z panelu admina (data = JSON, deleted = usunięte - nie wracają jako wbudowane), liczniki
+        -- zdarzeń gracza (achievements.py) i zdobyte osiągnięcia (seen = 0: popup jeszcze nie pokazany)
+        CREATE TABLE IF NOT EXISTS achievements (
+            id TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}', pos INTEGER NOT NULL DEFAULT 0, deleted INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE TABLE IF NOT EXISTS user_counters (user_id INTEGER NOT NULL, key TEXT NOT NULL, value INTEGER NOT NULL DEFAULT 0,
+                                                  PRIMARY KEY (user_id, key));
+        CREATE TABLE IF NOT EXISTS user_achievements (user_id INTEGER NOT NULL, ach_id TEXT NOT NULL, at REAL NOT NULL,
+                                                      seen INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (user_id, ach_id));
     """)
     if "pays" not in [r[1] for r in conn.execute("PRAGMA table_info(horse_bets)")]:   # migracja: mnożnik z chwili zakładu
         conn.execute("ALTER TABLE horse_bets ADD COLUMN pays REAL NOT NULL DEFAULT 0")
@@ -720,7 +754,10 @@ def insert_item(person_id, variant, source="drop"):
     """Nowa karta gracza (source: drop = ze skrzynki, contract, upgrade, joker = karta specjalna z kasyna, link = z linku
     od admina - do Hall of Fame; casino - zwykła wygrana w kasynie, bez Hall of Fame)."""
     now = time.time()
+    if catalog.PEOPLE[person_id].get("bibi"):
+        g.bibi = True    # nagłówek X-Bibi - przeglądarka pokazuje obrazek (bibiShow w app.js)
     note_collected(uid(), person_id, variant, source)
+    ach_count(uid(), achievements.card_events(catalog.PEOPLE[person_id], variant))
     new_id = db().execute("INSERT INTO items (person_id, holo, variant, created_at, user_id) VALUES (?, ?, ?, ?, ?) "
                           "RETURNING id", (person_id, int(variant != "normal"), variant, now, uid())).fetchone()[0]
     return {"id": new_id, "person": person_id, "variant": variant,
@@ -815,6 +852,257 @@ def index(view=None, name=None, token=None):
     if (view == "arena" or request.path in ("/mockups", "/stickers", "/variants", "/designer")) and not current_user()["is_admin"]:
         return redirect("/")
     return render_template("index.html")
+
+
+# ---------------------------------------------------------------- osiągnięcia (achievements.py)
+# Zdarzenia (zdobyta karta, otwarta skrzynka, gra w kasynie, walka w Arenie) tylko zwiększają liczniki gracza (ach_count -
+# bufor w pamięci zapytania). Po udanym zapytaniu ach_after zapisuje liczniki i sprawdza osiągnięcia zalogowanego gracza;
+# nowe dostaje od razu (nagrody) i odpowiedź ma nagłówek X-Ach - przeglądarka pobiera wtedy /api/achievements/pop (popup).
+# Liczniki rywala (jackpot, Arena) zapisują się od razu, a jego osiągnięcia sprawdza /api/me (co 30 s).
+
+def ach_count(user_id, keys):
+    """Zwiększa liczniki gracza: keys = lista kluczy (+1) albo {klucz: ile}."""
+    if not user_id:
+        return
+    buf = g.setdefault("ach_buf", {})
+    for k, n in (keys.items() if isinstance(keys, dict) else ((k, 1) for k in keys)):
+        buf[(user_id, k)] = buf.get((user_id, k), 0) + n
+
+
+def ach_flush():
+    for (user_id, key), n in (g.pop("ach_buf", None) or {}).items():
+        db().execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, ?) "
+                     "ON CONFLICT (user_id, key) DO UPDATE SET value = user_counters.value + excluded.value", (user_id, key, n))
+
+
+def ach_cards(rows):
+    """[(person_id, wariant)] z wierszy kart (items)."""
+    return [(r["person_id"], r["variant"]) for r in rows]
+
+
+def ach_cards_of(ids):
+    if not ids:
+        return []
+    marks = ",".join("?" * len(ids))
+    return ach_cards(db().execute(f"SELECT person_id, variant FROM items WHERE id IN ({marks})", list(ids)).fetchall())
+
+
+def ach_casino(user_id, game, won, cards):
+    """Gra w kasynie rozegrana (won: wygrana); cards = postawione karty."""
+    ach_count(user_id, achievements.play_events(game))
+    if won:
+        ach_count(user_id, achievements.win_events(game, cards))
+
+
+def ach_defs(include_off=False):
+    out = []
+    for r in db().execute("SELECT id, data FROM achievements WHERE deleted = 0 ORDER BY pos, id"):
+        d = json.loads(r["data"])
+        d["id"] = r["id"]
+        if include_off or d.get("enabled", True):
+            out.append(d)
+    return out
+
+
+def ach_together(persons):
+    """Przy jednym otwieraniu skrzynek wypadły te karty: liczymy warunki "drop_together", które w całości się z nimi zgadzają."""
+    keys = []
+    for d in ach_defs():
+        for c in d["criteria"]:
+            if c["type"] == "drop_together" and c.get("persons") and set(c["persons"]) <= persons:
+                keys.append(achievements.together_key(c["persons"]))
+    ach_count(uid(), list(dict.fromkeys(keys)))
+
+
+def ach_counters(user_id):
+    return {r["key"]: r["value"] for r in db().execute("SELECT key, value FROM user_counters WHERE user_id = ?", (user_id,))}
+
+
+def ach_collected(user_id, c):
+    """Różne osoby z klasera gracza pasujące do warunku "unique" (rzadkość / skrzynka / wariant)."""
+    out = set()
+    for pid, variant in collected_list(user_id):
+        p = catalog.PEOPLE[pid]
+        if c.get("rarity") and p["rarity"] != c["rarity"]:
+            continue
+        if c.get("crate") and c["crate"] not in (p.get("crates") or [p.get("crate")]):
+            continue
+        if c.get("variant") and c["variant"] != variant and c["variant"] not in achievements.parts(variant):
+            continue
+        out.add(pid)
+    return out
+
+
+def ach_grant(d):
+    """Nagrody za osiągnięcie dla zalogowanego gracza: pieniądze, skrzynki, karty."""
+    for r in d["rewards"]:
+        if r["type"] == "money":
+            add_state("balance", r["amount"])
+        elif r["type"] == "chest" and valid_chest_kind(r["kind"]):
+            add_chests(r["kind"], r["count"])
+        elif r["type"] == "card" and r["person"] in catalog.PEOPLE:
+            variant = r.get("variant") if r.get("variant") in VARIANTS else "normal"
+            note_drops([insert_item(r["person"], variant, "achievement") for _ in range(r["count"])])
+
+
+def ach_award():
+    """Sprawdza osiągnięcia zalogowanego gracza i przyznaje te, które właśnie spełnił (razem z nagrodami)."""
+    me, changed = uid(), False
+    for _ in range(4):   # karty z nagród też liczą się do kolejnych osiągnięć
+        if g.get("ach_buf"):
+            ach_flush()
+            changed = True
+        earned = {r[0] for r in db().execute("SELECT ach_id FROM user_achievements WHERE user_id = ?", (me,))}
+        todo = [d for d in ach_defs() if d["id"] not in earned]
+        if not todo:
+            break
+        counters = ach_counters(me)
+        won = [d for d in todo if achievements.done(d, counters, lambda c: ach_collected(me, c))]
+        if not won:
+            break
+        for d in won:
+            if db().execute("INSERT INTO user_achievements (user_id, ach_id, at, seen) VALUES (?, ?, ?, 0) ON CONFLICT DO NOTHING",
+                            (me, d["id"], time.time())).rowcount:
+                ach_grant(d)
+                g.ach_new = changed = True
+    if changed:
+        db().commit()
+
+
+@app.after_request
+def ach_after(resp):
+    try:
+        if (resp.status_code < 400 and request.endpoint != "static" and current_user() is not None
+                and (g.get("ach_buf") or request.path == "/api/me")):
+            ach_award()
+            if g.get("ach_new"):
+                resp.headers["X-Ach"] = "1"
+    except Exception:   # osiągnięcia nigdy nie psują odpowiedzi
+        app.logger.exception("achievements")
+        db().rollback()
+    return resp
+
+
+def ach_names(viewer=None):
+    """Nazwy do opisów warunków; tajne karty, których gracz jeszcze nie odkrył, są ukryte."""
+    found = discovered(viewer) if viewer else None
+
+    def person(pid):
+        p = catalog.PEOPLE.get(pid)
+        if not p:
+            return "?"
+        return "???" if found is not None and p["rarity"] == "secret" and pid not in found else p["name"]
+
+    def crate(cid):
+        if cid in catalog.CRATES:
+            return catalog.CRATES[cid]["name"]
+        return MONEY_CHESTS.get(cid[len("money_"):], {}).get("name", cid) if str(cid).startswith("money_") else cid
+
+    return {"person": person, "crate": crate, "variant": lambda v: VARIANTS.get(v, {}).get("name", v),
+            "rarity": lambda r: RARITIES.get(r, {}).get("name", r)}
+
+
+def ach_json(d, row, counters, names, collected_fn, full=True):
+    """Osiągnięcie dla gracza: opis, postęp, nagrody. Ukryte i niezdobyte - bez szczegółów."""
+    got = row is not None
+    out = {"id": d["id"], "icon": d.get("icon") or "🏆", "hidden": bool(d.get("hidden")), "earned": got,
+           "at": row["at"] if got else None}
+    if d.get("hidden") and not got:
+        return dict(out, name="???", desc="Ukryte osiągnięcie — zdobądź je, żeby zobaczyć, co trzeba zrobić.", progress=[], rewards=[])
+    conds = [achievements.describe(c, names) for c in d["criteria"]]
+    out.update(name=d["name"], desc=d.get("desc") or " + ".join(conds), conditions=conds,
+               rewards=[achievements.reward_text(r, names) for r in d["rewards"]])
+    out["progress"] = [dict(zip(("cur", "need"), achievements.progress(c, counters, collected_fn(c) if c.get("unique") else ())))
+                       for c in d["criteria"]] if full else []
+    return out
+
+
+@app.get("/api/users/<username>/achievements")
+@login_required
+def user_achievements(username):
+    u = find_user(username)
+    if u is None:
+        return jsonify({"error": "Nie ma takiego gracza"}), 404
+    mine = u["id"] == uid()
+    rows = {r["ach_id"]: r for r in db().execute("SELECT * FROM user_achievements WHERE user_id = ?", (u["id"],))}
+    counters, names = ach_counters(u["id"]) if mine else {}, ach_names(uid())
+    defs = [d for d in ach_defs() if mine or d["id"] in rows]
+    return jsonify({"mine": mine, "list": [ach_json(d, rows.get(d["id"]), counters, names, lambda c: ach_collected(u["id"], c), mine)
+                                           for d in defs]})
+
+
+@app.post("/api/achievements/pop")
+@login_required
+def achievements_pop():
+    """Nowe (jeszcze nie pokazane) osiągnięcia zalogowanego gracza - od razu oznaczamy je jako pokazane."""
+    rows = db().execute("SELECT * FROM user_achievements WHERE user_id = ? AND seen = 0 ORDER BY at", (uid(),)).fetchall()
+    defs = {d["id"]: d for d in ach_defs(True)}
+    names, out = ach_names(uid()), []
+    for r in rows:
+        d = defs.get(r["ach_id"])
+        if d:
+            out.append(ach_json(d, r, {}, names, lambda c: (), False))
+    if rows:
+        db().execute("UPDATE user_achievements SET seen = 1 WHERE user_id = ? AND seen = 0", (uid(),))
+        db().commit()
+    return jsonify({"list": out})
+
+
+def ach_ctx():
+    return {"people": set(catalog.PEOPLE), "variants": set(VARIANTS), "rarities": set(RARITIES),
+            "crates": {c for c, v in catalog.CRATES.items() if not v["special"]},
+            "chests": {c for c, v in catalog.CRATES.items() if not v["special"]} | {"money_" + k for k in MONEY_CHESTS}}
+
+
+@app.get("/api/admin/achievements")
+@admin_required
+def admin_achievements():
+    earned = {r[0]: r[1] for r in db().execute("SELECT ach_id, COUNT(*) FROM user_achievements GROUP BY ach_id")}
+    people = [{"id": p["id"], "name": p["name"], "rarity": p["rarity"]} for p in catalog.PEOPLE.values()]
+    return jsonify({
+        "list": [dict(d, earned=earned.get(d["id"], 0)) for d in ach_defs(True)],
+        "meta": {"types": achievements.TYPES, "games": achievements.GAMES, "rewardTypes": achievements.REWARD_TYPES,
+                 "people": sorted(people, key=lambda p: p["name"].lower()),
+                 "crates": [{"id": c, "name": v["name"]} for c, v in catalog.CRATES.items() if not v["special"]],
+                 "chests": [{"id": "money_" + k, "name": v["name"]} for k, v in MONEY_CHESTS.items()],
+                 "variants": [{"id": k, "name": v["name"]} for k, v in VARIANTS.items() if not v.get("combo")],
+                 "rarities": [{"id": k, "name": v["name"]} for k, v in RARITIES.items()],
+                 "maxCriteria": achievements.MAX_CRITERIA, "maxRewards": achievements.MAX_REWARDS}})
+
+
+@app.post("/api/admin/achievements")
+@admin_required
+def admin_achievement_save():
+    """Zapis osiągnięcia (body: {id?, name, desc, icon, hidden, enabled, criteria, rewards}); bez id - nowe."""
+    body = request.get_json(force=True) or {}
+    d, err = achievements.clean(body, ach_ctx())
+    if err:
+        return jsonify({"error": err}), 400
+    aid = str(body.get("id") or "")
+    if aid and not db().execute("SELECT 1 FROM achievements WHERE id = ?", (aid,)).fetchone():
+        return jsonify({"error": "Nie ma takiego osiągnięcia"}), 404
+    data = json.dumps(d, ensure_ascii=False)
+    if aid:
+        db().execute("UPDATE achievements SET data = ?, deleted = 0 WHERE id = ?", (data, aid))
+    else:
+        aid = "a_" + secrets.token_hex(4)
+        pos = db().execute("SELECT COALESCE(MAX(pos), 0) + 1 FROM achievements").fetchone()[0]
+        db().execute("INSERT INTO achievements (id, data, pos) VALUES (?, ?, ?)", (aid, data, pos))
+    log_admin("achievement", None, f"{d['name']} ({aid})")
+    db().commit()
+    return jsonify({"ok": True, "id": aid})
+
+
+@app.post("/api/admin/achievements/<aid>/delete")
+@admin_required
+def admin_achievement_delete(aid):
+    """Usunięcie (wbudowane osiągnięcia nie wracają po restarcie); zdobyte przez graczy znikają z ich list."""
+    if not db().execute("UPDATE achievements SET deleted = 1 WHERE id = ? AND deleted = 0", (aid,)).rowcount:
+        return jsonify({"error": "Nie ma takiego osiągnięcia"}), 404
+    db().execute("DELETE FROM user_achievements WHERE ach_id = ?", (aid,))
+    log_admin("achievement_delete", None, aid)
+    db().commit()
+    return jsonify({"ok": True})
 
 
 # ---------------------------------------------------------------- aplikacja na telefon (PWA)
@@ -1108,6 +1396,8 @@ def open_crates():
         person, variant = roll(crate)
         drops.append(insert_item(person["id"], variant))
     new = note_drops(drops)
+    ach_count(uid(), achievements.open_events(crate["id"], count))
+    ach_together({d["person"] for d in drops})
     db().commit()
     return jsonify({"drops": drops, "discovered": new, "state": get_state(), "fromInventory": from_inv,
                     "chests": get_chests()})
@@ -2625,6 +2915,7 @@ def casino_roulette():
     else:
         delete_items(ids)
         out["consumed"] = ids
+    ach_casino(uid(), "roulette", out["win"], ach_cards(rows))
     db().commit()
     out["state"] = get_state()
     return jsonify(out)
@@ -2674,6 +2965,7 @@ def casino_slots():
     else:
         delete_items(ids)
         out["consumed"] = ids
+    ach_casino(uid(), "slots", out["win"], ach_cards(rows))
     db().commit()
     out["state"] = get_state()
     return jsonify(out)
@@ -2714,6 +3006,12 @@ def horse_data(race):
     return HORSE_CACHE[race]
 
 
+def horse_runs(race):
+    """Wyścig rusza tylko, gdy postawiło na niego co najmniej HORSE_RACE["minPlayers"] graczy (zakłady zamykają się przed startem)."""
+    return db().execute("SELECT COUNT(DISTINCT user_id) FROM horse_bets WHERE race = ? AND status != 'cancelled'",
+                        (race,)).fetchone()[0] >= HORSE_RACE["minPlayers"]
+
+
 def horse_end(race):
     return horse_start(race) + horse_data(race)["dur"]
 
@@ -2735,12 +3033,19 @@ def settle_my_horses():
                         (uid(), int(now // HORSE_RACE["period"]))).fetchall()
     done = False
     for B in rows:
+        if not horse_runs(B["race"]):    # za mało graczy - wyścig się nie odbył, zakład wraca
+            if db().execute("UPDATE horse_bets SET status = 'settling' WHERE id = ? AND status = 'open'", (B["id"],)).rowcount:
+                give_items(json.loads(B["item_ids"]), uid())
+                db().execute("UPDATE horse_bets SET status = 'refund', payout = 0, result = '{}' WHERE id = ?", (B["id"],))
+                done = True
+            continue
         race = horse_data(B["race"])
         if now < horse_start(B["race"]) + race["dur"]:
             continue
         if not db().execute("UPDATE horse_bets SET status = 'settling' WHERE id = ? AND status = 'open'", (B["id"],)).rowcount:
             continue
         ids, result = json.loads(B["item_ids"]), {}
+        staked = ach_cards_of(ids)
         if race["winner"] < 0 or race["winner"] == B["horse"]:
             give_items(ids, uid())
             if race["winner"] < 0:
@@ -2753,6 +3058,8 @@ def settle_my_horses():
             marks = ",".join("?" * len(ids))
             db().execute(f"DELETE FROM items WHERE user_id = ? AND id IN ({marks})", [ESCROW, *ids])
             status, payout = "lost", 0
+        if status != "refund":
+            ach_casino(uid(), "horses", status == "won", staked)
         db().execute("UPDATE horse_bets SET status = ?, payout = ?, result = ? WHERE id = ?",
                      (status, payout, json.dumps(result), B["id"]))
         done = True
@@ -2781,7 +3088,7 @@ def casino_horses():
     cur = int(now // HORSE_RACE["period"])
     live = None
     for k in (cur, cur - 1):    # wyścig trwa dłużej niż okres tylko wyjątkowo
-        if k >= 0 and now < horse_end(k) + 20:
+        if k >= 0 and horse_runs(k) and now < horse_end(k) + 20:
             live = dict(horse_data(k), id=k, start=horse_start(k))
             break
     ids = [cur + 1] + ([live["id"]] if live else [])
@@ -2792,7 +3099,7 @@ def casino_horses():
                           f"WHERE b.race IN ({marks}) AND b.user_id != ? AND b.status != 'cancelled' ORDER BY b.id",
                           [*ids, uid()]).fetchall()
     last = [{"id": k, "start": horse_start(k), "winner": horse_data(k)["winner"]}
-            for k in range(cur, cur - 8, -1) if k >= 0 and now >= horse_end(k)]
+            for k in range(cur, cur - 40, -1) if k >= 0 and horse_runs(k) and now >= horse_end(k)][:8]
     return jsonify({"now": now, "horses": horse_list(), "live": live, "next": {"id": cur + 1, "start": horse_start(cur + 1)},
                     "mine": [horse_bet_json(B) for B in mine],
                     "others": [{"race": r["race"], "horse": r["horse"], "stake": r["stake"], "user": r["username"]} for r in others],
@@ -2886,6 +3193,8 @@ def casino_horses_solo():
     elif not out["refund"]:
         delete_items(ids)
         out["consumed"] = ids
+    if not out["refund"]:
+        ach_casino(uid(), "horses", out["win"], ach_cards(rows))
     db().commit()
     out["state"] = get_state()
     return jsonify(out)
@@ -2996,6 +3305,7 @@ def bj_json(G):
 def bj_end(G, player, dealer, deck):
     """Koniec rozdania: krupier dobiera (jeśli trzeba), rozliczenie kart i wygranej, rozdanie znika."""
     ids = json.loads(G["item_ids"]) + json.loads(G["double_ids"])
+    staked = ach_cards_of(ids)
     stake = G["stake"] + G["double_stake"]
     total = bj_total(player)[0]
     if total <= 21 and not bj_blackjack(player) and not bj_blackjack(dealer):
@@ -3027,6 +3337,7 @@ def bj_end(G, player, dealer, deck):
         note_drops(out["items"], "blackjack")
         out["special"] = casino_special_drop(payout)   # karta specjalna z kasyna (Joker) albo None
     db().execute("DELETE FROM blackjack_games WHERE user_id = ?", (uid(),))
+    ach_casino(uid(), "blackjack", result in ("win", "blackjack"), staked)
     db().commit()
     return jsonify({"game": None, "end": out, "state": get_state()})
 
@@ -3412,7 +3723,7 @@ def jackpot_play(J):
     Zwraca komunikat błędu (wtedy brakujące karty znikają z lobby, a akceptacje się cofają) albo None."""
     now = time.time()
     owners = {"a": J["creator_id"], "b": J["joiner_id"]}
-    rows, gone, values = jackpot_cards(J["id"]), [], {"a": 0, "b": 0}
+    rows, gone, values, staked = jackpot_cards(J["id"]), [], {"a": 0, "b": 0}, {"a": [], "b": []}
     for r in rows:
         it = db().execute("SELECT * FROM items WHERE id = ? AND user_id = ? AND favorite = 0",
                           (r["item_id"], owners[r["side"]])).fetchone()
@@ -3420,6 +3731,7 @@ def jackpot_play(J):
             gone.append(r["item_id"])
             continue
         values[r["side"]] += row_value(it)
+        staked[r["side"]].append((it["person_id"], it["variant"]))
         db().execute("UPDATE jackpot_items SET value = ? WHERE jackpot_id = ? AND item_id = ?", (row_value(it), J["id"], it["id"]))
     if gone or not values["a"] or not values["b"]:
         for item_id in gone:
@@ -3434,6 +3746,8 @@ def jackpot_play(J):
                         (values["a"], values["b"], winner, roll, now, now, J["id"])).rowcount:
         return JACKPOT_GONE
     give_items([r["item_id"] for r in rows], winner)   # zwycięzca: swoje karty z powrotem + karty rywala
+    for side, owner in owners.items():
+        ach_casino(owner, "jackpot", owner == winner, staked[side])
     return None
 
 
@@ -3567,6 +3881,10 @@ def arena_record(b):
             if arena_wins_today(user_id) in ARENA["rewardWins"]:
                 chest = ARENA["rewardChest"]
                 add_chests("money_" + chest, 1, user_id)
+        if k == b.over and not b.no_reward:   # osiągnięcia: wygrana walka, ostatni cios kartą
+            ach_count(user_id, ["arena:win"])
+            if b.reason == "ko" and b.last_use and b.last_use[0] == k:
+                ach_count(user_id, ["arena:fin", f"arena:fin:{b.last_use[1]}"])
         b.rewards[k] = arena_reward_info(arena_wins_today(user_id), chest)
     db().commit()
 
@@ -3784,7 +4102,7 @@ def unique_id(base, taken):
 def admin_card_json(p):
     return dict({k: p.get(k) for k in ("id", "name", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2",
                                        "kind1", "kind2", "abilities", "arena", "country", "source", "fixedVariant", "style",
-                                       "subtitle", "desc", "texts", "crate", "crates", "number", "builtin", "modified")},
+                                       "subtitle", "desc", "texts", "bibi", "crate", "crates", "number", "builtin", "modified")},
                 wiki=list(p["wiki"]) if p.get("wiki") else None,
                 hasImage=bool(images.find(p["id"])), hasAlt=bool(images.find(p["id"], True)),
                 cardVariants=catalog.photo_variants(p["id"]), variantPhotos=variant_photos(p["id"]),
@@ -4048,6 +4366,7 @@ def admin_save_card():
                                               zip(f.getlist("ab_name"), f.getlist("ab_kind"), f.getlist("ab_value"))]),
         "country": catalog.clean_country(f.get("country")),   # kod kraju do wariantu flagowego (np. PL)
         # podtytuł - krótki tekst na karcie; opis - dłuższy tekst obok karty w podglądzie
+        "bibi": bool(f.get("bibi")),   # easter egg: wypadnięcie tej karty pokazuje obrazek (bibiShow)
         "subtitle": (f.get("subtitle") or "").strip()[:catalog.SUBTITLE_MAX],
         "desc": (f.get("desc") or "").replace("\r\n", "\n").strip()[:catalog.DESC_MAX],
         # karta specjalna: skąd (kasyno / link), jedyny wariant (Jokerowa, Dżinsowa) i wygląd 1-6 (catalog.rebuild sprawdza)

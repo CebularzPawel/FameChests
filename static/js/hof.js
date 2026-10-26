@@ -3,7 +3,7 @@
 // kiedy (i skąd: skrzynka / kontrakt / ulepszacz) oraz ile takich kart w ogóle wypadło. Dane: /api/halloffame.
 
 const HOF = { data: null, at: 0, crate: "all", q: "", show: "all", sort: "number" };
-const HOF_SOURCES = { drop: "📦 ze skrzynki", contract: "📜 z kontraktu", upgrade: "⬆️ z ulepszacza", joker: "🎰 z kasyna", link: "🔗 z linku" };
+const HOF_SOURCES = { drop: "📦 ze skrzynki", contract: "📜 z kontraktu", upgrade: "⬆️ z ulepszacza", joker: "🎰 z kasyna", link: "🔗 z linku", achievement: "🏆 z osiągnięcia" };
 
 // po zdobyciu karty: "jesteś pierwszy w grze!" (serwer oznacza takie karty polem first)
 function announceFirsts(items) {

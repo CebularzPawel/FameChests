@@ -18,7 +18,7 @@ import data
 CRATE_FIELDS = ("name", "short", "code", "emoji", "color1", "color2", "price", "desc", "shop", "restricted", "weights",
                 "variants")
 CARD_FIELDS = ("name", "wiki", "rarity", "type", "hp", "attack", "dmg", "attack2", "dmg2", "kind1", "kind2", "abilities",
-               "arena", "crate", "crates", "country", "source", "fixedVariant", "style", "subtitle", "desc", "texts")
+               "arena", "crate", "crates", "country", "source", "fixedVariant", "style", "subtitle", "desc", "texts", "bibi")
 SUBTITLE_MAX, DESC_MAX = 40, 1000   # podtytuł (krótki tekst na karcie) i opis (obok karty w podglądzie) - z panelu admina
 COUNTRY_RE = re.compile(r"^[a-z]{2}(-[a-z0-9]{1,3})?$")   # kod kraju ISO 3166 (np. pl, de, gb-eng) - do wariantu flagowego
 STICKER_ID_RE = re.compile(r"^[a-f0-9]{8}$")
@@ -524,6 +524,7 @@ def rebuild(conn):
         p["subtitle"] = str(p.get("subtitle") or "").strip()[:SUBTITLE_MAX]
         p["desc"] = str(p.get("desc") or "").strip()[:DESC_MAX]
         p["texts"] = clean_texts(p.get("texts"))
+        p["bibi"] = bool(p.get("bibi"))
         if p.get("rarity") not in data.RARITIES:
             p["rarity"] = "green"
         if p.get("type") not in data.TYPES:

@@ -190,3 +190,15 @@ fieldset.a-special { border-color: #19e6ff66; }
 .a-egg-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .a-egg-form .a-img-box { width: 110px; height: 120px; }
 .a-egg-form .a-img-box img { object-fit: contain; }
+
+/* Osiągnięcia (achievements-admin.js) */
+.ach-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.ach-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--line); }
+.ach-row.off { opacity: .6; }
+.ach-ic { font-size: 28px; }
+.ach-info { flex: 1; min-width: 0; }
+.ach-form { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.ach-form h4 { margin: 8px 0 0; }
+.ae-block { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.ae-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.ae-actions { display: flex; gap: 8px; margin-top: 8px; }

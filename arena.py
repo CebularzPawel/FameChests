@@ -180,6 +180,7 @@ class Battle:
         self.no_reward = False
         self.rewards = {}                     # strona -> nagroda (wpisuje app.py po zakończeniu)
         self.recorded = False
+        self.last_use = None                  # (strona, id karty) ostatniego użytego ataku - do osiągnięć (kto zadał ostatni cios)
         self.seen = {"a": now, "b": now}
         self.turn_started = now
         self.created = self.touched = now
@@ -454,6 +455,7 @@ class Battle:
         ev = self.resolve(k, u, ab, primary)
         kos = self.collect_ko()
         self.push("use", k, uid=uid, ab=ab_index, primary=[t["uid"] for t in primary], ev=ev, kos=kos)
+        self.last_use = (k, u["pid"])
         self.check_win()
 
     def surrender(self, k):

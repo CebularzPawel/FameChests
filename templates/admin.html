@@ -107,6 +107,19 @@
         <div id="msgList" class="a-links"></div>
       </div>
 
+      <div class="panel" id="achPanel">
+        <div class="a-cards-head">
+          <h3>🏆 Osiągnięcia</h3>
+          <button class="btn primary" type="button" id="achNew">+ Nowe osiągnięcie</button>
+        </div>
+        <p class="muted small">Gracz zdobywa osiągnięcie, gdy spełni wszystkie warunki (jeden albo dwa) — dostaje wtedy wszystkie nagrody
+          (pieniądze, skrzynki, karty) i wysuwa mu się powiadomienie z boku. Ukryte osiągnięcia gracz widzi jako „???”, dopóki ich nie zdobędzie.
+          Liczy się to, co gracz zrobi po dodaniu osiągnięcia (karty już w ekwipunku zaliczają się raz, przy pierwszym uruchomieniu).
+          Wbudowane osiągnięcia z wyłączonym znaczkiem czekają, aż wybierzesz w nich kartę.</p>
+        <div id="achList" class="ach-list"></div>
+        <form id="achForm" class="ach-form" autocomplete="off" hidden></form>
+      </div>
+
       <div class="panel">
         <h3>🐎 Wyścigi konne</h3>
         <p class="muted small">Nazwy koni i mnożniki wygranej (wygrana = stawka × mnożnik). Puste pole albo wartość domyślna przywraca ustawienie z kodu.
@@ -141,5 +154,6 @@
 
   <div class="toasts" id="toasts"></div>
   <script src="{{ asset('js/admin.js') }}"></script>
+  <script src="{{ asset('js/achievements-admin.js') }}"></script>
 </body>
 </html>

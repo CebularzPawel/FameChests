@@ -194,6 +194,16 @@ PG_SCHEMA = """
     CREATE TABLE IF NOT EXISTS horse_settings (
         horse INTEGER PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pays DOUBLE PRECISION NOT NULL DEFAULT 0
     );
+    CREATE TABLE IF NOT EXISTS achievements (
+        id TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}', pos INTEGER NOT NULL DEFAULT 0, deleted INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS user_counters (
+        user_id BIGINT NOT NULL, key TEXT NOT NULL, value BIGINT NOT NULL DEFAULT 0, PRIMARY KEY (user_id, key)
+    );
+    CREATE TABLE IF NOT EXISTS user_achievements (
+        user_id BIGINT NOT NULL, ach_id TEXT NOT NULL, at DOUBLE PRECISION NOT NULL, seen INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, ach_id)
+    );
 """
 
 _pool = None

@@ -743,7 +743,7 @@ SLOTS = {"maxCards": 20, "pair": "cherry", "pairPays": 1,
 # Zakład: karta/y na jednego konia; wygrana = stawka × "pays" (jak w ruletce - karty zostają + wygrana w kartach),
 # przegrana (koń zdechł, uciekł, nie wygrał) - karty przepadają, gdy nikt nie wygra (samochód na torze) - stawki wracają.
 # "speed": siła konia (wpływa na szansę); "pays" wyliczone symulacją (python horses.py odds: 0,85 / szansa - 1), zwrot dla graczy ok. 91%.
-HORSE_RACE = {"period": 300, "betOpen": 300, "betClose": 8, "maxCards": 20, "maxBets": 3,
+HORSE_RACE = {"period": 300, "minPlayers": 1, "betOpen": 300, "betClose": 8, "maxCards": 20, "maxBets": 3,
               "laps": 4, "dt": 0.25, "duration": (70, 170), "tail": 6,
               "formSpread": 0.45, "strength": 0.022, "noise": 0.06, "noiseTau": 8,
               "turboMult": 5, "turboLaps": 0.25,
@@ -780,6 +780,11 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 16, "date": "2026-10-26", "title": "Osiągnięcia",
+     "items": [
+         "🏆 Nowe <b>osiągnięcia</b> - znajdziesz je w swoim profilu. Za spełnienie warunków (karty, skrzynki, kasyno, Arena...) dostajesz pieniądze, skrzynki albo karty, a z boku wysuwa się powiadomienie.",
+         "🕵️ Niektóre osiągnięcia są ukryte - zobaczysz je dopiero po zdobyciu.",
+     ]},
     {"v": 15, "date": "2026-10-25", "title": "Poprawka Skrzyni Halloween",
      "items": [
          "🎃 Wariant <b>Halloweenowa</b> sam w sobie nie zwiększa już wartości karty (×1) - liczy się tylko drugi wariant, np. Halloweenowa + Złota = wartość Złotej.",

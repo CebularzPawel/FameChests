@@ -110,7 +110,7 @@ async function renderStickers() {
           `<button type="button" class="stk-chip${cardMode && id === STK.pid ? " active" : ""}" data-goto="${id}">✎ ${esc(person(id).name)}</button>`).join("")}</div>` : ""}
         ${!cardMode && STK.cards[STK.pid] ? `<p class="stk-note small">Ta karta ma własne naklejki — tu widzisz i zmieniasz sam standard.</p>` : ""}
         ${under ? `<p class="stk-note small">Naklejki tego wariantu leżą na tle karty - pod zdjęciem i napisami.</p>` : ""}
-        <div class="stk-stage${cardMode ? " card-mode" : ""}${under ? " under-mode" : ""}${under && STK.peek ? " peek" : ""}" id="stkStage">${cardHTML(STK.pid, STK.variant)}</div>
+        <div class="stk-stage${cardMode ? " card-mode" : ""}${under ? " under-mode" : ""}${under && STK.peek ? " peek" : ""}" id="stkStage"><div class="stk-cardbox">${cardHTML(STK.pid, STK.variant)}</div></div>
         <p class="muted small stk-help">Przeciągnij naklejkę myszą · kółko myszy nad naklejką = rozmiar · Shift + kółko = obrót ·
           strzałki = przesuń (Shift - szybciej) · Delete = usuń${cardMode ? " (standardową - ukryj na tej karcie)" : ""}</p>
         ${cardMode ? "" : `<h3 class="stk-h">Na innych kartach</h3><div class="stk-others" id="stkOthers"></div>`}

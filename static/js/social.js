@@ -792,8 +792,11 @@ async function renderProfile() {
         <button class="page-arrow" id="pfNext">›</button>
       </div>
       <div class="page-indicator" id="pfPage"></div>
-    </div>`;
+    </div>
+
+    <div class="panel" id="pfAch"><h3>🏆 Osiągnięcia</h3></div>`;
   renderProfileBinder();
+  achProfile(u.username, mine);
 }
 
 function renderProfileBinder(flip = 0) {

@@ -206,6 +206,7 @@ function openCardForm(id) {
         <label class="wide">Imię i nazwisko / nazwa<input type="text" name="name" value="${esc(c.name)}" required maxlength="60"></label>
         <label class="wide">Podtytuł <small class="muted">(krótki tekst na karcie pod zdjęciem, max 40 znaków — pusty: typ i skrzynka)</small>
           <input type="text" name="subtitle" value="${esc(c.subtitle || "")}" maxlength="40" placeholder="np. Mistrz świata 2026"></label>
+        <label class="wide"><input type="checkbox" name="bibi" ${c.bibi ? "checked" : ""}> 🇮🇱 Easter egg „Tel Aviv impressed”: gdy ta karta wypadnie (z dowolnego źródła), obrazek wjeżdża z boku i lecą gwiazdy</label>
         <label class="wide">Opis <small class="muted">(dłuższy tekst obok karty w podglądzie, max 1000 znaków)</small>
           <textarea name="desc" rows="3" maxlength="1000" placeholder="Kim jest ta osoba, ciekawostki…">${esc(c.desc || "")}</textarea></label>
         <div class="wide a-crate-checks" ${c.rarity === "special" ? "hidden" : ""}><span class="muted small">Skrzynki (karta może być w kilku; pierwsza zaznaczona to skrzynka główna — jej kod jest na karcie):</span>
@@ -543,6 +544,7 @@ const LOG_ACTIONS = {
   message_add: "📢 Nowa wiadomość do graczy", message_delete: "📢 Usunięcie wiadomości",
   stickers_save: "🎨 Naklejki wariantu", stickers_card: "🎨 Naklejki jednej karty",
   egg_save: "🥚 Easter egg w bębnie", egg_delete: "🥚 Usunięcie easter egga",
+  achievement: "🏆 Osiągnięcie (zapis)", achievement_delete: "🏆 Usunięcie osiągnięcia",
   variant_save: "✨ Ustawienia wariantu", variant_event: "⏰ Wydarzenie wariantu", variant_event_stop: "⏰ Koniec wydarzenia wariantu",
 };
 

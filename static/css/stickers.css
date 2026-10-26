@@ -21,7 +21,9 @@
 .stk-row.k-hidden { opacity: .5; }
 .stk-row.k-hidden .stk-rname { text-decoration: line-through; }
 .stk-stage { display: flex; justify-content: center; padding: 60px 16px 40px; touch-action: none; }
-.stk-stage .card { width: min(360px, 100%); --cw: min(360px, 100%); }
+/* ramka karty to padding w % SZEROKOŚCI RODZICA - karta musi wypełniać swoje pudełko, inaczej ramka jest grubsza niż w grze */
+.stk-cardbox { width: min(360px, 100%); }
+.stk-stage .card { width: 100%; --cw: 100%; }
 .stk-stage .v-sticker { pointer-events: auto; cursor: grab; }
 /* naklejki pod zdjęciem: zdjęcie i napisy nie łapią kliknięć (da się chwycić naklejkę spod nich), a "prześwietlenie"
    robi je półprzezroczystymi */

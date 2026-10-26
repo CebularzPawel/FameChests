@@ -1,0 +1,30 @@
+/* Osiągnięcia: powiadomienie wysuwane z prawej (achievements.js) i kafelki na profilu */
+#achToasts { position: fixed; top: 76px; right: 0; z-index: 10050; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: min(380px, 94vw); overflow: hidden; padding: 4px 0 4px 8px; }
+.ach-popup {
+  display: flex; gap: 12px; align-items: center; padding: 12px 16px; margin-left: 8px; border-radius: 16px 0 0 16px; pointer-events: auto; cursor: pointer;
+  background: linear-gradient(135deg, #3b2a00, #151208 60%); border: 1px solid #ffc531; border-right: none; color: #fff3c4;
+  box-shadow: 0 8px 30px #000b, 0 0 24px #ffc53166; transform: translateX(110%); transition: transform .5s cubic-bezier(.2, .9, .3, 1.1);
+}
+.ach-popup.in { transform: none; }
+.ach-popup.out { transform: translateX(110%); transition-timing-function: ease-in; }
+.ach-popup .ach-pic { font-size: 38px; filter: drop-shadow(0 0 8px #ffc531); animation: achPop .8s .4s both; }
+.ach-popup .ach-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach-popup small { color: #ffc531; font-weight: 900; letter-spacing: .08em; font-size: 11px; }
+.ach-popup b { font-size: 17px; }
+.ach-popup span { font-size: 13px; opacity: .85; }
+.ach-popup em { font-style: normal; font-size: 12px; color: #9cff9c; margin-top: 3px; }
+@keyframes achPop { 0% { transform: scale(.2) rotate(-40deg); } 70% { transform: scale(1.3) rotate(8deg); } 100% { transform: none; } }
+
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 10px; }
+.ach-tile { display: flex; gap: 12px; padding: 12px; border-radius: 14px; background: var(--panel2); border: 1px solid var(--line); opacity: .7; }
+.ach-tile.got { opacity: 1; border-color: #ffc531; background: linear-gradient(135deg, #3b2a0055, var(--panel2)); }
+.ach-tile.secret .ach-txt b { letter-spacing: .15em; }
+.ach-tile .ach-pic { font-size: 34px; width: 46px; text-align: center; flex: none; filter: grayscale(1); }
+.ach-tile.got .ach-pic { filter: none; }
+.ach-tile .ach-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: 13px; }
+.ach-tile .ach-txt span { color: var(--muted); }
+.ach-tile em { font-style: normal; color: #7be07b; font-size: 12px; }
+.ach-tile small { color: #ffc531; }
+.ach-bar { position: relative; height: 16px; border-radius: 8px; background: #0006; overflow: hidden; margin-top: 3px; }
+.ach-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ffc531, #ff8a00); }
+.ach-bar span { position: relative; display: block; text-align: center; font-size: 11px; line-height: 16px; color: #fff; text-shadow: 0 1px 2px #000; }
