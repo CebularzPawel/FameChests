@@ -21,100 +21,70 @@ const vmStar = (x, y, r, fill) => `<path fill="${fill}" d="M${Array.from({ lengt
 let vmIdN = 0;
 const vmId = p => `${p}${++vmIdN}`;
 
-// ---------------------------------------------------------------- RETRO KOSMOS (nazwa robocza) - runda 5
-// Wybrane z rundy 4: Wschód Ziemi, Orzeł nad Księżycem i Start Saturna V - teraz w złoto-srebrnej kliszy (złote i srebrne
-// pasy światła na zmianę zamiast samego złota). Część makiet zostaje ze zdjęciami z misji, część ma w tle prawdziwy film
-// z tamtych lat (krótkie ciche pętle w static/video/space/, wycięte z filmów z archiwum NASA - domena publiczna).
-// Klasy z prefiksem ap-.
+// ---------------------------------------------------------------- RETRO KOSMOS (nazwa robocza) - runda 6
+// Wybrana makieta 5. z rundy 5: w tle prawdziwy film z Apollo 11 (lądownik Orzeł po odłączeniu dryfuje nad kraterami),
+// złoto-srebrna klisza (srebrne zdjęcie osoby, złotawa scena, złote smugi, ziarno, migotanie, rysy, winieta). Film i filtr
+// zostają - makiety różnią się samym wyglądem karty: ramką, napisami, panelami i ozdobami. Klasy z prefiksem ap-.
 
-const AP_PHOTOS = {
-  earthrise: "earthrise.jpg",    // as08-14-2383 - Apollo 8, 24.12.1968, „Wschód Ziemi”
-  eagle: "eagle-earth.jpg",      // as11-44-6642 - Apollo 11, lądownik Eagle nad Księżycem, w tle Ziemia
-  saturn: "saturn-v.jpg",        // 6900556 - start Apollo 11, Saturn V w locie, 16.07.1969
-};
-// filmy (images.nasa.gov, wersja ~mobile; w nawiasie sekunda początku wycinka)
-const AP_FILMS = {
-  saturnClimb: "saturn-climb",   // „Ultimate Saturn V Launch w Enhanced Sound” (146,4 s) - Saturn V po skosie na ciemnym niebie
-  saturnSky: "saturn-sky",       // jw. (157,6 s) - Saturn V w błękicie
-  lmOrbit: "lm-orbit",           // „HQ-194, Eagle Has Landed: The Flight of Apollo 11” (1355 s) - lądownik nad Księżycem
-  moonOrbit: "moon-orbit",       // jw. (1298 s) - przelot nad kraterami
-  descent: "lm-descent",         // jw. (739 s) - lądowanie, widok z okna lądownika
-  eva: "gemini-eva",             // „HD 049 Mercury Gemini Apollo Resource Reel 1” (2513,3 s) - Gemini 4, spacer Eda White'a
-  earth: "gemini-earth",         // jw. (2522,4 s) - Ziemia z okna Gemini
-  apollo9: "apollo9-lm",         // jw. (3416 s) - Apollo 9, lądownik nad Ziemią
-};
-const apPhoto = (k, cls = "") => `<img class="ap-ph ${cls}" src="/static/img/space/${AP_PHOTOS[k]}" alt="" draggable="false" loading="lazy">`;
-const apVideo = (k, cls = "") => `<video class="ap-film ${cls}" src="/static/video/space/${AP_FILMS[k]}.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>`;
+// film: „HQ-194, Eagle Has Landed: The Flight of Apollo 11” (images.nasa.gov, domena publiczna), wycinek od 1355 s,
+// wersja ~mobile, cicha pętla 10 s
+const AP_FILM = "lm-orbit";
 const apScratches = n => vmScatter(n, "ap-scratch", () => `animation-duration:${vmN(1.2, 3, 1)}s`, [0, 0]);
-// filtr całej karty: złoto-srebrne zabarwienie, ziarno, migotanie projektora, rysy, winieta
+// filtr całej karty: złote smugi, ziarno, migotanie projektora, rysy, winieta
 const apFilm = (extra = "") => `<div class="vm-deco ap-clip"><i class="ap-gs"></i><i class="ap-grain"></i><i class="ap-flicker"></i>${apScratches(2)}${extra}<i class="ap-vignette"></i></div>`;
-// tło: zdjęcie albo film + przyciemnienie u góry (pod nazwą) i na dole (pod zdolnościami)
-const apScene = inner => `<div class="vm-bg ap-scene">${inner}<i class="ap-shade"></i></div>`;
-// licznik taśmy w rogu (w makietach z filmem)
+// tło: film + przyciemnienie u góry (pod nazwą) i na dole (pod zdolnościami); extra - nad filmem, pod napisami
+const apScene = (extra = "") => `<div class="vm-bg ap-scene"><video class="ap-film" src="/static/video/space/${AP_FILM}.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>${extra}<i class="ap-shade"></i></div>`;
+// licznik taśmy w rogu zdjęcia
 const apReel = () => '<div class="vm-deco"><span class="ap-rec"><i></i>16 mm</span></div>';
+// cyfra, która sama odlicza 0-9 (pionowy pasek cyfr przesuwany co sekundę)
+const apTick = () => '<span class="ap-tick"><i>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</i></span>';
+// naszywka misji w rogu zdjęcia: napis dookoła, Księżyc nad horyzontem i gwiazda
+function apPatch() {
+  const id = vmId("apP");
+  return vmSvg(`<defs><path id="${id}" d="M20 20 m-14.6 0 a14.6 14.6 0 1 1 29.2 0 a14.6 14.6 0 1 1 -29.2 0"/>
+    <linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c1"/><stop offset=".45" stop-color="#c9952c"/><stop offset=".55" stop-color="#e8ecf2"/><stop offset="1" stop-color="#8a909a"/></linearGradient></defs>
+    <circle cx="20" cy="20" r="19" fill="#0b0d14" stroke="url(#${id}g)" stroke-width="1.6"/><circle cx="20" cy="20" r="11.4" fill="#141824" stroke="#c8ccd4" stroke-width=".5"/>
+    <text font-family="Orbitron, sans-serif" font-weight="900" font-size="3.9" letter-spacing=".7" fill="url(#${id}g)"><textPath href="#${id}">APOLLO · ORZEŁ · 1969 ·</textPath></text>
+    <path d="M9.6 25 Q20 20.5 30.4 25 L29 28.5 Q20 33 11 28.5 Z" fill="#8a909a"/><circle cx="23.5" cy="15.2" r="3.4" fill="#e8ecf2"/><circle cx="24.7" cy="14.4" r="3" fill="#141824"/>
+    ${vmStar(15.2, 16, 2.3, "#f2d27a")}`, "0 0 40 40", "", "xMidYMid meet");
+}
 
 const VM_APOLLO = {
   key: "apollo", icon: "🚀", name: "Retro kosmos (nazwa robocza)", tag: "◉ MISJA 69",
-  about: "runda 5: złoto-srebrna klisza; 3 makiety ze zdjęciami z misji i 5 z prawdziwym filmem z lat 60. w tle (archiwum NASA, domena publiczna)",
+  about: "runda 6: film z Apollo 11 i złoto-srebrna klisza bez zmian - cztery wersje wyglądu karty (ramka, napisy, panele, ozdoby)",
   looks: [
     {
-      name: "Wschód Ziemi (zdjęcie)",
-      desc: "Zdjęcie „Wschód Ziemi” z Apollo 8: Ziemia powoli wschodzi w pasie pod zdjęciem karty. Klisza złoto-srebrna: złote i srebrne smugi światła na zmianę, ziarno, migotanie.",
-      bg: () => apScene(apPhoto("earthrise", "earthrise")),
-      deco: () => apFilm(),
-      sub: () => "WSCHÓD ZIEMI · APOLLO 8 · 24.12.1968",
-    },
-    {
-      name: "Orzeł nad Księżycem (zdjęcie)",
-      desc: "Lądownik Eagle z Apollo 11 nad Księżycem, nad horyzontem Ziemia - kamera powoli zjeżdża od Ziemi do lądownika i z powrotem.",
-      bg: () => apScene(apPhoto("eagle", "eagle")),
-      deco: () => apFilm(),
-      sub: () => "ORZEŁ · POWRÓT NA ORBITĘ · 21.07.1969",
-    },
-    {
-      name: "Start Saturna V (zdjęcie)",
-      desc: "Czarno-białe zdjęcie startu Apollo 11: Saturn V ze smugą dymu przesuwa się po skosie przez kadr; obraz podskakuje jak w kronice.",
-      bg: () => apScene(apPhoto("saturn", "saturn")),
-      deco: () => apFilm('<i class="ap-dust"></i>'),
-      cls: "ap-jitter",
-      sub: () => "T+00:01:00 · APOLLO 11 · 16.07.1969",
-    },
-    {
-      name: "Saturn V (film)",
-      desc: "Prawdziwy film ze startu: Saturn V wznosi się po skosie na ciemnym niebie, z dysz bije ogień. Pętla kilku sekund, licznik taśmy w rogu.",
-      bg: () => apScene(apVideo("saturnClimb", "f-saturn")),
-      deco: () => apFilm('<i class="ap-dust"></i>') + apReel(),
-      sub: () => "SATURN V · PRZYLĄDEK KENNEDY'EGO",
-    },
-    {
-      name: "Orzeł nad Księżycem (film)",
-      desc: "Film z Apollo 11: lądownik Eagle po odłączeniu dryfuje nad kraterami Księżyca, w pasie pod zdjęciem karty.",
-      bg: () => apScene(apVideo("lmOrbit", "f-lm")),
+      name: "Klisza (obecna)",
+      desc: "Obecny wygląd: złoto-srebrna ramka, nazwa w złoto-srebrnym gradiencie, półprzezroczyste czarne panele, licznik taśmy „16 mm” w rogu zdjęcia.",
+      bg: () => apScene(),
       deco: () => apFilm() + apReel(),
       sub: () => "ORZEŁ ODŁĄCZA SIĘ · 20.07.1969",
     },
     {
-      name: "Spacer w kosmosie (film)",
-      desc: "Film z Gemini 4: Ed White unosi się na złotej linie nad błękitną Ziemią - pierwszy amerykański spacer kosmiczny.",
-      bg: () => apScene(apVideo("eva", "f-eva")),
-      deco: () => apFilm() + apReel(),
-      sub: () => "SPACER W KOSMOSIE · GEMINI 4 · 1965",
+      name: "Kontrola misji",
+      desc: "Jak ekran w centrum kontroli lotu: nad nazwą pasek z zegarem misji (sekundy same odliczają), na zdjęciu krzyżyki pomiarowe jak na kliszach Hasselblada z Księżyca i złote narożniki kadru, w pasie filmu odczyty wysokości i prędkości. Ramka z cienkich złotych i srebrnych linii, napisy maszynowe.",
+      top: () => `<div class="ap2-bar"><span>CAPCOM · HOUSTON</span><span class="ap2-met">MET 102:45:4${apTick()}</span></div>`,
+      bg: () => apScene('<span class="ap2-tm l">ALT 47 920 FT<br>VEL 1 604 FT/S</span><span class="ap2-tm r">ORZEŁ ▲<br>KOLUMBIA ▼</span>'),
+      photo: () => '<i class="vm-photo ap2-reseau"></i><i class="vm-photo ap2-corners"></i>',
+      deco: () => apFilm() + '<div class="vm-deco"><i class="ap2-lines"></i></div>',
+      sub: () => "▲ ORZEŁ ODŁĄCZA SIĘ · 20.07.1969",
     },
     {
-      name: "Lądowanie (film)",
-      desc: "Widok z okna lądownika Apollo 11 tuż przed lądowaniem: powierzchnia Księżyca przesuwa się coraz bliżej, obraz podskakuje.",
-      bg: () => apScene(apVideo("descent", "f-descent")),
-      deco: () => apFilm('<i class="ap-dust"></i>') + apReel(),
-      cls: "ap-jitter",
-      sub: () => "LĄDOWANIE · MORZE SPOKOJU · 20.07.1969",
+      name: "Naszywka misji",
+      desc: "Jak plakat misji z lat 60.: nazwa wielkimi złotymi literami, w rogu zdjęcia okrągła naszywka misji (napis dookoła, Księżyc, gwiazda), podpis na złoto-srebrnej wstędze z wciętymi końcami, ramka złota z cienkim srebrnym paskiem w środku, w rogach karty migoczące gwiazdki.",
+      bg: () => apScene(),
+      photo: () => `<i class="vm-photo ap3-patch">${apPatch()}</i>`,
+      deco: () => apFilm() + `<div class="vm-deco">${["tl", "tr", "bl", "br"].map(c => `<i class="ap3-star ${c}"></i>`).join("")}</div>`,
+      sub: () => "ORZEŁ ODŁĄCZA SIĘ · 20.07.1969",
     },
     {
-      name: "Kronika misji (film)",
-      desc: "Montaż jak w kronice filmowej: co 4 s cięcie na następne ujęcie - Saturn V w błękicie, Ziemia z okna Gemini, lądownik Apollo 9 nad Ziemią, przelot nad kraterami Księżyca.",
-      bg: () => apScene(["saturnSky", "earth", "apollo9", "moonOrbit"].map((k, i) => apVideo(k, `f-cut c${i}`)).join("")),
-      deco: () => apFilm('<i class="ap-dust"></i>') + apReel(),
-      cls: "ap-jitter",
-      sub: () => "KRONIKA · 1965–1969",
+      name: "Panel przyrządów",
+      desc: "Jak kabina lądownika: ramka z pogniecionej złotej folii (u dołu srebrnej), zdjęcie w metalowej oprawie z czterema śrubami, panele jak czarne płyty przyrządów ze śrubami w rogach, nad nazwą przyciski ABORT / ABORT STAGE w obwódkach w paski, podpis wygrawerowany na tabliczce.",
+      top: () => '<div class="ap4-btns"><b>ABORT</b><b>ABORT STAGE</b><i class="ap4-led"></i><span>PGNS · AGS</span></div>',
+      bg: () => apScene(),
+      photo: () => `<i class="vm-photo ap4-bezel">${["tl", "tr", "bl", "br"].map(c => `<i class="ap4-screw ${c}"></i>`).join("")}</i>`,
+      deco: () => apFilm(),
+      sub: () => "ORZEŁ ODŁĄCZA SIĘ · 20.07.1969",
     },
   ],
 };
