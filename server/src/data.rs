@@ -269,11 +269,12 @@ impl GameData {
         let variants_json = Value::Object(variants_raw.iter().map(|(k, v)| (k.clone(), Value::Object(v.clone()))).collect());
         let mut variant_order: Vec<String> = variants.keys().cloned().collect();
         variant_order.sort_by(|a, b| variants[a].mult.total_cmp(&variants[b].mult)); // stabilne, jak sorted()
-        let exclusive_variants: Vec<String> = variants.iter().filter(|(_, x)| x.exclusive).map(|(k, _)| k.clone()).collect();
-        let crate_variants = exclusive_variants
+        // warianty przypinane do skrzynek: każdy wariant wypada tylko ze skrzynek, do których jest przypięty - wszystkie
+        // poza zwykłą, połączeniami, wariantami kart specjalnych i konkretnych kart (jak CRATE_VARIANTS w data.py)
+        let crate_variants = variants
             .iter()
-            .filter(|v| variants[*v].cards.is_empty() && !variants[*v].combo && !variants[*v].special)
-            .cloned()
+            .filter(|(k, x)| *k != "normal" && x.cards.is_empty() && !x.combo && !x.special)
+            .map(|(k, _)| k.clone())
             .collect();
         let special_variants = variants.iter().filter(|(_, x)| x.special).map(|(k, _)| k.clone()).collect();
         let casino_variants = variant_order

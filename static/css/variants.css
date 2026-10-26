@@ -48,6 +48,20 @@
 .vr-cname small { color: var(--muted); font-size: 11px; }
 .vr-cpct { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 13px; }
 .vr-crate.yes .vr-cpct { color: #7dffa8; }
+/* przypięcie wariantu do skrzynki (📌) */
+.vr-where-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.vr-pin-all { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.vr-crate.pinned { opacity: .85; }
+.vr-crate.yes.pinned { opacity: 1; }
+.vr-pin { position: relative; flex: none; cursor: pointer; }
+.vr-pin input { position: absolute; opacity: 0; pointer-events: none; }
+.vr-pin span {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; font-size: 16px;
+  border: 1px solid var(--line); background: var(--panel); filter: grayscale(1); opacity: .45; transition: .15s;
+}
+.vr-pin:hover span { opacity: .8; }
+.vr-pin input:checked + span { filter: none; opacity: 1; border-color: var(--accent); background: #ffcf3f22; }
+.vr-pin input:focus-visible + span { outline: 2px solid var(--accent); }
 
 .vr-events { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .vr-ev { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--line); }

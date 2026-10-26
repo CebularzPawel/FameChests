@@ -29,11 +29,17 @@ pub fn random() -> f64 {
     rand::thread_rng().gen()
 }
 
-/// Wariant karty. extra = warianty wyjątkowe dostępne w tej skrzynce (bez nich: tylko zwykłe warianty).
+/// Wariant karty poza skrzynką (kontrakt): wszystkie zwykłe warianty + extra (bez extra: tylko zwykłe warianty).
+pub fn roll_variant(factor: f64, extra: &[String]) -> String {
+    roll_from(factor, extra, false)
+}
+
+/// Wariant karty. listed_only: tylko warianty z listy (skrzynka - warianty do niej przypięte, catalog.crate_variants),
+/// inaczej wszystkie zwykłe + lista (wyjątkowe dostępne tu).
 /// Wariant-warstwa (flaga) z szansą "extraChance" dostaje jeszcze jeden wariant - z tymi samymi szansami co zwykle.
 /// Warianty "always" (halloweenowe): w tej skrzynce każda karta dostaje jeden z nich (według "weight"), a zwykły
 /// wariant losuje się normalnie - chyba że wylosowany ma "noCombo": wtedy karta ma tylko ten wariant.
-pub fn roll_variant(factor: f64, extra: &[String]) -> String {
+fn roll_from(factor: f64, extra: &[String], listed_only: bool) -> String {
     let g = g();
     let always: Vec<&String> = extra.iter().filter(|v| g.variants[*v].always).collect();
     if !always.is_empty() {
@@ -43,7 +49,7 @@ pub fn roll_variant(factor: f64, extra: &[String]) -> String {
             return layer.clone();
         }
         let rest: Vec<String> = extra.iter().filter(|v| !g.variants[*v].layer).cloned().collect();
-        return combine_variant(layer, &roll_variant(factor, &rest));
+        return combine_variant(layer, &roll_from(factor, &rest, listed_only));
     }
     // najrzadsze najpierw
     let specials: Vec<&String> = g
@@ -52,7 +58,7 @@ pub fn roll_variant(factor: f64, extra: &[String]) -> String {
         .rev()
         .filter(|v| {
             let x = &g.variants[*v];
-            *v != "normal" && !x.combo && (!x.exclusive || extra.contains(v))
+            *v != "normal" && !x.combo && (extra.contains(v) || (!listed_only && !x.exclusive))
         })
         .collect();
     let total: f64 = specials.iter().map(|v| g.variants[*v].chance).sum();
@@ -87,7 +93,7 @@ pub fn roll(cat: &Catalog, cr: &Crate) -> Option<(Arc<Person>, String)> {
     let rarity = &g.rarity_order[choose_weighted(&weights)?];
     let pool: Vec<&&Arc<Person>> = people.iter().filter(|p| &p.rarity == rarity).collect();
     let person = (**pool.choose(&mut rand::thread_rng())?).clone();
-    let variant = roll_variant(1.0, &cat.crate_variants(cr, Some(&person)));
+    let variant = roll_from(1.0, &cat.crate_variants(cr, Some(&person)), true); // tylko warianty przypięte do skrzynki
     Some((person, variant))
 }
 
@@ -139,6 +145,12 @@ mod tests {
         for _ in 0..500 {
             let v = roll_variant(1.0, &hw);
             assert!(v == "lantern" || v == "devil" || v.starts_with("halloween"), "{v}");
+        }
+        // skrzynka: tylko warianty do niej przypięte (bez przypiętych - same zwykłe karty)
+        for _ in 0..2000 {
+            assert_eq!(roll_from(1.0, &[], true), "normal");
+            let v = roll_from(1.0, &["gold".to_string()], true);
+            assert!(v == "normal" || v == "gold", "{v}");
         }
         let (cards, money) = house_cards(&cat, 12_345);
         let total: i64 = cards.iter().map(|(p, v)| p.value(v)).sum::<i64>() + money;

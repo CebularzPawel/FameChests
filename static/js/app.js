@@ -84,10 +84,10 @@ async function refreshConfig() {
 
 function rarityIdx(r) { return S.cfg.rarityOrder.indexOf(r); }
 function varRank(v) { return S.cfg.variantOrder.indexOf(v || "normal"); }
-// warianty wyjątkowe (Królewski, Flagowy...) wypadają tylko ze skrzynek, w których admin je włączył
+// warianty wyjątkowe (Królewski, Flagowy...) nie wypadają z kontraktu, ulepszacza ani kasyna
 function isExclusive(v) { return !!S.cfg.variants[v]?.exclusive; }
-// warianty specjalne, które mogą wypaść z tej skrzynki: zwykłe zawsze, wyjątkowe tylko włączone w skrzynce
-// (flagowy - tylko dla kart z ustawionym krajem)
+// warianty specjalne, które mogą wypaść z tej skrzynki: każdy wariant tylko wtedy, gdy jest przypięty do skrzynki
+// (pole skrzynki "variants", panel admina) - flagowy tylko dla kart z ustawionym krajem
 // (warianty z polem "cards", np. Rzulty, należą do konkretnych kart - nie do skrzynki)
 // (połączenia "flag+gold" nie wypadają osobno - patrz variantChance)
 // (jak catalog.drop_variants: wyłączone warianty nie wypadają, a trwające wydarzenie włącza wariant w swoich skrzynkach)
@@ -100,7 +100,7 @@ function crateVariants(crate, p = null) {
     if (v === "flag" && p && !p.country) return false;
     if (variantEvent(v, crate?.id)) return true;
     if (!variantOn(v)) return false;
-    return !V.exclusive || !!V.cards || (crate?.variants || []).includes(v);
+    return !!V.cards || (crate?.variants || []).includes(v);
   });
 }
 // Ustawienia wariantów ze strony /variants (catalog.variant_cfg_json): włączony / wyłączony i wydarzenia - od-do wariant

@@ -1,6 +1,9 @@
 //! Start bazy: schemat, jednorazowe uzupełnienia danych ze starszych wersji gry, katalog, Hall of Fame.
 
+use std::collections::HashMap;
+
 use indexmap::IndexMap;
+use serde_json::{json, Map, Value};
 use sqlx::PgPool;
 
 use crate::config::Config;
@@ -97,9 +100,41 @@ pub async fn init_db(pool: &PgPool, cfg: &Config) -> anyhow::Result<catalog::Cat
         tracing::info!("Wczytano karty i skrzynki z catalog_export.json");
     }
     export::copy_custom_images(&cfg.base_dir, &cfg.data_dir)?;
-    let cat = catalog::load(&mut *pool.acquire().await?).await?;
+    let mut cat = catalog::load(&mut *pool.acquire().await?).await?;
+    if migrate_crate_variants(pool, &cat).await? > 0 {
+        cat = catalog::load(&mut *pool.acquire().await?).await?;
+    }
     backfill_hall_of_fame(pool).await?;
     Ok(cat)
+}
+
+/// Jednorazowo: skrzynki bez "variantsAll" dostają na stałe zapisane przypięte warianty (dotychczasowe wyjątkowe + zwykłe,
+/// które wypadały ze wszystkich skrzynek - catalog::check_crate), żeby warianty dodane później nie przypinały się same
+/// (jak catalog.migrate_crate_variants w Pythonie). Zapytania bez makr, więc bez `cargo sqlx prepare`. Zwraca liczbę skrzynek.
+async fn migrate_crate_variants(pool: &PgPool, cat: &catalog::Catalog) -> anyhow::Result<usize> {
+    let mut tx = pool.begin().await?;
+    let rows: Vec<(String, String)> = sqlx::query_as("SELECT id, data FROM catalog_crates").fetch_all(&mut *tx).await?;
+    let saved: HashMap<String, Map<String, Value>> =
+        rows.into_iter().map(|(id, d)| (id, serde_json::from_str(&d).unwrap_or_default())).collect();
+    let mut n = 0;
+    for (cid, cr) in &cat.crates {
+        let mut d = saved.get(cid).cloned().unwrap_or_default();
+        if cr.special || d.get("variantsAll").and_then(Value::as_bool).unwrap_or(false) {
+            continue;
+        }
+        d.insert("variants".into(), json!(cr.variants));
+        d.insert("variantsAll".into(), json!(true));
+        sqlx::query(
+            "INSERT INTO catalog_crates (id, data, deleted) VALUES ($1, $2, 0) ON CONFLICT(id) DO UPDATE SET data = excluded.data",
+        )
+        .bind(cid)
+        .bind(Value::Object(d).to_string())
+        .execute(&mut *tx)
+        .await?;
+        n += 1;
+    }
+    tx.commit().await?;
+    Ok(n)
 }
 
 /// Tabele z wariantem karty (kolumna) - przy usuwaniu wariantu z gry

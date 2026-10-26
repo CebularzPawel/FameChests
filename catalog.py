@@ -56,7 +56,7 @@ def clean_country(raw):
 
 
 def crate_variants(crate, person=None):
-    """Warianty wyjątkowe, które mogą wypaść z tej skrzynki (dla tej karty: flagowy tylko z ustawionym krajem,
+    """Warianty przypięte do tej skrzynki, które są (albo były) w grze (dla tej karty: flagowy tylko z ustawionym krajem,
     plus warianty przypisane do samej karty, np. Rzulty)."""
     out = [v for v in crate.get("variants") or [] if (v != "flag" or person is None or person.get("country"))
            and variant_released(v)]
@@ -105,10 +105,39 @@ def clean_variant_settings(v, raw):
     return out
 
 
-def variant_enabled(v):
-    """Czy wariant w ogóle wypada (poza wydarzeniami): ustawienie admina, a bez niego - "off" w data.py."""
-    on = VARIANT_CFG.get(v, {}).get("enabled")
+def variant_enabled(v, cfg=None):
+    """Czy wariant w ogóle wypada (poza wydarzeniami): ustawienie admina, a bez niego - "off" w data.py.
+    cfg - ustawienia wariantów (domyślnie VARIANT_CFG; rebuild podaje te, które właśnie wczytuje)."""
+    on = (VARIANT_CFG if cfg is None else cfg).get(v, {}).get("enabled")
     return (not data.VARIANTS[v].get("off")) if on is None else on
+
+
+def chosen_crate_variants(cid, crate, cfg=None):
+    """Warianty przypięte do skrzynki. Zapis sprzed przypinania wszystkich wariantów (bez "variantsAll") - jak wtedy
+    działała gra: wyjątkowe wybrane w skrzynce (albo DEFAULT_CRATE_VARIANTS) + włączone zwykłe warianty, które wypadały
+    ze wszystkich skrzynek (migrate_crate_variants zapisuje to raz na stałe)."""
+    if data.CRATES.get(cid, {}).get("special"):   # skrzynki kart specjalnych nie da się otworzyć - bez wariantów
+        return []
+    chosen = list((crate["variants"] if "variants" in crate else data.DEFAULT_CRATE_VARIANTS.get(cid, [])) or [])
+    if not crate.get("variantsAll"):
+        chosen += [v for v in data.CRATE_VARIANTS if not data.VARIANTS[v].get("exclusive") and variant_enabled(v, cfg)]
+    return [v for v in data.CRATE_VARIANTS if v in chosen]
+
+
+def migrate_crate_variants(conn):
+    """Jednorazowo: skrzynki bez "variantsAll" dostają na stałe zapisane warianty z chosen_crate_variants (dotychczasowe
+    wyjątkowe + włączone zwykłe), żeby warianty dodane później nie przypinały się same. Zwraca liczbę skrzynek."""
+    rows = {r[0]: json.loads(r[1] or "{}") for r in conn.execute("SELECT id, data FROM catalog_crates")}
+    n = 0
+    for cid, crate in CRATES.items():
+        if crate["special"] or rows.get(cid, {}).get("variantsAll"):
+            continue
+        d = dict(rows.get(cid, {}), variants=crate["variants"], variantsAll=True)
+        conn.execute("INSERT INTO catalog_crates (id, data, deleted) VALUES (?, ?, 0) "
+                     "ON CONFLICT(id) DO UPDATE SET data = excluded.data", (cid, json.dumps(d, ensure_ascii=False)))
+        n += 1
+    conn.commit()
+    return n
 
 
 def variant_events(v):
@@ -143,8 +172,8 @@ def _variant_fits(v, person):
 
 def drop_variants(crate, person=None, now=None):
     """Warianty, które mogą TERAZ wypaść z tej skrzynki (dla tej karty) i mnożniki szansy z trwających wydarzeń:
-    ([warianty], {wariant: mnożnik}). Zwykłe - gdy włączone; wyjątkowe - gdy włączone w skrzynce i w ogóle;
-    każdy wariant z trwającym wydarzeniem w tej skrzynce - zawsze."""
+    ([warianty], {wariant: mnożnik}). Każdy wariant - gdy jest przypięty do skrzynki i włączony (warianty konkretnych
+    kart, np. Rzulty - gdy włączone); każdy wariant z trwającym wydarzeniem w tej skrzynce - zawsze."""
     avail, boost, own = [], {}, set(crate.get("variants") or [])
     for v in data.VARIANT_ORDER:
         if not _variant_fits(v, person):
@@ -153,7 +182,7 @@ def drop_variants(crate, person=None, now=None):
         if ev:
             if ev["boost"] != 1:
                 boost[v] = ev["boost"]
-        elif not variant_enabled(v) or (x.get("exclusive") and not x.get("cards") and v not in own):
+        elif not variant_enabled(v) or (not x.get("cards") and v not in own):
             continue
         avail.append(v)
     return avail, boost
@@ -554,9 +583,8 @@ def rebuild(conn):
         crate["special"] = bool(data.CRATES.get(cid, {}).get("special"))
         crate["shop"] = bool(crate.get("shop", True)) and not crate["special"]
         crate["restricted"] = bool(crate.get("restricted", False))
-        # warianty wyjątkowe (np. Królewski, Flagowy) - tylko te, które admin włączył (albo domyślne z data.py)
-        chosen = crate["variants"] if "variants" in crate else data.DEFAULT_CRATE_VARIANTS.get(cid, [])
-        crate["variants"] = [v for v in data.CRATE_VARIANTS if v in (chosen or [])]
+        # warianty przypięte do skrzynki (każdy wariant wypada tylko ze skrzynek, do których jest przypięty)
+        crate["variants"] = chosen_crate_variants(cid, crate, variant_cfg)
         crate["weights"] = {r: float(w) for r, w in (crate.get("weights") or {}).items() if r in data.RARITIES}
         # tajna karta: zawsze 1 na SECRET_ODDS otwartych skrzynek (chyba że admin ustawi inaczej)
         crate["autoSecret"] = "secret" not in crate["weights"]

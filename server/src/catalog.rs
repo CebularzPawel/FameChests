@@ -279,6 +279,10 @@ pub struct RawCrate {
     /// None = admin nie wybierał (domyślne warianty z DEFAULT_CRATE_VARIANTS)
     #[serde_as(as = "DefaultOnError<Option<VecSkipError<_>>>")]
     pub variants: Option<Vec<String>>,
+    /// lista wariantów obejmuje wszystkie przypięte warianty (zapis po wprowadzeniu przypinania - startup::migrate_crate_variants)
+    #[serde(rename = "variantsAll")]
+    #[serde_as(as = "DefaultOnError")]
+    pub variants_all: bool,
     #[serde_as(as = "DefaultOnError<IndexMap<_, DefaultOnError<Num>>>")]
     pub weights: IndexMap<String, f64>,
     pub builtin: bool,
@@ -604,8 +608,14 @@ fn check_crate(cid: &str, c: RawCrate, present: &HashSet<String>, people: Vec<St
     let g = g();
     // skrzynka kart specjalnych: nigdy w sklepie, nie da się jej kupić ani otworzyć
     let special = g.crates.get(cid).is_some_and(|b| b.special);
-    // warianty wyjątkowe - tylko te, które admin włączył (albo domyślne)
-    let chosen = c.variants.unwrap_or_else(|| g.default_crate_variants.get(cid).cloned().unwrap_or_default());
+    // warianty przypięte do skrzynki; zapis sprzed przypinania (bez "variantsAll") - jak wtedy działała gra: wybrane
+    // wyjątkowe (albo domyślne) + włączone zwykłe warianty, które wypadały ze wszystkich skrzynek (jak chosen_crate_variants)
+    let mut chosen = c.variants.unwrap_or_else(|| g.default_crate_variants.get(cid).cloned().unwrap_or_default());
+    if special {
+        chosen.clear(); // skrzynki kart specjalnych nie da się otworzyć - bez wariantów
+    } else if !c.variants_all {
+        chosen.extend(g.crate_variants.iter().filter(|v| !g.variants[*v].exclusive && !g.variants[*v].off).cloned());
+    }
     let mut weights: IndexMap<String, f64> = c.weights.into_iter().filter(|(r, _)| g.rarities.contains_key(r)).collect();
     // tajna karta: zawsze 1 na SECRET_ODDS otwartych skrzynek (chyba że admin ustawi inaczej)
     let auto_secret = !weights.contains_key("secret");
