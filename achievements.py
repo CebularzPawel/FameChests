@@ -7,15 +7,24 @@ Warunek (`criteria`): {"type": ..., "count": n, ...}
                  crate (rarity + crate razem); bez filtrów = wszystkie karty. "unique": różne osoby z klasera zamiast liczby zdobyć
   open           otwarte skrzynki: "crate" (puste = wszystkie)
   casino_plays   rozegrane gry w kasynie: "game" (puste = dowolna)
+  casino_plays   ... "weekday" (0 = poniedziałek ... 6 = niedziela, puste = dowolny dzień): gry w ten dzień tygodnia
   casino_win     wygrane w kasynie: "game", opcjonalnie wygrana z postawioną kartą "person" / "variant"
-  drop_together  "persons": 2-4 karty, które wypadły naraz przy jednym otwieraniu skrzynek
+  casino_streak  wygrane w kasynie z rzędu ("game" albo dowolna gra; remis / zwrot nie przerywa serii) - liczy się najlepsza seria
+  drop_together  "persons": 2-4 karty, które wypadły naraz przy jednym otwieraniu skrzynek (ta sama karta może się powtarzać:
+                 [kwaśniewski, kwaśniewski] = dwie takie karty naraz)
+
+Warunki z kartami ("cards" bez "unique") liczą zdobyte karty (liczniki) albo karty, które gracz ma teraz w ekwipunku - co
+większe; dzięki temu liczą się też karty z wymiany, rynku, jackpota i od admina (app.py: ach_owned).
   arena          "mode": win (wygrane walki) albo finisher (wygrana, a ostatni cios zadała karta "person")
 """
 
 GAMES = {"roulette": "Ruletka", "blackjack": "Blackjack", "slots": "Jednoręki bandyta", "jackpot": "Jackpot",
          "horses": "Wyścigi konne"}
 TYPES = {"cards": "Zdobyte karty", "open": "Otwarte skrzynki", "casino_plays": "Gry w kasynie",
-         "casino_win": "Wygrane w kasynie", "drop_together": "Wypadnięcie kart naraz", "arena": "Arena"}
+         "casino_win": "Wygrane w kasynie", "casino_streak": "Wygrane w kasynie z rzędu",
+         "drop_together": "Wypadnięcie kart naraz", "arena": "Arena"}
+WEEKDAYS = ["poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"]
+WEEKDAYS_IN = ["w poniedziałek", "we wtorek", "w środę", "w czwartek", "w piątek", "w sobotę", "w niedzielę"]
 REWARD_TYPES = {"money": "Pieniądze", "chest": "Skrzynki", "card": "Karta"}
 NAME_MAX, DESC_MAX, MAX_CRITERIA, MAX_REWARDS, MAX_COUNT = 60, 300, 2, 8, 10_000_000
 
@@ -41,8 +50,9 @@ def card_events(person, variant):
     return keys
 
 
-def play_events(game):
-    return ["play:any", f"play:{game}"]
+def play_events(game, weekday):
+    """weekday: dzień tygodnia gry (0 = poniedziałek)."""
+    return ["play:any", f"play:{game}", f"play:any:wd{weekday}", f"play:{game}:wd{weekday}"]
 
 
 def win_events(game, cards):
@@ -64,7 +74,12 @@ def open_events(crate_id, n):
 
 
 def together_key(persons):
-    return "dt:" + ",".join(sorted(persons))
+    return "dt:" + ",".join(sorted(persons))   # powtórzenia zostają: "dt:a,a" = dwie karty a naraz
+
+
+def weekday_of(c):
+    wd = c.get("weekday")
+    return wd if isinstance(wd, int) and 0 <= wd <= 6 else None
 
 
 def criterion_key(c):
@@ -79,7 +94,10 @@ def criterion_key(c):
     if t == "open":
         return f"open:{c['crate']}" if c.get("crate") else "open"
     if t == "casino_plays":
-        return f"play:{c.get('game') or 'any'}"
+        wd = weekday_of(c)
+        return f"play:{c.get('game') or 'any'}" + (f":wd{wd}" if wd is not None else "")
+    if t == "casino_streak":
+        return f"beststreak:{c.get('game') or 'any'}"
     if t == "casino_win":
         g, p, v = c.get("game") or "any", c.get("person") or "", c.get("variant") or ""
         return f"winpv:{g}:{p}:{v}" if p and v else f"winp:{g}:{p}" if p else f"winv:{g}:{v}" if v else f"win:{g}"
@@ -92,17 +110,22 @@ def criterion_key(c):
     return None
 
 
-def progress(c, counters, collected=()):
-    """(ile jest, ile trzeba) dla jednego warunku. collected: [(person_id, variant)] z klasera - tylko dla "unique"."""
+def progress(c, counters, collected=(), owned=None):
+    """(ile jest, ile trzeba) dla jednego warunku. collected: różne osoby z klasera - tylko dla "unique";
+    owned: liczniki kart, które gracz ma teraz w ekwipunku (te same klucze co card_events) - dla "cards"."""
     need = max(1, int(c.get("count") or 1))
     if c.get("type") == "cards" and c.get("unique"):
         return min(len(collected), need), need
-    return min(int(counters.get(criterion_key(c), 0)), need), need
+    key = criterion_key(c)
+    cur = int(counters.get(key, 0))
+    if c.get("type") == "cards" and owned:
+        cur = max(cur, int(owned.get(key, 0)))
+    return min(cur, need), need
 
 
-def done(d, counters, collected_fn):
+def done(d, counters, collected_fn, owned=None):
     for c in d["criteria"]:
-        cur, need = progress(c, counters, collected_fn(c) if c.get("unique") else ())
+        cur, need = progress(c, counters, collected_fn(c) if c.get("unique") else (), owned)
         if cur < need:
             return False
     return True
@@ -127,12 +150,18 @@ def describe(c, names):
     if t == "open":
         return "Otwórz skrzynki" + (f" „{names['crate'](c['crate'])}”" if c.get("crate") else "") + f": {n}×"
     if t == "casino_plays":
-        return "Zagraj w kasynie" + (f" ({achievements_game(c)})" if c.get("game") else "") + f": {n}×"
+        wd = weekday_of(c)
+        return ("Zagraj w kasynie" + (f" ({achievements_game(c)})" if c.get("game") else "") +
+                (f" {WEEKDAYS_IN[wd]}" if wd is not None else "") + f": {n}×")
+    if t == "casino_streak":
+        return f"Wygraj w kasynie {n} razy z rzędu" + (f" ({achievements_game(c)})" if c.get("game") else "")
     if t == "casino_win":
         extra = (f", stawiając kartę {person}" if person else "") + (f" w wariancie {variant}" if variant else "")
         return "Wygraj w kasynie" + (f" ({achievements_game(c)})" if c.get("game") else "") + extra + f": {n}×"
     if t == "drop_together":
-        return "Wylosuj naraz (przy otwieraniu kilku skrzynek): " + ", ".join(names["person"](p) for p in c.get("persons") or [])
+        ps = c.get("persons") or []
+        return "Wylosuj naraz (przy otwieraniu kilku skrzynek): " + ", ".join(
+            (f"{ps.count(p)}× " if ps.count(p) > 1 else "") + names["person"](p) for p in dict.fromkeys(ps))
     if t == "arena":
         if c.get("mode") == "finisher":
             return f"Wygraj walkę w Arenie, zadając ostatni cios kartą {person or 'dowolną'}" + (f": {n}×" if n > 1 else "")
@@ -180,12 +209,16 @@ def clean_criterion(c, ctx):
         out["crate"] = c.get("crate") if c.get("crate") in ctx["crates"] else ""
     elif t == "casino_plays":
         out["game"] = c.get("game") if c.get("game") in GAMES else ""
+        wd = c.get("weekday")
+        out["weekday"] = int(wd) if str(wd).isdigit() and 0 <= int(wd) <= 6 else ""
+    elif t == "casino_streak":
+        out["game"] = c.get("game") if c.get("game") in GAMES else ""
     elif t == "casino_win":
         out.update(game=c.get("game") if c.get("game") in GAMES else "", person=pid, variant=var)
     elif t == "drop_together":
-        persons = [p for p in dict.fromkeys(c.get("persons") or []) if p in ctx["people"]]
+        persons = [p for p in (c.get("persons") or []) if p in ctx["people"]]
         if not 2 <= len(persons) <= 4:
-            return None, "Wybierz od 2 do 4 różnych kart"
+            return None, "Wybierz od 2 do 4 kart (ta sama karta może się powtarzać - np. dwie takie same naraz)"
         out["persons"], out["count"] = persons, 1
     elif t == "arena":
         out.update(mode="finisher" if c.get("mode") == "finisher" else "win", person=pid if c.get("mode") == "finisher" else "")
@@ -253,4 +286,39 @@ DEFAULTS = [
     {"id": "3000_lat_temu", "name": "3000 lat temu", "desc": "Wylosuj Diamentowego Netanjahu.", "icon": "💎", "hidden": True,
      "enabled": False, "criteria": [{"type": "cards", "person": "", "variant": "diamond", "count": 1}],
      "rewards": [{"type": "money", "amount": 100_000}]},
+    # ogólne (karty, skrzynki, kasyno, Arena) i z listy życzeń
+    {'id': 'pierwsza_karta', 'name': 'Pierwsza karta', 'desc': 'Zdobądź swoją pierwszą kartę.', 'icon': '🃏', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 500}]},
+    {'id': 'zbieracz_100', 'name': 'Zbieracz', 'desc': 'Zdobądź 100 kart.', 'icon': '🧺', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 100}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'chomik_500', 'name': 'Chomik', 'desc': 'Zdobądź 500 kart.', 'icon': '🐹', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 500}], 'rewards': [{'type': 'money', 'amount': 20000}]},
+    {'id': 'kolekcjoner_2000', 'name': 'Kolekcjoner absolutny', 'desc': 'Zdobądź 2000 kart.', 'icon': '🏛️', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 2000}], 'rewards': [{'type': 'chest', 'kind': 'money_mega', 'count': 1}]},
+    {'id': 'album_25', 'name': 'Album się zapełnia', 'desc': 'Miej w klaserze 25 różnych osób.', 'icon': '📖', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 25, 'unique': True}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'album_75', 'name': 'Prawie komplet', 'desc': 'Miej w klaserze 75 różnych osób.', 'icon': '📚', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'count': 75, 'unique': True}], 'rewards': [{'type': 'money', 'amount': 25000}]},
+    {'id': 'epicka', 'name': 'Epicko!', 'desc': 'Wylosuj kartę Epicką.', 'icon': '💜', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'rarity': 'purple', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 1000}]},
+    {'id': 'mityczna', 'name': 'Mit czy prawda?', 'desc': 'Wylosuj kartę Mityczną.', 'icon': '❤️\u200d🔥', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'rarity': 'red', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 3000}]},
+    {'id': 'legendarna', 'name': 'Legenda', 'desc': 'Wylosuj kartę Legendarną.', 'icon': '🌟', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'rarity': 'gold', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 10000}]},
+    {'id': 'ultra', 'name': 'ULTRA!', 'desc': 'Wylosuj kartę ULTRA.', 'icon': '🌈', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'rarity': 'ultra', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 25000}]},
+    {'id': 'tajna', 'name': 'Tajemnica', 'desc': 'Zdobądź tajną kartę.', 'icon': '🕵️', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'cards', 'rarity': 'secret', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 50000}]},
+    {'id': 'holo', 'name': 'Błyszczy się', 'desc': 'Zdobądź kartę Holo.', 'icon': '✨', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'holo', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 1000}]},
+    {'id': 'zlota', 'name': 'Złota rączka', 'desc': 'Zdobądź Złotą kartę.', 'icon': '🥇', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'gold', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 2000}]},
+    {'id': 'diament', 'name': 'Diamenty są wieczne', 'desc': 'Zdobądź Diamentową kartę.', 'icon': '💎', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'diamond', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 15000}]},
+    {'id': 'galaktyka', 'name': 'Gwiezdny pył', 'desc': 'Zdobądź Galaktyczną kartę.', 'icon': '🌌', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'galaxy', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 20000}]},
+    {'id': 'negatyw', 'name': 'Ciemna strona', 'desc': 'Zdobądź kartę Negatyw.', 'icon': '◐', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'negative', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 30000}]},
+    {'id': 'pierwsza_skrzynka', 'name': 'Pierwsza skrzynka', 'desc': 'Otwórz swoją pierwszą skrzynkę.', 'icon': '📦', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'open', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 300}]},
+    {'id': 'hazardzista_100', 'name': 'Hazardzista', 'desc': 'Otwórz 100 skrzynek.', 'icon': '🎁', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'open', 'count': 100}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'uzalezniony_1000', 'name': 'Uzależniony', 'desc': 'Otwórz 1000 skrzynek.', 'icon': '🫠', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'open', 'count': 1000}], 'rewards': [{'type': 'chest', 'kind': 'money_mega', 'count': 2}]},
+    {'id': 'za_komuny', 'name': 'Za komuny było lepiej', 'desc': 'Otwórz 50 Skrzynek PRL.', 'icon': '☭', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'open', 'crate': 'prl', 'count': 50}], 'rewards': [{'type': 'money', 'amount': 3000}]},
+    {'id': 'witamy_w_kasynie', 'name': 'Witamy w kasynie', 'desc': 'Zagraj w dowolną grę w kasynie.', 'icon': '🎰', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_plays', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 500}]},
+    {'id': 'staly_bywalec', 'name': 'Stały bywalec', 'desc': 'Zagraj w kasynie 100 razy.', 'icon': '🍸', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_plays', 'count': 100}], 'rewards': [{'type': 'money', 'amount': 10000}]},
+    {'id': 'pierwsza_wygrana', 'name': 'Dom nie zawsze wygrywa', 'desc': 'Wygraj grę w kasynie.', 'icon': '💸', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_win', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 1000}]},
+    {'id': 'szczesciarz_50', 'name': 'Szczęściarz', 'desc': 'Wygraj w kasynie 50 razy.', 'icon': '🍀', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_win', 'count': 50}], 'rewards': [{'type': 'money', 'amount': 15000}]},
+    {'id': 'czerwone_czarne', 'name': 'Czerwone czy czarne', 'desc': 'Zagraj w ruletkę 25 razy.', 'icon': '🎡', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_plays', 'game': 'roulette', 'count': 25}], 'rewards': [{'type': 'money', 'amount': 3000}]},
+    {'id': 'oczko', 'name': 'Oczko', 'desc': 'Wygraj 10 rozdań w blackjacku.', 'icon': '🂡', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_win', 'game': 'blackjack', 'count': 10}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'na_koniku', 'name': 'Na koniku', 'desc': 'Wygraj zakład na wyścigach konnych.', 'icon': '🐎', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_win', 'game': 'horses', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 3000}]},
+    {'id': 'zwyciezca_bierze_wszystko', 'name': 'Zwycięzca bierze wszystko', 'desc': 'Wygraj grę w jackpot.', 'icon': '💰', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'casino_win', 'game': 'jackpot', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'gladiator', 'name': 'Gladiator', 'desc': 'Wygraj walkę w Arenie.', 'icon': '⚔️', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'arena', 'mode': 'win', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 2000}]},
+    {'id': 'karta_mi_zre', 'name': 'Karta mi dzisiaj żre', 'desc': 'Wygraj 3 gry w kasynie z rzędu.', 'icon': '🔥', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'casino_streak', 'count': 3}], 'rewards': [{'type': 'money', 'amount': 10000}]},
+    {'id': 'wtorek_automaty', 'name': 'Wtorek automaty', 'desc': 'Zagraj w jednorękiego bandytę we wtorek.', 'icon': '📅', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'casino_plays', 'game': 'slots', 'weekday': 1, 'count': 1}], 'rewards': [{'type': 'money', 'amount': 2000}]},
+    {'id': 'maga', 'name': 'Make America Great Again', 'desc': 'Wylosuj Flagową kartę Donalda Trumpa (w dowolnym połączeniu).', 'icon': '🇺🇸', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'cards', 'person': 'w_trump', 'variant': 'flag', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 20000}]},
+    {'id': 'patriota', 'name': 'Patriota', 'desc': 'Wylosuj dowolną kartę Flagową.', 'icon': '🏳️', 'hidden': False, 'enabled': True, 'criteria': [{'type': 'cards', 'variant': 'flag', 'count': 1}], 'rewards': [{'type': 'money', 'amount': 5000}]},
+    {'id': 'caly_litr', 'name': 'Cały litr', 'desc': 'Wylosuj dwie karty Aleksandra Kwaśniewskiego przy jednym otwieraniu skrzynek.', 'icon': '🍾', 'hidden': True, 'enabled': True, 'criteria': [{'type': 'drop_together', 'persons': ['pl_aleksander_kwasniewski', 'pl_aleksander_kwasniewski'], 'count': 1}], 'rewards': [{'type': 'money', 'amount': 10000}]},
 ]

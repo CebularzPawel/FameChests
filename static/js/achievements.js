@@ -61,15 +61,38 @@ function achTile(a) {
       ${a.earned ? `<small>✔ ${new Date(a.at * 1000).toLocaleDateString("pl-PL")}</small>` : ""}</div></div>`;
 }
 
+// dwie zakładki: zwykłe i ukryte (ukryte niezdobyte to "???")
 async function achProfile(username, mine) {
   const box = $("#pfAch");
   if (!box) return;
   let d;
   try { d = await api(`/api/users/${encodeURIComponent(username)}/achievements`); } catch (_) { return; }
   if (!$("#pfAch")) return;
-  const got = d.list.filter(a => a.earned).length;
-  if (!d.list.length) { box.innerHTML = `<h3>🏆 Osiągnięcia</h3><p class="muted">${mine ? "Brak osiągnięć w grze." : "Ten gracz nie ma jeszcze osiągnięć."}</p>`; return; }
-  const sorted = d.list.slice().sort((a, b) => b.earned - a.earned || a.hidden - b.hidden);
-  box.innerHTML = `<h3>🏆 Osiągnięcia ${mine ? `<small class="muted">${got} / ${d.list.length}</small>` : `<small class="muted">${got}</small>`}</h3>
-    <div class="ach-grid">${sorted.map(achTile).join("")}</div>`;
+  ACH.prof = { list: d.list, mine };
+  achProfileDraw();
 }
+
+function achProfileDraw() {
+  const box = $("#pfAch"), P = ACH.prof;
+  if (!box || !P) return;
+  const tab = ACH.tab || "normal";
+  const groups = { normal: P.list.filter(a => !a.hidden), hidden: P.list.filter(a => a.hidden) };
+  const count = l => `${l.filter(a => a.earned).length}${P.mine ? " / " + l.length : ""}`;
+  const list = groups[tab].slice().sort((a, b) => b.earned - a.earned);
+  box.innerHTML = `<div class="ach-head"><h3>🏆 Osiągnięcia</h3>
+      <div class="seg ach-tabs">
+        <button data-achtab="normal" class="${tab === "normal" ? "active" : ""}">🏆 Zwykłe <small>${count(groups.normal)}</small></button>
+        <button data-achtab="hidden" class="${tab === "hidden" ? "active" : ""}">🕵️ Ukryte <small>${count(groups.hidden)}</small></button>
+      </div></div>
+    ${list.length ? `<div class="ach-grid">${list.map(achTile).join("")}</div>`
+      : `<p class="muted">${tab === "hidden" ? (P.mine ? "Brak ukrytych osiągnięć." : "Ten gracz nie odkrył jeszcze żadnego ukrytego osiągnięcia.")
+        : (P.mine ? "Brak osiągnięć w grze." : "Ten gracz nie ma jeszcze osiągnięć.")}</p>`}`;
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-achtab]");
+  if (!b) return;
+  ACH.tab = b.dataset.achtab;
+  Sound.click();
+  achProfileDraw();
+});

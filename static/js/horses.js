@@ -719,9 +719,9 @@ function hrUpdateRows(race, T) {
 async function hrBet() {
   if (HR.horse == null || !HR.sel.size || CS.spinning) return;
   const ids = [...HR.sel], stake = csStake(HR.sel), h = hrHorses()[HR.horse];
-  if (stake >= 5000 && !confirm(`Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na konia „${h.name}”?`)) return;
+  if (!csBetOk(ids, stake, S.cfg.horses.race.maxCards, `Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na konia „${h.name}”?`)) return;
   try {
-    const res = await api("/api/casino/horses/bet", { horse: HR.horse, ids });
+    const res = await api("/api/casino/horses/bet", { horse: HR.horse, ids, vabank: csIsVabank(ids.length, S.cfg.horses.race.maxCards) });
     removeItems(res.consumed);
     HR.sel.clear();
     applyState(res.state);
@@ -744,10 +744,10 @@ async function hrCancel(id) {
 async function hrSolo() {
   if (HR.horse == null || !HR.sel.size || CS.spinning || HR.solo) return;
   const ids = [...HR.sel], stake = csStake(HR.sel), h = hrHorses()[HR.horse];
-  if (stake >= 5000 && !confirm(`Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na konia „${h.name}” w wyścigu solo?`)) return;
+  if (!csBetOk(ids, stake, S.cfg.horses.race.maxCards, `Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na konia „${h.name}” w wyścigu solo?`)) return;
   Sound.unlock();
   let res;
-  try { res = await api("/api/casino/horses/solo", { horse: HR.horse, ids }); }
+  try { res = await api("/api/casino/horses/solo", { horse: HR.horse, ids, vabank: csIsVabank(ids.length, S.cfg.horses.race.maxCards) }); }
   catch (e) { Sound.error(); toast(e.message, true); return; }
   CS.spinning = true;
   HR.last = null;

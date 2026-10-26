@@ -1,3 +1,4 @@
+import collections
 import datetime
 import functools
 import gzip
@@ -883,6 +884,8 @@ def ach_count(user_id, keys):
 
 def ach_flush():
     for (user_id, key), n in (g.pop("ach_buf", None) or {}).items():
+        if not n:
+            continue
         db().execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, ?) "
                      "ON CONFLICT (user_id, key) DO UPDATE SET value = user_counters.value + excluded.value", (user_id, key, n))
 
@@ -900,10 +903,25 @@ def ach_cards_of(ids):
 
 
 def ach_casino(user_id, game, won, cards):
-    """Gra w kasynie rozegrana (won: wygrana); cards = postawione karty."""
-    ach_count(user_id, achievements.play_events(game))
+    """Gra w kasynie rozegrana (won: True wygrana / False przegrana / None remis, zwrot); cards = postawione karty.
+    Seria wygranych z rzędu (streak:<gra>, najlepsza: beststreak:<gra>) jest zapisywana od razu - przegrana ją zeruje."""
+    ach_count(user_id, achievements.play_events(game, datetime.date.today().weekday()))
     if won:
         ach_count(user_id, achievements.win_events(game, cards))
+    if won is None:
+        return
+    for g_ in ("any", game):
+        if won:
+            db().execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, 1) "
+                         "ON CONFLICT (user_id, key) DO UPDATE SET value = user_counters.value + 1", (user_id, f"streak:{g_}"))
+            cur = db().execute("SELECT value FROM user_counters WHERE user_id = ? AND key = ?", (user_id, f"streak:{g_}")).fetchone()[0]
+            db().execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT (user_id, key) DO UPDATE SET "
+                         "value = CASE WHEN excluded.value > user_counters.value THEN excluded.value ELSE user_counters.value END",
+                         (user_id, f"beststreak:{g_}", cur))
+        else:
+            db().execute("UPDATE user_counters SET value = 0 WHERE user_id = ? AND key = ?", (user_id, f"streak:{g_}"))
+    if user_id == uid():
+        g.setdefault("ach_buf", {})[(user_id, "casino")] = 0   # sprawdź osiągnięcia po tym zapytaniu
 
 
 def ach_defs(include_off=False):
@@ -917,13 +935,26 @@ def ach_defs(include_off=False):
 
 
 def ach_together(persons):
-    """Przy jednym otwieraniu skrzynek wypadły te karty: liczymy warunki "drop_together", które w całości się z nimi zgadzają."""
-    keys = []
+    """Przy jednym otwieraniu skrzynek wypadły te karty (lista z powtórzeniami): liczymy warunki "drop_together", które
+    w całości się z nimi zgadzają (ta sama karta dwa razy w warunku = musiała wypaść dwa razy)."""
+    have, keys = collections.Counter(persons), []
     for d in ach_defs():
         for c in d["criteria"]:
-            if c["type"] == "drop_together" and c.get("persons") and set(c["persons"]) <= persons:
+            need = collections.Counter(c.get("persons") or [])
+            if c["type"] == "drop_together" and need and all(have[p] >= n for p, n in need.items()):
                 keys.append(achievements.together_key(c["persons"]))
     ach_count(uid(), list(dict.fromkeys(keys)))
+
+
+def ach_owned(user_id):
+    """Liczniki z kart, które gracz ma teraz (te same klucze co achievements.card_events) - karty z wymiany, rynku itd."""
+    out = collections.Counter()
+    for pid, variant, n in db().execute("SELECT person_id, variant, COUNT(*) FROM items WHERE user_id = ? GROUP BY person_id, variant",
+                                        (user_id,)).fetchall():
+        if pid in catalog.PEOPLE:
+            for k in achievements.card_events(catalog.PEOPLE[pid], variant):
+                out[k] += n
+    return out
 
 
 def ach_counters(user_id):
@@ -968,8 +999,8 @@ def ach_award():
         todo = [d for d in ach_defs() if d["id"] not in earned]
         if not todo:
             break
-        counters = ach_counters(me)
-        won = [d for d in todo if achievements.done(d, counters, lambda c: ach_collected(me, c))]
+        counters, owned = ach_counters(me), ach_owned(me)
+        won = [d for d in todo if achievements.done(d, counters, lambda c: ach_collected(me, c), owned)]
         if not won:
             break
         for d in won:
@@ -1014,7 +1045,7 @@ def ach_names(viewer=None):
             "rarity": lambda r: RARITIES.get(r, {}).get("name", r)}
 
 
-def ach_json(d, row, counters, names, collected_fn, full=True):
+def ach_json(d, row, counters, names, collected_fn, full=True, owned=None):
     """Osiągnięcie dla gracza: opis, postęp, nagrody. Ukryte i niezdobyte - bez szczegółów."""
     got = row is not None
     out = {"id": d["id"], "icon": d.get("icon") or "🏆", "hidden": bool(d.get("hidden")), "earned": got,
@@ -1024,7 +1055,7 @@ def ach_json(d, row, counters, names, collected_fn, full=True):
     conds = [achievements.describe(c, names) for c in d["criteria"]]
     out.update(name=d["name"], desc=d.get("desc") or " + ".join(conds), conditions=conds,
                rewards=[achievements.reward_text(r, names) for r in d["rewards"]])
-    out["progress"] = [dict(zip(("cur", "need"), achievements.progress(c, counters, collected_fn(c) if c.get("unique") else ())))
+    out["progress"] = [dict(zip(("cur", "need"), achievements.progress(c, counters, collected_fn(c) if c.get("unique") else (), owned)))
                        for c in d["criteria"]] if full else []
     return out
 
@@ -1038,8 +1069,9 @@ def user_achievements(username):
     mine = u["id"] == uid()
     rows = {r["ach_id"]: r for r in db().execute("SELECT * FROM user_achievements WHERE user_id = ?", (u["id"],))}
     counters, names = ach_counters(u["id"]) if mine else {}, ach_names(uid())
+    owned = ach_owned(u["id"]) if mine else None
     defs = [d for d in ach_defs() if mine or d["id"] in rows]
-    return jsonify({"mine": mine, "list": [ach_json(d, rows.get(d["id"]), counters, names, lambda c: ach_collected(u["id"], c), mine)
+    return jsonify({"mine": mine, "list": [ach_json(d, rows.get(d["id"]), counters, names, lambda c: ach_collected(u["id"], c), mine, owned)
                                            for d in defs]})
 
 
@@ -1079,6 +1111,7 @@ def admin_achievements():
                  "chests": [{"id": "money_" + k, "name": v["name"]} for k, v in MONEY_CHESTS.items()],
                  "variants": [{"id": k, "name": v["name"]} for k, v in VARIANTS.items() if not v.get("combo")],
                  "rarities": [{"id": k, "name": v["name"]} for k, v in RARITIES.items()],
+                 "weekdays": achievements.WEEKDAYS,
                  "maxCriteria": achievements.MAX_CRITERIA, "maxRewards": achievements.MAX_REWARDS}})
 
 
@@ -1409,7 +1442,7 @@ def open_crates():
         drops.append(insert_item(person["id"], variant))
     new = note_drops(drops)
     ach_count(uid(), achievements.open_events(crate["id"], count))
-    ach_together({d["person"] for d in drops})
+    ach_together([d["person"] for d in drops])
     db().commit()
     return jsonify({"drops": drops, "discovered": new, "state": get_state(), "fromInventory": from_inv,
                     "chests": get_chests()})
@@ -2267,7 +2300,10 @@ def me():
                     "horseNews": horse_news(),   # rozliczone zakłady na wyścigi konne, których jeszcze nie widział
                     "jackpotLobby": lobby["id"] if lobby else None, "jackpotInvites": invites,
                     "patchNotes": [n for n in PATCH_NOTES if n["v"] > seen][:3],  # nowości od ostatniej wizyty
-                    "messages": active_messages(me_id)})   # wiadomości od adminów, których jeszcze nie widział
+                    "messages": active_messages(me_id),   # wiadomości od adminów, których jeszcze nie widział
+                    # osiągnięcia zdobyte, a jeszcze niepokazane (np. przyznane przy zapytaniu bez nagłówka X-Ach) - achPoll
+                    "achUnseen": db().execute("SELECT COUNT(*) FROM user_achievements WHERE user_id = ? AND seen = 0",
+                                              (me_id,)).fetchone()[0]})   # wiadomości od adminów, których jeszcze nie widział
 
 
 def ufo_cards():
@@ -2365,6 +2401,23 @@ def patch_notes_seen():
 # Karta wystawiona na rynek albo postawiona w jackpocie należy do ESCROW (user_id = 0), aż transakcja się skończy -
 # wtedy nie da się jej sprzedać, zużyć w kuźni ani dać w wymianie. Pieniądze z ofert kupna, licytacji i zleceń
 # "Szukam" są od razu zabierane kupującemu (i oddawane, gdy oferta przepada), więc zawarta transakcja zawsze się uda.
+
+def vabank_ids():
+    """Va bank: wszystkie moje karty, które można postawić w kasynie (bez ulubionych ⭐ i specjalnych 🃏)."""
+    return {r["id"] for r in db().execute("SELECT id, person_id FROM items WHERE user_id = ? AND favorite = 0", (uid(),))
+            if r["person_id"] in catalog.PEOPLE and not catalog.is_special(catalog.PEOPLE[r["person_id"]])}
+
+
+def stake_error(ids, max_cards, body, verb="Postaw", min_cards=1):
+    """None, gdy liczba postawionych kart jest dobra, albo komunikat błędu. Va bank (body["vabank"]) znosi limit kart, ale
+    tylko wtedy, gdy stawką są WSZYSTKIE karty gracza, które da się postawić - nie da się tak ominąć limitu częścią kart."""
+    if min_cards <= len(ids) <= max_cards:
+        return None
+    if len(ids) > max_cards and body.get("vabank"):
+        return None if set(ids) == vabank_ids() else \
+            "Va bank to WSZYSTKIE twoje karty (bez ulubionych ⭐ i specjalnych 🃏) - zaznacz je przyciskiem"
+    return f"{verb} od {min_cards} do {max_cards} kart" if min_cards else f"Najwyżej {max_cards} kart"
+
 
 def take_my_items(ids, stake=False):
     """(wiersze moich kart, None) albo (None, komunikat błędu) - karty muszą być moje i bez gwiazdki.
@@ -2907,8 +2960,9 @@ def casino_roulette():
         ids = []
     if bet not in ROULETTE_BETS:
         return bad("Wybierz zakład na stole")
-    if not 1 <= len(ids) <= ROULETTE["maxCards"]:
-        return bad(f"Postaw od 1 do {ROULETTE['maxCards']} kart")
+    err = stake_error(ids, ROULETTE["maxCards"], body)
+    if err:
+        return bad(err)
     rows, err = take_my_items(ids, stake=True)
     if err:
         return bad(err)
@@ -2954,12 +3008,14 @@ def casino_slots():
     """Jednoręki bandyta: stawką są karty. Wygrana - karty zostają u gracza i dostaje karty o wartości stawka × mnożnik
     (jak w ruletce, też szansa na kartę specjalną z kasyna), przegrana - postawione karty przepadają."""
     lock_me()
+    body = request.get_json(force=True)
     try:
-        ids = [int(i) for i in request.get_json(force=True).get("ids") or []]
+        ids = [int(i) for i in body.get("ids") or []]
     except (TypeError, ValueError):
         ids = []
-    if not 1 <= len(ids) <= SLOTS["maxCards"]:
-        return bad(f"Postaw od 1 do {SLOTS['maxCards']} kart")
+    err = stake_error(ids, SLOTS["maxCards"], body)
+    if err:
+        return bad(err)
     rows, err = take_my_items(ids, stake=True)
     if err:
         return bad(err)
@@ -3131,11 +3187,13 @@ def horse_pick(body):
 @login_required
 def casino_horses_bet():
     lock_me()
-    horse, ids = horse_pick(request.get_json(force=True))
+    body = request.get_json(force=True)
+    horse, ids = horse_pick(body)
     if horse is None:
         return bad("Wybierz konia")
-    if not 1 <= len(ids) <= HORSE_RACE["maxCards"]:
-        return bad(f"Postaw od 1 do {HORSE_RACE['maxCards']} kart")
+    err = stake_error(ids, HORSE_RACE["maxCards"], body)
+    if err:
+        return bad(err)
     now = time.time()
     race = int(now // HORSE_RACE["period"]) + 1
     left = horse_start(race) - now
@@ -3188,11 +3246,13 @@ def casino_horses_seen():
 def casino_horses_solo():
     """Wyścig tylko dla mnie: ziarno losowe, wynik od razu (jak w ruletce) - przeglądarka odtwarza przebieg."""
     lock_me()
-    horse, ids = horse_pick(request.get_json(force=True))
+    body = request.get_json(force=True)
+    horse, ids = horse_pick(body)
     if horse is None:
         return bad("Wybierz konia")
-    if not 1 <= len(ids) <= HORSE_RACE["maxCards"]:
-        return bad(f"Postaw od 1 do {HORSE_RACE['maxCards']} kart")
+    err = stake_error(ids, HORSE_RACE["maxCards"], body)
+    if err:
+        return bad(err)
     rows, err = take_my_items(ids, stake=True)
     if err:
         return bad(err)
@@ -3349,7 +3409,7 @@ def bj_end(G, player, dealer, deck):
         note_drops(out["items"], "blackjack")
         out["special"] = casino_special_drop(payout)   # karta specjalna z kasyna (Joker) albo None
     db().execute("DELETE FROM blackjack_games WHERE user_id = ?", (uid(),))
-    ach_casino(uid(), "blackjack", result in ("win", "blackjack"), staked)
+    ach_casino(uid(), "blackjack", None if result == "push" else result in ("win", "blackjack"), staked)
     db().commit()
     return jsonify({"game": None, "end": out, "state": get_state()})
 
@@ -3383,9 +3443,11 @@ def casino_blackjack_deal():
     lock_me()
     if my_blackjack():
         return bad("Najpierw dokończ rozdanie")
-    ids = int_ids(request.get_json(force=True).get("ids"))
-    if not 1 <= len(ids) <= BLACKJACK["maxCards"]:
-        return bad(f"Postaw od 1 do {BLACKJACK['maxCards']} kart")
+    body = request.get_json(force=True)
+    ids = int_ids(body.get("ids"))
+    err = stake_error(ids, BLACKJACK["maxCards"], body)
+    if err:
+        return bad(err)
     rows, err = take_my_items(ids, stake=True)
     if err:
         return bad(err)
@@ -3715,9 +3777,11 @@ def casino_jackpot_cards(jid):
     if J is None:
         return bad(JACKPOT_GONE)
     side = jackpot_side(J, uid())
-    ids = int_ids(request.get_json(force=True).get("ids"))
-    if len(ids) > JACKPOT["maxCards"]:
-        return bad(f"Najwyżej {JACKPOT['maxCards']} kart")
+    body = request.get_json(force=True)
+    ids = int_ids(body.get("ids"))
+    err = stake_error(ids, JACKPOT["maxCards"], body, min_cards=0)
+    if err:
+        return bad(err)
     rows, err = take_my_items(ids, stake=True) if ids else ([], None)
     if err:
         return bad(err)

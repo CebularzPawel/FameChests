@@ -28,3 +28,7 @@
 .ach-bar { position: relative; height: 16px; border-radius: 8px; background: #0006; overflow: hidden; margin-top: 3px; }
 .ach-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ffc531, #ff8a00); }
 .ach-bar span { position: relative; display: block; text-align: center; font-size: 11px; line-height: 16px; color: #fff; text-shadow: 0 1px 2px #000; }
+
+.ach-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ach-head h3 { margin: 0; }
+.ach-tabs small { opacity: .7; margin-left: 4px; }

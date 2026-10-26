@@ -69,13 +69,13 @@ function slResultHTML(r) {
 async function spinSlots() {
   if (CS.spinning || !SL.sel.size) return;
   const ids = [...SL.sel], stake = csStake(SL.sel);
-  if (stake >= 5000 && !confirm(`Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)}?`)) return;
+  if (!csBetOk(ids, stake, S.cfg.slots.maxCards, `Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)}?`)) return;
   CS.spinning = true;
   Sound.unlock();
   const lever = $("#slLever");
   lever?.classList.add("pulled");
   let res;
-  try { res = await api("/api/casino/slots", { ids }); }
+  try { res = await api("/api/casino/slots", { ids, vabank: csIsVabank(ids.length, S.cfg.slots.maxCards) }); }
   catch (e) { CS.spinning = false; Sound.error(); toast(e.message, true); return drawSlots(); }
   $$("#casinoBody button, #casinoBody input").forEach(b => { b.disabled = true; });
   $(".sl-machine")?.classList.add("spinning");

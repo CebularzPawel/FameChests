@@ -297,3 +297,7 @@
   .hr-bets { grid-column: 1 / -1; }
   .hr-actions { grid-template-columns: 1fr; }
 }
+
+/* VA BANK - przycisk w wyborze kart (casino.js, csPickerHTML) */
+.cs-vabank { background: linear-gradient(135deg, #7a0000, #d4002a); color: #fff; border-color: #ff5a5a; font-weight: 900; letter-spacing: .04em; }
+.cs-vabank:hover { box-shadow: 0 0 12px #ff2a2a99; }

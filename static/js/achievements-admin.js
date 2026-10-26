@@ -22,7 +22,8 @@ function aeCritLine(c) {
   if (c.type === "cards") bits.push(n, c.person ? person(c.person) : "", c.variant ? `wariant ${m.variants.find(v => v.id === c.variant)?.name || c.variant}` : "",
     c.rarity ? m.rarities.find(r => r.id === c.rarity)?.name : "", c.crate ? m.crates.find(x => x.id === c.crate)?.name : "", c.unique ? "(różne)" : "");
   if (c.type === "open") bits.push(n, c.crate ? m.crates.find(x => x.id === c.crate)?.name : "dowolne");
-  if (c.type === "casino_plays") bits.push(n, m.games[c.game] || "dowolna gra");
+  if (c.type === "casino_plays") bits.push(n, m.games[c.game] || "dowolna gra", Number.isInteger(c.weekday) ? `(${m.weekdays[c.weekday]})` : "");
+  if (c.type === "casino_streak") bits.push(`${c.count} z rzędu`, m.games[c.game] || "dowolna gra");
   if (c.type === "casino_win") bits.push(n, m.games[c.game] || "dowolna gra", c.person ? `kartą ${person(c.person)}` : "", c.variant ? `wariant ${c.variant}` : "");
   if (c.type === "drop_together") bits.push((c.persons || []).map(person).join(" + "));
   if (c.type === "arena") bits.push(c.mode === "finisher" ? `ostatni cios: ${person(c.person)}` : `${n}wygrane walki`);
@@ -48,8 +49,8 @@ const aeNew = () => ({ id: "", name: "", desc: "", icon: "🏆", hidden: false, 
 
 // pola warunku zależnie od rodzaju
 function aeCritFields(c, i) {
-  const P = (k, label, html) => `<label>${label}${html}</label>`, at = k => `data-ae-path="criteria.${i}.${k}"`;
-  const people = (k, label, empty = "— dowolna —") => P(label, "", `<select ${at(k)}>${aeOpt(aePeople(), c[k], empty)}</select>`);
+  const at = k => `data-ae-path="criteria.${i}.${k}"`;
+  const people = (k, label, empty = "— dowolna —") => `<label>${label}<select ${at(k)}>${aeOpt(aePeople(), c[k], empty)}</select></label>`;
   const variants = (k, label) => `<label>${label}<select ${at(k)}>${aeOpt(AE.meta.variants, c[k], "— dowolny —")}</select></label>`;
   const games = `<label>Gra<select ${at("game")}>${aeOpt(aeGames(), c.game, "— dowolna —")}</select></label>`;
   const count = `<label>Ile razy / ile sztuk<input type="number" min="1" ${at("count")} value="${c.count || 1}"></label>`;
@@ -60,10 +61,12 @@ function aeCritFields(c, i) {
       `<label class="chk"><input type="checkbox" ${at("unique")} ${c.unique ? "checked" : ""}> liczą się różne karty z klasera (bez duplikatów)</label>
        <p class="muted small wide">Karta i wariant razem = konkretna karta w konkretnym wariancie. Rzadkość i skrzynka razem = karty tej rzadkości z tej skrzynki.</p>`;
     case "open": return `<label>Skrzynka<select ${at("crate")}>${aeOpt(AE.meta.crates, c.crate, "— dowolna —")}</select></label>` + count;
-    case "casino_plays": return games + count;
+    case "casino_plays": return games + `<label>Dzień tygodnia<select ${at("weekday")} data-num="1">${aeOpt(AE.meta.weekdays.map((name, id) => ({ id: String(id), name })), Number.isInteger(c.weekday) ? String(c.weekday) : "", "— dowolny —")}</select></label>` + count;
+    case "casino_streak": return games + `<label>Ile wygranych z rzędu<input type="number" min="1" ${at("count")} value="${c.count || 1}"></label>
+      <p class="muted small wide">Przegrana zeruje serię, remis (blackjack) i zwrot (wyścig bez zwycięzcy) jej nie przerywają.</p>`;
     case "casino_win": return games + people("person", "Wygrana kartą (postawioną)") + variants("variant", "Wariant postawionej karty") + count;
     case "drop_together": return [0, 1, 2, 3].map(j => `<label>Karta ${j + 1}${j < 2 ? "" : " (opcjonalnie)"}<select data-ae-path="criteria.${i}.persons.${j}">${aeOpt(aePeople(), (c.persons || [])[j], "— brak —")}</select></label>`).join("") +
-      '<p class="muted small wide">Wszystkie te karty muszą wypaść przy jednym otwieraniu kilku skrzynek naraz.</p>';
+      '<p class="muted small wide">Wszystkie te karty muszą wypaść przy jednym otwieraniu kilku skrzynek naraz. Ta sama karta wybrana dwa razy = muszą wypaść dwie takie karty.</p>';
     case "arena": return `<label>Co<select ${at("mode")}><option value="win"${c.mode !== "finisher" ? " selected" : ""}>Wygrane walki</option>
         <option value="finisher"${c.mode === "finisher" ? " selected" : ""}>Wygrana, a ostatni cios zadała karta…</option></select></label>` +
       (c.mode === "finisher" ? people("person", "Karta zadająca ostatni cios", "— dowolna —") : "") + count;
@@ -118,7 +121,7 @@ function aeSet(path, el) {
   let o = a;
   ks.slice(0, -1).forEach((k, j) => { o = o[k] ??= (/^\d+$/.test(ks[j + 1]) ? [] : {}); });
   const last = ks[ks.length - 1];
-  o[last] = el.type === "checkbox" ? el.checked : el.type === "number" ? +el.value : el.value;
+  o[last] = el.type === "checkbox" ? el.checked : el.type === "number" ? +el.value : el.dataset.num ? (el.value === "" ? "" : +el.value) : el.value;
   if (path.endsWith(".type")) {   // zmiana rodzaju: czyste pola warunku / nagrody
     const holder = a[ks[0]][+ks[1]], t = holder.type;
     a[ks[0]][+ks[1]] = ks[0] === "criteria" ? { type: t, count: 1, ...(t === "drop_together" ? { persons: [] } : {}) }

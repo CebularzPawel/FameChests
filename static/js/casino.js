@@ -79,6 +79,13 @@ function csAddDuplicates(ids, max, zone) {
   return [...ids, ...picked];
 }
 
+// VA BANK: stawką są wszystkie moje karty, które da się postawić - znosi limit kart (serwer sprawdza, że to naprawdę wszystkie)
+const csIsVabank = (n, max) => n > max;
+function csBetOk(ids, stake, max, text) {
+  if (csIsVabank(ids.length, max)) return confirm(`☠️ VA BANK! Stawiasz WSZYSTKIE swoje karty (${ids.length}, wartość ${fmt(stake)}). Przegrasz — stracisz je wszystkie. Na pewno?`);
+  return stake < 5000 || confirm(text);
+}
+
 // siatka moich kart do wyboru (ruletka / jackpot / blackjack)
 function csPickerHTML(set, q, max, zone, dupesTip = "Dodaj wszystkie karty, które masz podwójnie — z każdej zostaje jeden egzemplarz (ulubione ⭐ zostają)") {
   const sorted = sortCards(csItems().filter(i => cardMatches(i, q)), CS.sorts[zone]);
@@ -86,7 +93,8 @@ function csPickerHTML(set, q, max, zone, dupesTip = "Dodaj wszystkie karty, któ
   const dupes = csDuplicates(set, zone).length;
   return `<div class="cs-pick-head"><input type="text" data-csq="${zone}" placeholder="🔍 Szukaj: nazwa, wariant, rzadkość…" value="${esc(q)}">
       ${sortSelectHTML(CS.sorts[zone], `data-cssort="${zone}"`)}
-      <span class="muted small">${set.size}/${max} kart · ${fmt(csStake(set))}</span>
+      <span class="muted small">${csIsVabank(set.size, max) ? "☠️ VA BANK: " + set.size : `${set.size}/${max}`} kart · ${fmt(csStake(set))}</span>
+      ${zone !== "bjd" && csItems().length ? `<button class="btn tiny cs-vabank" data-csvabank="${zone}" title="Postaw WSZYSTKIE swoje karty - limit ${max} kart nie obowiązuje (bez ulubionych ⭐ i specjalnych 🃏)">☠️ VA BANK (${csItems().length})</button>` : ""}
       ${dupes ? `<button class="btn tiny" data-csdupes="${zone}" title="${esc(dupesTip)}">♻️ Dodaj duplikaty (${dupes})</button>` : ""}
       ${set.size ? `<button class="btn tiny" data-csclear="${zone}">Wyczyść</button>` : ""}</div>
     <div class="pick-grid cs-grid" data-zone="${zone}" data-keep="${zone}">${list.slice(0, CS_PICK_LIMIT).map(i => pickHTML(i, { sel: set.has(i.id) })).join("")
@@ -203,11 +211,11 @@ async function spinRoulette() {
   if (CS.spinning || !CS.sel.size) return;
   const ids = [...CS.sel], stake = csStake(CS.sel);
   const bet = S.cfg.roulette.bets[CS.bet];
-  if (stake >= 5000 && !confirm(`Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na „${bet.name}”?`)) return;
+  if (!csBetOk(ids, stake, S.cfg.roulette.maxCards, `Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} na „${bet.name}”?`)) return;
   CS.spinning = true;
   Sound.unlock();
   let res;
-  try { res = await api("/api/casino/roulette", { ids, bet: CS.bet }); }
+  try { res = await api("/api/casino/roulette", { ids, bet: CS.bet, vabank: csIsVabank(ids.length, S.cfg.roulette.maxCards) }); }
   catch (e) { CS.spinning = false; Sound.error(); toast(e.message, true); return drawRoulette(); }
   $("#rlSpin").disabled = true;
   $$("#casinoBody button, #casinoBody input").forEach(b => { b.disabled = true; });
@@ -430,7 +438,7 @@ async function bjAction(kind) {
   const ids = kind === "deal" ? [...B.sel] : kind === "double" ? [...B.dsel] : [];
   if (kind === "deal") {
     const stake = csStake(B.sel);
-    if (!ids.length || (stake >= 5000 && !confirm(`Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} w blackjacku?`))) return;
+    if (!ids.length || !csBetOk(ids, stake, S.cfg.blackjack.maxCards, `Postawić ${ids.length} ${plural(ids.length, "kartę", "karty", "kart")} o wartości ${fmt(stake)} w blackjacku?`)) return;
   }
   if (kind === "double") {
     if (!ids.length) { Sound.error(); return toast(`Wybierz poniżej karty do podwojenia — razem najwyżej ${fmt(G.stake)}`, true); }
@@ -439,7 +447,7 @@ async function bjAction(kind) {
   CS.spinning = true;
   Sound.unlock();
   let res;
-  try { res = await api(`/api/casino/blackjack/${kind}`, ids.length ? { ids } : {}); }
+  try { res = await api(`/api/casino/blackjack/${kind}`, ids.length ? { ids, vabank: kind === "deal" && csIsVabank(ids.length, S.cfg.blackjack.maxCards) } : {}); }
   catch (e) { CS.spinning = false; Sound.error(); toast(e.message, true); return renderBlackjack(); }
   removeItems(ids);   // postawione karty leżą na stole (po remisie / wygranej wracają)
   if (kind === "deal") { B.sel.clear(); B.view = { player: [], dealer: [] }; }
@@ -678,7 +686,7 @@ async function jpCreate() {
 async function jpSetCards(ids) {
   const L = CS.jp.data?.current;
   if (!L || CS.jp.busy) return;
-  const res = await jpCall(`/api/casino/jackpot/${L.id}/cards`, { ids });
+  const res = await jpCall(`/api/casino/jackpot/${L.id}/cards`, { ids, vabank: csIsVabank(ids.length, S.cfg.jackpot.maxCards) });
   if (res) Sound.click();
   drawJackpot();
 }
@@ -847,6 +855,16 @@ function bindCasino() {
       const ids = csAddDuplicates([...CS.sel], S.cfg.roulette.maxCards, "rl");
       if (ids) { CS.sel = new Set(ids); Sound.click(); drawRoulette(); }
       return;
+    }
+    const vb = t.closest("[data-csvabank]");
+    if (vb) {   // VA BANK: zaznacz wszystkie karty do postawienia
+      const zone = vb.dataset.csvabank, all = csItems().map(i => i.id);
+      if (!all.length) return;
+      Sound.click();
+      if (zone === "jp") return L && jpSetCards(all);
+      const set = new Set(all);
+      if (zone === "bj") CS.bj.sel = set; else if (zone === "sl") SL.sel = set; else if (zone === "hr") HR.sel = set; else CS.sel = set;
+      return csRedraw(zone);
     }
     const clear = t.closest("[data-csclear]");
     if (clear) {

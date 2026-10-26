@@ -466,6 +466,13 @@
    "off": true,
    "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."
   },
+  "apollo": {
+   "name": "Apollo",
+   "chance": 0.005,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Retro kosmos: w tle prawdziwy film z Apollo 11, złoto-srebrna klisza, krzyżyki pomiarowe na zdjęciu i zegar misji nad nazwą."
+  },
   "usa": {
    "name": "Amerykańska",
    "chance": 0.006,

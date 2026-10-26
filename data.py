@@ -160,6 +160,8 @@ VARIANTS = {
                 "desc": "Szczotkowana miedź, która na oczach pokrywa się patyną: ciemnieje, wykwitają zielone plamy, a ramka i zdjęcie zielenieją razem z nią - i znów lśni."},
     "reflective": {"name": "Odblaskowa", "chance": 0.014, "mult": 5.5, "off": True,
                 "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."},
+    "apollo":  {"name": "Apollo",       "chance": 0.005, "mult": 10.0, "off": True,
+                "desc": "Retro kosmos: w tle prawdziwy film z Apollo 11, złoto-srebrna klisza, krzyżyki pomiarowe na zdjęciu i zegar misji nad nazwą."},
     "usa":     {"name": "Amerykańska",  "chance": 0.006, "mult": 9.0, "off": True,
                 "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
@@ -789,6 +791,12 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 18, "date": "2026-10-27", "title": "Więcej osiągnięć",
+     "items": [
+         "🏆 Ponad 30 nowych <b>osiągnięć</b>: pierwsza skrzynka, karty Mityczne i Legendarne, warianty, kasyno, Arena… Za każde są nagrody.",
+         "🕵️ Osiągnięcia na profilu mają teraz dwie zakładki: <b>zwykłe</b> i <b>ukryte</b> - ukryte poznasz dopiero, gdy je zdobędziesz.",
+         "🔧 Poprawka: liczą się też karty z wymiany, rynku i jackpota, a powiadomienie nie gubi się po grze w jackpot.",
+     ]},
     {"v": 17, "date": "2026-10-26", "title": "Osiągnięcia",
      "items": [
          "🏆 Nowe <b>osiągnięcia</b> - znajdziesz je w swoim profilu. Za spełnienie warunków (karty, skrzynki, kasyno, Arena...) dostajesz pieniądze, skrzynki albo karty, a z boku wysuwa się powiadomienie.",
