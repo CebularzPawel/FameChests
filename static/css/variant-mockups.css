@@ -48,6 +48,11 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 /* powiewająca flaga w tle, przekrzywiona (ub-tilt obraca całość, w środku flaga faluje, a cienie fal przesuwają się po pasach) */
 .ub-tilt { inset: -30% -45%; rotate: -14deg; }
 .ub-tilt.rev { rotate: 18deg; }
+/* runda 3: ustawienia flagi, żeby pole z gwiazdami (lewe górne 40% x 54% flagi) trafiło w widoczne miejsce karty */
+.ub-tilt.pos-a { inset: auto; left: -8%; top: 49%; width: 150%; height: 72%; rotate: -8deg; }                 /* gwiazdy w pasie pod zdjęciem, po lewej */
+.ub-tilt.pos-b { inset: auto; left: 18%; top: 38%; width: 160%; height: 86%; rotate: -10deg; }                /* duże gwiazdy na środku */
+.ub-tilt.pos-c { inset: auto; left: -52%; top: -6%; width: 155%; height: 80%; rotate: 14deg; scale: -1 1; }   /* gwiazdy w górnym prawym rogu */
+.ub-tilt.pos-d { inset: auto; left: -62%; top: 22%; width: 155%; height: 82%; rotate: 196deg; }               /* flaga odwrócona: gwiazdy w prawym dolnym rogu */
 .ub-tilt.dim { opacity: .45; }
 .ub-tilt > i { position: absolute; display: block; }
 .ub-flagbox { inset: 0; opacity: .8; animation: ubWave 6s ease-in-out infinite; transform-origin: 0 50%; }
@@ -66,137 +71,91 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 .ub-canton { inset: 0 auto auto 0; width: 34%; aspect-ratio: 30.4 / 21.54; box-shadow: .2cqw .2cqw 1cqw #000a; opacity: .92; overflow: hidden; }
 .ub-canton svg, .ub-lstars svg, .ub-torn svg, .ub-expo svg { overflow: hidden; }
 
-/* 2. czerwień tylko na zdjęciu */
-.card.vm-usbw-2 .card-name { text-shadow: .06em .06em 0 #b3263a, 0 0 .3em #000; }
-.card.vm-usbw-2 .vm-tag { background: #b3263a; color: #fff; border-color: #fff; }
-
-/* 3. flaga na skos (pasy po skosie przez całe zdjęcie, zanikają w stronę twarzy) */
-.card.vm-usbw-3 { --frame: linear-gradient(135deg, #2a2a2a, #0a0a0a 45%, #3a3a3a); }
-.ub-diag { inset: -60%; rotate: -24deg; mix-blend-mode: multiply; will-change: transform; animation: ubDiag 8s linear infinite;
-  background: repeating-linear-gradient(180deg, #2a2a2a 0 3%, #f2f2f2 3% 6%);
-  -webkit-mask: linear-gradient(180deg, #000 30%, transparent 58%); mask: linear-gradient(180deg, #000 30%, transparent 58%); }
-@keyframes ubDiag { 50% { transform: translateY(3%); } }
-
-/* 4. światło przez flagę (projektor) */
-.card.vm-usbw-4 { --frame: linear-gradient(135deg, #1a1a1a, #050505); }
-.card.vm-usbw-4 .card-photo > img { filter: grayscale(1) contrast(1.4) brightness(.85); }
-.ub-light { top: -20%; height: 140%; mix-blend-mode: overlay; opacity: .85; animation: ubLight 5s ease-in-out infinite; transform-origin: 0 50%;
-  background: repeating-linear-gradient(180deg, #000 0 4.6%, #fff 4.6% 9.2%);
-  -webkit-mask: linear-gradient(95deg, transparent 25%, #000 60%); mask: linear-gradient(95deg, transparent 25%, #000 60%); }
-@keyframes ubLight { 50% { transform: skewY(-4deg) translateY(2%); } }
-.ub-lstars { inset: 0 auto auto 0; width: 40%; aspect-ratio: 30.4 / 21.54; mix-blend-mode: screen; filter: blur(.3px) drop-shadow(0 0 1cqw #fff); animation: vmPulse 3s ease-in-out infinite; }
-.ub-beam { left: -20%; top: -10%; width: 90%; height: 120%; rotate: -20deg; mix-blend-mode: screen; opacity: .35;
-  background: linear-gradient(180deg, #fff, transparent 85%); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); }
-.ub-vignette { inset: 0; background: radial-gradient(90% 75% at 50% 40%, transparent 50%, #000d); }
-
-/* 5. podwójna ekspozycja */
-.ub-expo { inset: -6%; mix-blend-mode: multiply; opacity: .5; animation: ubWave 5s ease-in-out infinite; }
-.ub-print { inset: 2.4%; border-radius: 3.4%/2.4%; box-shadow: inset 0 0 0 .8cqw #f2f2f2, inset 0 0 0 1.05cqw #111; }
-.card.vm-usbw-5 { --frame: linear-gradient(135deg, #2a2a2a, #0a0a0a 45%, #3a3a3a); }
-.card.vm-usbw-5 .card-name { text-shadow: .06em .06em 0 #b3263a, 0 0 .3em #000; }
-
-/* 6. zdarty plakat */
-.ub-torn { inset: 0 auto 0 0; width: 70%; clip-path: polygon(0 0, 92% 0, 78% 12%, 86% 22%, 64% 38%, 72% 48%, 46% 62%, 54% 72%, 28% 86%, 36% 92%, 18% 100%, 0 100%);
-  filter: drop-shadow(.4cqw 0 .6cqw #000a); opacity: .95; }
-.ub-torn svg { position: absolute; inset: 0; }
-.ub-curl { left: 47%; top: 30%; width: 22%; height: 26%; clip-path: polygon(0 100%, 100% 0, 30% 40%);
-  background: linear-gradient(135deg, #f2f2f2, #9a9a9a 60%, #4a4a4a); filter: drop-shadow(.4cqw .4cqw .5cqw #000c); animation: ubCurl 4s ease-in-out infinite; transform-origin: 0 100%; }
-@keyframes ubCurl { 50% { transform: rotate(-4deg) scale(1.04); } }
-.ub-staple { width: 4cqw; height: .8cqw; background: linear-gradient(180deg, #e8e8e8, #8a8a8a); box-shadow: .2cqw .3cqw .3cqw #000a; }
-.ub-staple.a { left: 11%; top: 15.5%; rotate: -20deg; } .ub-staple.b { left: 36%; top: 51%; rotate: 15deg; }
-.card.vm-usbw-6 { --frame: linear-gradient(135deg, #2a2a2a, #0a0a0a 45%, #3a3a3a); }
-
-/* ============================================================ RETRO KOSMOS (vm-apollo, klasy ap-) - runda 2
-   Realistyczny Księżyc (apMoon: szum + oświetlenie w filtrze SVG) i cała karta jak nagranie / transmisja z lat 60-70:
-   złoty filtr na całej karcie (ap-gold, mix-blend color), ziarno, migotanie, winieta, linie obrazu telewizora. */
+/* ============================================================ RETRO KOSMOS (vm-apollo, klasy ap-) - runda 3
+   Filtr starej złotej kliszy na całej karcie (ap-gold mix-blend color, ziarno, migotanie, rysy, winieta; ap-jitter -
+   podskakujący obraz) i sceny w odsłoniętym pasie pod skróconym zdjęciem: Ziemia, Sputnik, lądownik, rakieta, sonda, łazik. */
 .card.vm-apollo { --frame: linear-gradient(115deg, #6a6e78, #e8ecf2 20%, #9aa0aa 40%, #f6f8fb 55%, #7a808a 75%, #dfe3ea); box-shadow: 0 6px 18px #000c; }
 .card.vm-apollo .card-inner { background: #050508; color: #ecebe4; }
 .card.vm-apollo :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp, .card-value) { color: #ecebe4; }
-.card.vm-apollo :is(.card-sub, .card-attack, .card-stats) { background: #000b; border: none; border-radius: .25em; }
-.card.vm-apollo .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.vm-apollo :is(.card-sub, .card-attack, .card-stats) { background: #000a; border: none; border-radius: .25em; }
+.card.vm-apollo .card-attack { padding-inline: .35em; margin-top: 1.5%; background: #0008; }
 .card.vm-apollo .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: .9em; text-shadow: 0 0 .4em #000; }
 .card.vm-apollo .card-sub { font: 700 .44em/1.3 "Share Tech Mono", monospace; letter-spacing: .1em; font-style: normal; margin-bottom: auto; }
-.card.vm-apollo .card-photo { aspect-ratio: 1 / .78; border: none; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .14em #cfd4dc, 0 .3em .8em #000; }
+/* krótsze zdjęcie - scena widać w pasie pod nim */
+.card.vm-apollo .card-photo { aspect-ratio: 1 / .7; border: none; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .14em #cfd4dc, 0 .3em .8em #000; }
 .card.vm-apollo .card-photo > img { filter: grayscale(.55) sepia(.3) contrast(1.2) brightness(1.03); }
 .card.vm-apollo .vm-tag { background: linear-gradient(90deg, #8a6200, #fff1c1, #c9952c); color: #2a1c00; border: 1px solid #2a1c00; font-family: Orbitron, sans-serif; letter-spacing: .1em; }
 .ap-clip { overflow: hidden; border-radius: inherit; }
 .ap-space { inset: 0; background: radial-gradient(60% 40% at 80% 20%, #1e2a5a44, transparent 70%), radial-gradient(50% 35% at 15% 75%, #3a1e5a2a, transparent 70%), #030306; }
-.ap-space.warm { background: radial-gradient(70% 50% at 50% 40%, #2a1e0a, #050302); }
 .ap-star { width: calc(1cqw * var(--s, 1)); aspect-ratio: 1; border-radius: 50%; background: #fff; box-shadow: 0 0 1cqw #fff; animation: apTwinkle 2.6s ease-in-out infinite; }
 @keyframes apTwinkle { 50% { opacity: .2; scale: .5; } }
+.vm-apollo .vm-bg > i > svg, .ap-sputnik > svg, .ap-probe > svg { position: absolute; inset: 0; }
 
-/* filtry całej karty: złoty odcień, ziarno, migotanie projektora, winieta */
-.ap-gold { inset: 0; background: linear-gradient(160deg, #f8dc8a, #c08a2a 60%, #8a5a10); mix-blend-mode: color; opacity: .32; }
+/* filtr starej złotej kliszy */
+.ap-gold { inset: 0; background: linear-gradient(160deg, #f8dc8a, #c08a2a 60%, #8a5a10); mix-blend-mode: color; opacity: .34; }
 .ap-grain { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .45; mix-blend-mode: overlay; animation: vpGrain .4s steps(3) infinite; }
 .ap-flicker { inset: 0; background: #fff6d8; opacity: 0; mix-blend-mode: overlay; animation: apFlicker .3s steps(3) infinite; }
 @keyframes apFlicker { 33% { opacity: .07; } 66% { opacity: .02; } }
 .ap-vignette { inset: 0; background: radial-gradient(95% 80% at 50% 45%, transparent 55%, #000c); }
 .ap-scratch { top: 0 !important; bottom: 0; width: .25cqw; background: linear-gradient(transparent, #fff8 20%, #fff5 70%, transparent); opacity: 0; animation: apScratch steps(1) infinite; }
 @keyframes apScratch { 0% { opacity: .8; } 30% { opacity: 0; } 55% { opacity: .5; translate: 4cqw 0; } 70% { opacity: 0; } }
-
-/* Księżyc (svg z apMoon) */
-.ap-moon { aspect-ratio: 1; filter: drop-shadow(0 0 2cqw #f8e8b044); }
-.ap-moon > i, .ap-moon > b { position: absolute; display: block; z-index: 1; }
-.ap-moon.big { left: 50%; top: 80%; width: 78%; translate: -50% -50%; animation: apRise 14s ease-in-out infinite; }
-@keyframes apRise { 50% { translate: -50% -53%; } }
-.ap-moon.corner { right: -12%; top: 49%; width: 46cqw; animation: apFloat 9s ease-in-out infinite; }
-@keyframes apFloat { 50% { translate: -1.5cqw 1cqw; } }
-.ap-moon.crescent { left: 50%; top: 78%; width: 84%; translate: -50% -50%; filter: drop-shadow(0 0 3cqw #f8e8b055); }
-.ap-moon.atlas { left: 50%; top: 70%; width: 86%; translate: -50% -50%; animation: apLibrate 18s ease-in-out infinite; }
-@keyframes apLibrate { 50% { rotate: 6deg; scale: 1.02; } }
-.ap-grid { inset: 2%; border-radius: 50%; opacity: .55;
-  background: repeating-linear-gradient(180deg, transparent 0 7.5%, #fff 7.5% 7.9%), repeating-radial-gradient(ellipse 50% 100% at 50% 50%, transparent 0 15%, #fff 15% 15.8%); mix-blend-mode: overlay; }
-.ap-lbl { font: 700 2cqw/1 "Share Tech Mono", monospace; color: #fff; letter-spacing: .08em; text-shadow: 0 0 .3cqw #000, 0 0 .6cqw #000; white-space: nowrap; }
-.ap-lbl::before { content: "+ "; color: #f8dc8a; }
-
-/* Ziemia (mała, nad horyzontem) */
-.ap-earth-s { left: 72%; top: 59%; width: 9cqw; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle at 78% 32%, transparent 38%, #000000d8 66%), radial-gradient(ellipse 34% 9% at 46% 30%, #ffffffb0, transparent),
-    radial-gradient(ellipse 18% 22% at 58% 40%, #6a8a4ab0, transparent), radial-gradient(circle at 65% 40%, #4a8ae8, #1a3a8a 60%, #0a1a4a);
-  box-shadow: 0 0 1.4cqw #8ab0ff66; }
-.ap-earth-s.high { left: 16%; top: 58%; }
-
-/* 2. Transmisja TV: linie obrazu, przewijający się pasek, szum co jakiś czas, zaokrąglony ekran */
-.ap-scan { inset: 0; background: repeating-linear-gradient(180deg, #0000 0 .5cqw, #0007 .5cqw .8cqw); }
-.ap-scan.soft { opacity: .45; }
-.ap-roll-bar { left: 0; right: 0; top: -25%; height: 16%; background: linear-gradient(180deg, transparent, #fff2 40%, #fff5 50%, #fff2 60%, transparent);
-  will-change: transform; animation: apRoll 3.8s linear infinite; mix-blend-mode: screen; }
-@keyframes apRoll { to { transform: translateY(900%); } }
-.ap-static { inset: 0; background: var(--tx-grain) 0 0 / 50px; mix-blend-mode: screen; opacity: 0; animation: apStatic 6s steps(1) infinite; }
-@keyframes apStatic { 0%, 82%, 100% { opacity: 0; } 83% { opacity: .7; } 85% { opacity: .3; background-position: 20px 10px; } 87% { opacity: 0; } }
-.ap-crt { inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.4cqw #1a1a1a, inset 0 0 5cqw 1cqw #000; }
-.card.vm-apollo-2 .card-photo > img { filter: grayscale(1) sepia(.2) contrast(1.6) brightness(1.15) blur(.35px); }
-.ap-ghost { box-shadow: inset 0 0 2cqw #fff5; background: linear-gradient(90deg, transparent 55%, #fff1); }
-.ap-live { position: relative; display: flex; justify-content: space-between; font: 700 .4em/1 "Share Tech Mono", monospace; letter-spacing: .08em; color: #ecebe4; margin: .5% 0 1.5%; }
-.ap-live b { color: #ff3b3b; animation: vmBlink 1s steps(1) infinite; }
-.card.vm-apollo-2 .card-name { font-family: "Share Tech Mono", monospace; font-weight: 400; text-shadow: 0 0 .3em #fff, 0 0 .8em #fff8; }
-
-/* 3. Kronika filmowa: obraz podskakuje, kurz, znacznik zmiany rolki */
-.card.ap-jitter .card-inner { animation: apJitter 2.4s steps(1) infinite; }
-@keyframes apJitter { 0%, 100% { translate: 0 0; } 10% { translate: 0 -.4%; } 20% { translate: .2% .2%; } 45% { translate: 0 .5%; } 46% { translate: 0 0; } 70% { translate: -.2% -.3%; } }
-.card.vm-apollo-3 .card-photo > img { filter: grayscale(1) sepia(.75) contrast(1.25) brightness(1.02); }
 .ap-dust { inset: 0; opacity: .7; animation: ubDust .3s steps(2) infinite;
   background: radial-gradient(circle, #fff 0 .25cqw, transparent .35cqw) 20% 30% / 37% 41%, radial-gradient(circle, #000 0 .3cqw, transparent .4cqw) 70% 60% / 31% 47%; }
-.ap-cue { right: 7%; top: 5%; width: 6cqw; aspect-ratio: 1; border-radius: 50%; border: .5cqw solid #fff8; opacity: 0; animation: apCue 7s steps(1) infinite; }
-@keyframes apCue { 0%, 90% { opacity: 0; } 91%, 95% { opacity: .9; } }
+.card.ap-jitter .card-inner { animation: apJitter 2.4s steps(1) infinite; }
+@keyframes apJitter { 0%, 100% { translate: 0 0; } 10% { translate: 0 -.4%; } 20% { translate: .2% .2%; } 45% { translate: 0 .5%; } 46% { translate: 0 0; } 70% { translate: -.2% -.3%; } }
 
-/* 4. Sierp i telemetria: krzyż celownika i znaczniki na zdjęciu, wysokość przewija się w dół */
-.ap-reticle { --rc: #fff; filter: drop-shadow(0 0 .3cqw #000) drop-shadow(0 0 .3cqw #000);
-  background: linear-gradient(var(--rc), var(--rc)) 50% 50% / 14% .45cqw no-repeat, linear-gradient(var(--rc), var(--rc)) 50% 50% / .45cqw 14% no-repeat,
-    linear-gradient(var(--rc), var(--rc)) 8% 10% / 7% .45cqw no-repeat, linear-gradient(var(--rc), var(--rc)) 8% 10% / .45cqw 9% no-repeat,
-    linear-gradient(var(--rc), var(--rc)) 92% 10% / 7% .45cqw no-repeat, linear-gradient(var(--rc), var(--rc)) 92% 10% / .45cqw 9% no-repeat,
-    linear-gradient(var(--rc), var(--rc)) 8% 90% / 7% .45cqw no-repeat, linear-gradient(var(--rc), var(--rc)) 8% 90% / .45cqw 9% no-repeat,
-    linear-gradient(var(--rc), var(--rc)) 92% 90% / 7% .45cqw no-repeat, linear-gradient(var(--rc), var(--rc)) 92% 90% / .45cqw 9% no-repeat; }
-.ap-tele { position: absolute; z-index: 2; left: 5%; bottom: 5%; display: flex; gap: .6em; align-items: center; font: 700 2.4cqw/1 "Share Tech Mono", monospace; color: #fff;
-  background: #000a; padding: .3em .5em; text-shadow: 0 0 .4cqw #fff8; }
-.ap-roll { display: inline-block; height: 1em; overflow: hidden; }
-.ap-roll b { display: block; line-height: 1em; animation: apTele 6s steps(6) infinite; white-space: pre; }
-@keyframes apTele { to { transform: translateY(-600%); } }
+/* Ziemia: ocean, ląd, smugi chmur, nocna strona po lewej, poświata atmosfery */
+.ap-earth { aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 78% 32%, transparent 38%, #000000d8 66%), radial-gradient(ellipse 34% 9% at 46% 30%, #ffffffb0, transparent),
+    radial-gradient(ellipse 26% 8% at 62% 52%, #ffffffa0, transparent), radial-gradient(ellipse 20% 7% at 70% 70%, #ffffff80, transparent),
+    radial-gradient(ellipse 18% 22% at 58% 40%, #6a8a4ab0, transparent), radial-gradient(ellipse 14% 18% at 74% 58%, #9a7a4a90, transparent),
+    radial-gradient(circle at 65% 40%, #4a8ae8, #1a3a8a 60%, #0a1a4a);
+  box-shadow: 0 0 1.6cqw #8ab0ff66; }
+/* 1. wschód Ziemi: wschodzi zza horyzontu (pod nim schowana, nad nim widać), potem zachodzi */
+.ap-earth.rise { left: 54%; top: 58%; width: 16cqw; translate: -50% -50%; animation: apEarthRise 12s ease-in-out infinite; }
+@keyframes apEarthRise { 0%, 100% { translate: -50% 60%; } 45%, 60% { translate: -50% -55%; } }
+.ap-earth.sky { left: 14%; top: 55%; width: 8cqw; animation: apFloat 9s ease-in-out infinite; }
+.ap-earth.sky.b { left: 74%; top: 54%; }
+@keyframes apFloat { 50% { translate: .5cqw -.6cqw; } }
 
-/* 5. Odbicie w wizjerze: złota szybka hełmu z odbiciem Księżyca */
-.ap-visor { background: linear-gradient(135deg, #ffd27a, #8a5a10 45%, #ffe9a8 80%); mix-blend-mode: multiply; opacity: .55; }
-.ap-reflect { inset: 4% 4% auto auto; width: 36%; aspect-ratio: 1; opacity: .85; mix-blend-mode: screen; }
-.card.vm-apollo-5 .card-photo { border-radius: 1.2em .4em 1.2em .4em; box-shadow: 0 0 0 .18em #f0c86a, 0 0 0 .32em #2a2a2a, 0 .3em .8em #000; }
-.ap-visor-hi { inset: -10% 30% 40% -20%; border-radius: 50%; background: radial-gradient(closest-side, #fff8, transparent); rotate: -30deg; mix-blend-mode: screen; opacity: .5;
-  animation: apVisor 6s ease-in-out infinite; }
-@keyframes apVisor { 50% { translate: 8% 4%; opacity: .3; } }
+/* 2. Sputnik nad krawędzią Ziemi, kręgi sygnału */
+.ap-limb { left: -40%; right: -40%; top: 62%; height: 120%; border-radius: 50%; background: radial-gradient(circle at 50% 10%, #4a8ae8, #1a3a8a 30%, #0a1a4a 60%);
+  box-shadow: 0 -1.5cqw 3cqw #8ab0ffaa, inset 0 2cqw 3cqw #fff6; }
+.ap-sputnik { width: 20cqw; aspect-ratio: 2; translate: -50% -50%; animation: apOrbit 11s linear infinite; }
+@keyframes apOrbit { 0% { left: -15%; top: 66%; rotate: -14deg; } 50% { left: 50%; top: 56%; rotate: 0deg; } 100% { left: 115%; top: 66%; rotate: 14deg; } }
+.ap-beep { left: 20%; top: 50%; width: 4cqw; aspect-ratio: 1; border-radius: 50%; border: .3cqw solid #fff; translate: -50% -50%; opacity: 0; animation: apBeep 1.2s ease-out infinite; }
+.ap-beep.b { animation-delay: .6s; }
+@keyframes apBeep { 0% { opacity: .9; scale: .5; } 100% { opacity: 0; scale: 4; } }
+
+/* 3. lądownik na powierzchni z długim cieniem */
+.ap-lm { left: 50%; top: 61%; width: 30cqw; aspect-ratio: 40 / 35; translate: -50% -50%; filter: drop-shadow(0 0 .6cqw #0008); }
+.ap-lmshadow { left: 55%; top: 69.5%; width: 40cqw; height: 2.2cqw; background: radial-gradient(closest-side, #000c, transparent); translate: -20% 0; skew: -40deg; }
+
+/* 4. start rakiety o świcie: wieża, rakieta z płomieniem wznosi się, dym na dole */
+.ap-dawn { inset: 0; background: linear-gradient(180deg, #050508 40%, #2a1e3a 55%, #8a5a3a 70%, #e0a86a 82%, #f4d8a0); }
+.ap-tower { left: 22%; top: 44%; width: 9cqw; height: 32%; }
+.ap-launch { left: 50%; top: 50%; width: 9cqw; height: 32%; translate: -50% 0; animation: apLaunch 9s ease-in infinite; }
+@keyframes apLaunch { 0%, 15% { transform: translateY(0); } 100% { transform: translateY(-120%); } }
+.ap-rocket { inset: 0; }
+.ap-flame { left: 50%; top: 98%; width: 60%; height: 40%; translate: -50% 0; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: radial-gradient(ellipse at 50% 20%, #fff, #ffe08a 25%, #ff8a2a 55%, transparent 75%); animation: apFlame .12s steps(2) infinite; mix-blend-mode: screen; }
+@keyframes apFlame { 50% { scale: .85 1.15; opacity: .8; } }
+.ap-smoke { top: 76%; width: 16cqw; aspect-ratio: 1; border-radius: 50%; translate: -50% 0; background: radial-gradient(circle, #f4ecdcd0, #c8b89a80 60%, transparent 72%);
+  animation: apSmoke 3s ease-out infinite; }
+@keyframes apSmoke { 0% { scale: .4; opacity: .9; } 100% { scale: 1.8; opacity: 0; translate: -50% -30%; } }
+
+/* 5. sonda dryfuje na tle Saturna */
+.ap-saturn { left: 72%; top: 60%; width: 14cqw; aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
+  background: radial-gradient(circle at 70% 30%, transparent 45%, #000c 75%), repeating-linear-gradient(170deg, #e8c890 0 1cqw, #c8a060 1cqw 1.8cqw, #f0dcb0 1.8cqw 2.6cqw); }
+.ap-ring { left: -45%; right: -45%; top: 40%; height: 20%; border-radius: 50%; border: .9cqw solid #f0dcb0aa; rotate: -14deg; box-shadow: 0 0 0 .3cqw #c8a06055;
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%, 0 100%, 100% 100%, 100% 50%); }
+.ap-probe { width: 28cqw; aspect-ratio: 40 / 30; translate: -50% -50%; animation: apDrift 16s ease-in-out infinite; }
+@keyframes apDrift { 0% { left: 24%; top: 60%; rotate: -8deg; } 50% { left: 40%; top: 55%; rotate: 10deg; } 100% { left: 24%; top: 60%; rotate: -8deg; } }
+
+/* 6. łazik jedzie po powierzchni i wzbija pył */
+.ap-rover { width: 22cqw; aspect-ratio: 30 / 14; top: 63%; translate: -50% -50%; animation: apDrive 10s linear infinite; }
+@keyframes apDrive { 0% { left: -20%; } 100% { left: 120%; } }
+.ap-rover > svg { position: absolute; inset: 0; animation: apBump .5s ease-in-out infinite; }
+@keyframes apBump { 50% { translate: 0 -4%; } }
+.ap-trail { position: absolute; right: 85%; top: 50%; width: 60%; height: 80%; border-radius: 50%; background: radial-gradient(ellipse at 100% 50%, #d8d0c0aa, transparent 70%);
+  animation: vmPulse .6s ease-in-out infinite; }
