@@ -19,3 +19,108 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 @keyframes vmPulse { 50% { opacity: .55; } }
 @keyframes vmBlink { 50% { opacity: .15; } }
 @keyframes vmSpin { to { transform: rotate(360deg); } }
+
+/* ============================================================ RETRO KOSMOS (vm-apollo, klasy ap-) - runda 6
+   Tło: krótka pętla prawdziwego filmu z Apollo 11 (static/video/space/lm-orbit.mp4, archiwum NASA, domena publiczna).
+   Na całej karcie złoto-srebrna klisza: srebrne zdjęcie, złotawy film, złote smugi ap-gs, ziarno, migotanie, rysy, winieta.
+   Makiety 2-4 (vm-apollo-2..4) zmieniają tylko wygląd karty - ramkę, napisy, panele i ozdoby. */
+.card.vm-apollo { --frame: linear-gradient(115deg, #8a6a20, #f6e3a8 16%, #9aa0aa 34%, #f4f6f9 50%, #8a909a 64%, #f6e3a8 82%, #8a6a20); box-shadow: 0 6px 18px #000c; }
+.card.vm-apollo .card-inner { background: #050508; color: #ecebe4; }
+.card.vm-apollo :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp, .card-value) { color: #ecebe4; }
+.card.vm-apollo :is(.card-sub, .card-attack, .card-stats) { background: #000a; border: none; border-radius: .25em; }
+.card.vm-apollo .card-attack { padding-inline: .35em; margin-top: 1.5%; background: #000b; }
+.card.vm-apollo .card-name { font-family: Orbitron, Rubik, sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: .9em;
+  background: linear-gradient(180deg, #fff6d8 0 35%, #e8c870 50%, #e8ecf2 65%, #b8bec8); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 .3em #000); }
+.card.vm-apollo .card-sub { font: 700 .44em/1.3 "Share Tech Mono", monospace; letter-spacing: .1em; font-style: normal; margin-bottom: auto; }
+/* krótsze zdjęcie - scena widać w pasie pod nim */
+.card.vm-apollo .card-photo { aspect-ratio: 1 / .7; border: none; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .1em #e8c870, 0 0 0 .2em #c8ccd4, 0 .3em .8em #000; }
+.card.vm-apollo .vm-tag { background: linear-gradient(90deg, #8a6200, #fff1c1 30%, #c8ccd4 60%, #f4f6f9 80%, #8a909a); color: #1a1a1a; border: 1px solid #1a1a1a; font-family: Orbitron, sans-serif; letter-spacing: .1em; }
+.ap-clip { overflow: hidden; border-radius: inherit; }
+
+/* złoto-srebrna klisza: zdjęcie osoby srebrne, film w tle złotawy, ramka złoto-srebrna,
+   po karcie ukośne pasy złotego i srebrnego światła (ap-gs). Tylko zwykłe filtry CSS i przezroczystość - mix-blend-mode i filtry SVG nad filmem / na filmie Chrome psuje
+   (obraz robi się jasnoszary jak negatyw albo czarny). */
+.card.vm-apollo .card-photo > img { filter: grayscale(1) sepia(.08) contrast(1.2) brightness(1.04); }   /* srebrne zdjęcie */
+.ap-scene .ap-film { filter: grayscale(1) sepia(.55) contrast(1.35) brightness(1.15); }   /* złotawy film w tle */
+.ap-gs { inset: 0; background: linear-gradient(150deg, #f2c45a40 0%, #f2c45a10 14%, transparent 22%, #eef2f814 34%, transparent 44%,
+  #e0a83a38 56%, #e0a83a0c 68%, transparent 76%, #eef2f812 88%, #f2c45a30 100%); }
+.ap-grain { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .14; animation: vpGrain .4s steps(3) infinite; }
+.ap-flicker { inset: 0; background: #f4f0e4; opacity: 0; animation: apFlicker .3s steps(3) infinite; }
+@keyframes apFlicker { 33% { opacity: .05; } 66% { opacity: .015; } }
+.ap-vignette { inset: 0; background: radial-gradient(95% 80% at 50% 45%, transparent 55%, #000c); }
+.ap-scratch { top: 0 !important; bottom: 0; width: .25cqw; background: linear-gradient(transparent, #fff8 20%, #fff5 70%, transparent); opacity: 0; animation: apScratch steps(1) infinite; }
+@keyframes apScratch { 0% { opacity: .8; } 30% { opacity: 0; } 55% { opacity: .5; translate: 4cqw 0; } 70% { opacity: 0; } }
+/* licznik taśmy w prawym górnym rogu zdjęcia */
+.ap-rec { right: 7%; top: 13.5%; font: 700 2.4cqw/1 "Share Tech Mono", monospace; letter-spacing: .1em; color: #f4f0e4; text-shadow: 0 0 .6cqw #000; display: flex !important; align-items: center; gap: .8cqw; }
+.ap-rec i { width: 1.6cqw; aspect-ratio: 1; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 1cqw #ff3b30; animation: apRec 1s steps(1) infinite; }
+@keyframes apRec { 50% { opacity: 0; } }
+
+/* film w tle karty: cały kadr, lądownik (78%, 45% kadru) w pasie pod zdjęciem karty */
+.ap-scene .ap-film { position: absolute; display: block; max-width: none; left: -85%; top: 27%; width: 180%; height: auto; will-change: transform; }
+.ap-shade { inset: 0; background: linear-gradient(180deg, #000c 0%, #0006 14%, transparent 30%, transparent 64%, #0008 80%, #000d); }
+/* cyfra odliczająca 0-9 co sekundę */
+.ap-tick { display: inline-block; height: 1em; line-height: 1em; overflow: hidden; vertical-align: top; }
+.ap-tick i { display: block; font-style: normal; animation: apTick 10s steps(10) infinite; }
+@keyframes apTick { to { transform: translateY(-10em); } }
+
+/* ---- 2. Kontrola misji: ramka z cienkich linii, pasek z zegarem misji, krzyżyki pomiarowe, odczyty telemetrii */
+.card.vm-apollo-2 { --frame: linear-gradient(180deg, #e8c870, #8a6a20 30%, #c8ccd4 60%, #6a707a); }
+.card.vm-apollo-2 .card-name { font: 500 .82em/1.05 Orbitron, sans-serif; letter-spacing: .14em; background: none; color: #e8ecf2; filter: none; text-shadow: 0 0 .4em #e8ecf288; }
+.card.vm-apollo-2 :is(.card-sub, .card-attack, .card-stats) { background: #05070acc; border: 1px solid #c8ccd466; border-radius: 0; }
+.card.vm-apollo-2 :is(.atk-name, .card-stats, .card-foot) { font-family: "Share Tech Mono", monospace; letter-spacing: .04em; }
+.card.vm-apollo-2 .card-sub { color: #e8c870; text-align: left; padding-left: .5em; }
+.card.vm-apollo-2 .card-photo { border-radius: 0; box-shadow: 0 0 0 .08em #c8ccd4, 0 0 0 .22em #05070a, 0 0 0 .3em #c9952c88; }
+.card.vm-apollo-2 .vm-tag { border-radius: 0; }
+.ap2-bar { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; margin: 0 0 1.5%; padding: .2em .45em;
+  font: 700 .4em/1 "Share Tech Mono", monospace; letter-spacing: .12em; color: #c8ccd4; border-block: 1px solid #c8ccd466; background: #05070a99; }
+.ap2-met { color: #f2d27a; text-shadow: 0 0 .5em #f2d27a88; }
+/* krzyżyki pomiarowe (płytka réseau aparatu Hasselblad): kratka małych plusów */
+.ap2-reseau { inset: 0; }
+.ap2-reseau::before { content: ""; position: absolute; inset: 0; opacity: .8; filter: drop-shadow(0 0 .25cqw #000);
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M20 15v10M15 20h10' stroke='%23e8ecf2' stroke-width='1.2'/></svg>") 50% 50% / 13cqw 13cqw; }
+.ap2-corners { inset: 4% !important; --g: #f2d27a; background:
+  linear-gradient(var(--g), var(--g)) 0 0 / 4cqw .35cqw no-repeat, linear-gradient(var(--g), var(--g)) 0 0 / .35cqw 4cqw no-repeat,
+  linear-gradient(var(--g), var(--g)) 100% 0 / 4cqw .35cqw no-repeat, linear-gradient(var(--g), var(--g)) 100% 0 / .35cqw 4cqw no-repeat,
+  linear-gradient(var(--g), var(--g)) 0 100% / 4cqw .35cqw no-repeat, linear-gradient(var(--g), var(--g)) 0 100% / .35cqw 4cqw no-repeat,
+  linear-gradient(var(--g), var(--g)) 100% 100% / 4cqw .35cqw no-repeat, linear-gradient(var(--g), var(--g)) 100% 100% / .35cqw 4cqw no-repeat; }
+.ap2-tm { top: 64%; font: 700 2.3cqw/1.35 "Share Tech Mono", monospace; letter-spacing: .08em; color: #e8ecf2; text-shadow: 0 0 .8cqw #000, 0 0 .3cqw #000; }
+.ap2-tm.l { left: 6%; } .ap2-tm.r { right: 6%; text-align: right; color: #f2d27a; }
+.ap2-lines { inset: 2.4%; border: .25cqw solid #c8ccd499; border-radius: 1.5%; box-shadow: inset 0 0 0 1cqw transparent, inset 0 0 0 1.25cqw #c9952c66; }
+
+/* ---- 3. Naszywka misji: złote wielkie litery, naszywka w rogu zdjęcia, podpis na wstędze, ramka złota ze srebrnym paskiem */
+.card.vm-apollo-3 { --frame: linear-gradient(180deg, #f6e3a8, #c9952c 22%, #8a6a20 40%, #d9b25a 60%, #f6e3a8 80%, #a87a28); }
+.card.vm-apollo-3 .card-inner { box-shadow: inset 0 0 0 .14em #e8ecf2, inset 0 0 0 .22em #05070a; }
+.card.vm-apollo-3 .card-name { font: 900 .95em/1.05 Rubik, sans-serif; letter-spacing: .1em; background: linear-gradient(180deg, #fff6d8 0 30%, #f2d27a 48%, #a87a28 52%, #e8c870); -webkit-background-clip: text; background-clip: text; }
+.card.vm-apollo-3 .card-photo { box-shadow: 0 0 0 .12em #f2d27a, 0 0 0 .2em #05070a, 0 0 0 .27em #c8ccd4, 0 .3em .8em #000; }
+.card.vm-apollo-3 .card-sub { background: linear-gradient(90deg, #8a6a20, #f2d27a 18%, #fff6d8 32%, #c8ccd4 52%, #f4f6f9 68%, #9aa0aa 86%, #6a707a); color: #141414; font-weight: 700;
+  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%); border-radius: 0; padding-inline: 6%; text-shadow: 0 .05em 0 #fff6; }
+.card.vm-apollo-3 :is(.card-attack, .card-stats) { background: #05070ab8; box-shadow: inset 0 0 0 .07em #c9952c99; }
+.ap3-patch { inset: 3% 3% auto auto !important; width: 25%; aspect-ratio: 1; filter: drop-shadow(0 .4cqw .8cqw #000); rotate: 8deg; }
+.ap3-star { width: 4.4cqw; filter: drop-shadow(0 0 .8cqw #fff6d8); aspect-ratio: 1; background: #f6e3a8; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: apTwinkle 2.4s ease-in-out infinite; }
+.ap3-star.tl { left: .4%; top: .3%; } .ap3-star.tr { right: .4%; top: .3%; animation-delay: -.6s; }
+.ap3-star.bl { left: .4%; bottom: .3%; animation-delay: -1.2s; background: #e8ecf2; } .ap3-star.br { right: .4%; bottom: .3%; animation-delay: -1.8s; background: #e8ecf2; }
+@keyframes apTwinkle { 50% { opacity: .3; scale: .55; } }
+
+/* ---- 4. Panel przyrządów: ramka z pogniecionej folii (złota u góry, srebrna u dołu), oprawa zdjęcia ze śrubami, płyty przyrządów */
+.card.vm-apollo-4 { --frame: linear-gradient(180deg, transparent 45%, #c8ccd4d0 62%, #e8ecf2d8),
+  url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.06' numOctaves='3' seed='7'/><feDiffuseLighting lighting-color='%23ffe08a' surfaceScale='3.5'><feDistantLight azimuth='225' elevation='42'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>") 0 0 / 60px, #c9952c; }
+.card.vm-apollo-4 .card-inner { background: #0c0e12; }
+.card.vm-apollo-4 .card-name { font: 400 .82em/1.05 "Black Ops One", Rubik, sans-serif; letter-spacing: .08em; background: none; color: #f4f6f9; filter: none; text-shadow: 0 .06em 0 #000; }
+.card.vm-apollo-4 :is(.card-attack, .card-stats) { border: .08em solid #4a4f58; border-radius: .2em; box-shadow: inset 0 .06em 0 #ffffff1a, 0 .1em .3em #000a;
+  background: radial-gradient(circle at .45em .45em, #8a909a 0 .1em, #2a2e36 .12em, transparent .17em), radial-gradient(circle at calc(100% - .45em) .45em, #8a909a 0 .1em, #2a2e36 .12em, transparent .17em),
+    radial-gradient(circle at .45em calc(100% - .45em), #8a909a 0 .1em, #2a2e36 .12em, transparent .17em), radial-gradient(circle at calc(100% - .45em) calc(100% - .45em), #8a909a 0 .1em, #2a2e36 .12em, transparent .17em),
+    linear-gradient(180deg, #23262ce8, #121418f0); }
+.card.vm-apollo-4 .card-attack { padding-inline: .7em; }
+.card.vm-apollo-4 .card-sub { background: linear-gradient(180deg, #e8ecf2, #9aa0aa); color: #111; border-radius: .15em; padding: .15em .7em; width: fit-content; margin-inline: auto; margin-top: 2.4%;
+  box-shadow: inset 0 0 0 .08em #6a707a, 0 .1em .2em #000a; text-shadow: 0 .05em 0 #fff8; }
+.card.vm-apollo-4 .card-photo { border-radius: .15em; box-shadow: 0 0 0 .35em #3a3e46, 0 0 0 .42em #8a909a, 0 .3em .8em #000; margin-inline: 3%; }
+.ap4-bezel { inset: 0; }
+.ap4-screw { width: 3.2cqw; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f4f6f9, #8a909a 55%, #3a3e46); box-shadow: 0 .2cqw .4cqw #000; }
+.ap4-screw::after { content: ""; position: absolute; inset: 44% 14%; background: #2a2e36; rotate: 35deg; }
+.ap4-screw.tl { left: 2.5%; top: 3.5%; } .ap4-screw.tr { right: 2.5%; top: 3.5%; } .ap4-screw.bl { left: 2.5%; bottom: 3.5%; } .ap4-screw.br { right: 2.5%; bottom: 3.5%; }
+.ap4-btns { position: relative; z-index: 1; display: flex; align-items: center; gap: .55em; margin: .1em .15em 2%; font: 900 .38em/1 Rubik, sans-serif; letter-spacing: .06em; }
+/* czerwony przycisk w obwódce w żółto-czarne paski (osłona) */
+.ap4-btns b { padding: .3em .5em; color: #fff; background: linear-gradient(180deg, #d8382c, #8a1a14) padding-box, repeating-linear-gradient(45deg, #f2d27a 0 .3em, #111 .3em .6em) border-box;
+  border: .32em solid transparent; border-radius: .2em; }
+.ap4-btns span { margin-left: auto; color: #c8ccd4; font-family: "Share Tech Mono", monospace; font-weight: 700; }
+.ap4-led { width: .9em; aspect-ratio: 1; border-radius: 50%; background: #5dff7a; box-shadow: 0 0 .6em #5dff7a; animation: apRec 1.6s steps(1) infinite; }

@@ -2153,6 +2153,45 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-hollywood img { filter: sepia(.35) saturate(1.4) contrast(1.05); }
 .pick.v-hollywood { box-shadow: inset 0 0 0 2px #ffd08a, inset 0 0 0 4px #8a3a5a, inset 0 -26px 26px -18px var(--rc); }
 
+/* Amerykańska - czarno-biały plakat filmu „opartego na faktach”: przekrzywiona szara flaga USA powiewa w tle (widać ją
+   w pasie pod skróconym zdjęciem), szare pasy płyną przez połowę zdjęcia, w rogu zdjęcia czarne pole z gwiazdami, ramka
+   w czarno-białe ukośne pasy. VX_BG / VX_PHOTO / VX_DECO usa (flaga: usFlag w app.js), podpis w variantSub. */
+.card.v-usa .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-usa :is(.card-sub, .card-attack, .card-stats) { background: #000c; border: none; border-radius: .25em; }
+.card.v-usa .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-usa, .ph.vt-usa { background: #f2f2f2; color: #111; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; text-shadow: none; }
+.vdot.vt-usa { background: repeating-linear-gradient(180deg, #3a3a3a 0 2px, #f2f2f2 2px 4px); box-shadow: inset 4px 4px 0 0 #111; }
+.odd.odd-v.vt-usa { border-left-color: #f2f2f2; }
+.card.v-usa { --frame: repeating-linear-gradient(45deg, #f2f2f2 0 3cqw, #111 3cqw 6cqw); --spin: initial; box-shadow: 0 6px 18px #000c; }
+.card.v-usa .card-inner { background: #141414; color: #f2f2f2; }
+.card.v-usa :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp, .card-value) { color: #f2f2f2; }
+.card.v-usa .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; text-shadow: 0 0 .3em #000; }
+.card.v-usa .card-sub { font: 700 .5em/1.3 Rubik, sans-serif; letter-spacing: .14em; font-style: normal; margin-bottom: auto; }
+/* krótsze zdjęcie i panele zepchnięte w dół - powiewającą flagę widać między zdjęciem a zdolnościami */
+.card.v-usa .card-photo { aspect-ratio: 1 / .8; border: none; border-image: none; box-shadow: 0 0 0 .14em #f2f2f2, 0 .3em .8em #000; }
+.card.v-usa .card-photo > img, .r-secret.v-usa .sc-art img { filter: grayscale(1) contrast(1.55) brightness(1.04); }
+.card.v-usa :is(.card-type, .atk-cost, :where(.card-stats b), .gem) { filter: grayscale(1); }
+.us-tilt { inset: -30% -45%; rotate: -14deg; }
+.us-tilt > i { position: absolute; display: block; }
+.us-tilt svg, .us-canton svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.us-flagbox { inset: 0; opacity: .8; animation: usWave 6s ease-in-out infinite; transform-origin: 0 50%; }
+@keyframes usWave { 50% { transform: skewY(3deg) translateY(1.5%) scaleX(1.03); } }
+.us-ripple { top: 0; bottom: 0; left: -50%; width: 200%; animation: usRipple 3.2s linear infinite;
+  background: repeating-linear-gradient(100deg, transparent 0 4cqw, #0006 8cqw, transparent 12cqw, #fff2 15cqw, transparent 18cqw); }
+@keyframes usRipple { to { transform: translateX(18cqw); } }
+.us-spot { inset: 0; background: radial-gradient(70% 45% at 50% 0%, #fff5, transparent 70%), radial-gradient(120% 90% at 50% 60%, transparent 40%, #000c); }
+/* pasy flagi na zdjęciu (płyną w dół, zanikają w stronę twarzy) i pole z gwiazdami w rogu */
+.us-stripes { top: -20%; height: 140%; animation: usStripes 7s linear infinite; mix-blend-mode: multiply;
+  background: repeating-linear-gradient(180deg, #3a3a3a 0 4.6%, #f2f2f2 4.6% 9.2%);
+  -webkit-mask: linear-gradient(100deg, transparent 38%, #000c 62%, #000); mask: linear-gradient(100deg, transparent 38%, #000c 62%, #000); }
+@keyframes usStripes { to { transform: translateY(13.14%); } }
+.vx-photo.us-canton { inset: 0 auto auto 0; width: 34%; height: auto; aspect-ratio: 30.4 / 21.54; box-shadow: .2cqw .2cqw 1cqw #000a; opacity: .92; overflow: hidden; }
+.us-hazard { inset: 3.6%; border-radius: 3%/2.2%; box-shadow: inset 0 0 0 .35cqw #111, inset 0 0 1.5cqw #000; }
+.r-secret.v-usa .sc-border { background: repeating-linear-gradient(45deg, #f2f2f2 0 8px, #111 8px 16px); animation: none; }
+.pick.v-usa img { filter: grayscale(1) contrast(1.4); }
+.pick.v-usa { box-shadow: inset 0 0 0 2px #f2f2f2, inset 0 0 0 4px #111, inset 0 -26px 26px -18px var(--rc); }
+.us-flagbox, .us-ripple, .us-stripes { will-change: transform; }
+
 /* Kobaltowa - kobalt-60 w basenie reaktora: ciemna woda, z dołu pulsuje niebieska poświata Czerenkowa, po karcie faluje
    światło odbite od wody (VX_BG / VX_PHOTO cobalt, podpis w variantSub) */
 .card.v-cobalt .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }

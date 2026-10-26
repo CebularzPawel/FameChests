@@ -86,13 +86,14 @@ def clean_variant_events(raw):
 
 
 def clean_variant_settings(v, raw):
-    """Ustawienia wariantu z panelu: {"enabled", "chance", "weight", "desc", "events"} - None = jak w kodzie (data.py)."""
+    """Ustawienia wariantu z panelu: {"enabled", "chance", "weight", "desc", "mult", "events"} - None = jak w kodzie (data.py).
+    "mult" - mnożnik wartości karty w tym wariancie (połączenia z warstwami przeliczają się w rebuild)."""
     raw = raw if isinstance(raw, dict) else {}
     x = data.VARIANTS[v]
     out = {"enabled": raw["enabled"] if isinstance(raw.get("enabled"), bool) else None,
            # "released": wariant był już kiedyś włączony - nawet wyłączony zostaje w klaserze (gracze mogą mieć te karty)
            "released": bool(raw.get("released")) or raw.get("enabled") is True,
-           "chance": None, "weight": None,
+           "chance": None, "weight": None, "mult": None,
            "desc": str(raw["desc"]).strip()[:300] if isinstance(raw.get("desc"), str) else None,
            "events": [] if x.get("special") else clean_variant_events(raw.get("events"))}
     if raw.get("chance") is not None and not x.get("always") and not x.get("special"):
@@ -102,6 +103,8 @@ def clean_variant_settings(v, raw):
             pass
     if raw.get("weight") is not None and x.get("always"):
         out["weight"] = _int(raw.get("weight"), 1, 10000)
+    if raw.get("mult") is not None and not x.get("special"):
+        out["mult"] = _num(raw.get("mult"), 0.01, data.VARIANT_MULT_MAX, None)
     return out
 
 
@@ -212,7 +215,7 @@ def variant_cfg_json(v, admin=False):
     out = {"enabled": variant_enabled(v), "released": bool(variant_released(v)), "events": events}
     if admin:
         cfg = VARIANT_CFG.get(v, {})
-        out.update(saved={k: cfg.get(k) for k in ("enabled", "chance", "weight", "desc")},
+        out.update(saved={k: cfg.get(k) for k in ("enabled", "chance", "weight", "desc", "mult")},
                    defaults=data.VARIANT_DEFAULTS.get(v), off=bool(data.VARIANTS[v].get("off")))
     return out
 
@@ -475,20 +478,25 @@ def rebuild(conn):
             CUSTOM_VARIANTS[row[0]] = clean_custom_variant(d["custom"])
     data.register_custom_variants(CUSTOM_VARIANTS)
     for v, d in data.VARIANT_DEFAULTS.items():   # ustawienia z panelu nakładamy zawsze na wartości z kodu
-        data.VARIANTS[v]["chance"], data.VARIANTS[v]["desc"] = d["chance"], d["desc"]
+        data.VARIANTS[v]["chance"], data.VARIANTS[v]["desc"], data.VARIANTS[v]["mult"] = d["chance"], d["desc"], d["mult"]
         if d["weight"] is not None:
             data.VARIANTS[v]["weight"] = d["weight"]
     for row in conn.execute("SELECT id, data FROM catalog_variants WHERE deleted = 0"):
         d = json.loads(row[1] or "{}")
         if row[0] in data.VARIANT_DEFAULTS and "settings" in d:
             variant_cfg[row[0]] = vs = clean_variant_settings(row[0], d["settings"])
-            for k in ("chance", "weight", "desc"):
+            for k in ("chance", "weight", "desc", "mult"):
                 if vs[k] is not None:
                     data.VARIANTS[row[0]][k] = vs[k]
         if row[0] in data.STICKER_VARIANTS:
             STICKERS[row[0]] = clean_stickers(d.get("stickers"))
             cards = {pid: clean_card_stickers(own) for pid, own in (d.get("cards") or {}).items()}
             STICKER_CARDS[row[0]] = {pid: own for pid, own in cards.items() if own}
+    # mnożnik połączenia warstw (flag+gold) = iloczyn mnożników warstw; kolejność wariantów - od najtańszego
+    for x in data.VARIANTS.values():
+        if x.get("combo"):
+            x["mult"] = round(data.VARIANTS[x["layers"][0]]["mult"] * data.VARIANTS[x["layers"][1]]["mult"], 2)
+    data.VARIANT_ORDER[:] = sorted(data.VARIANTS, key=lambda v: data.VARIANTS[v]["mult"])
 
     for cid, c in data.CRATES.items():
         crates[cid] = dict({"shop": True, "restricted": False, "weights": {}}, **builtin_crate(cid),

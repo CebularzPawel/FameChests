@@ -156,6 +156,8 @@ VARIANTS = {
                 "desc": "Źródło neutronów: za zdjęciem rozżarzony do białości rdzeń, z którego na wszystkie strony lecą srebrne smugi neutronów."},
     "reflective": {"name": "Odblaskowa", "chance": 0.014, "mult": 5.5, "off": True,
                 "desc": "Świecąca fluorescencyjna żółć jak kamizelka odblaskowa; gdy przelatuje światło reflektora, srebrne pasy rozbłyskują, a karta jarzy się mocniej."},
+    "usa":     {"name": "Amerykańska",  "chance": 0.006, "mult": 9.0, "off": True,
+                "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
     # 1 na 2 137 000 skrzynek - Rzulty ma być trochę rzadszy: 1 na 2 137 420 (szansa na wariant przy wypadnięciu JP2).
     # Może mieć własne zdjęcie (panel admina, edycja karty).
@@ -192,10 +194,11 @@ for _layer in [v for v, x in VARIANTS.items() if x.get("layer")]:
             "mult": round(VARIANTS[_layer]["mult"] * _x["mult"], 2), "exclusive": True, "combo": True,
             "layers": [_layer, _base]}
 VARIANT_ORDER = sorted(VARIANTS, key=lambda v: VARIANTS[v]["mult"])   # od najtańszego do najdroższego
-# Ustawienia wariantów z panelu admina (/variants, catalog.rebuild) nadpisują w VARIANTS szansę, wagę i opis -
-# tu zostają wartości z kodu, do których wraca "Przywróć domyślne"
-VARIANT_DEFAULTS = {v: {"chance": x["chance"], "weight": x.get("weight"), "desc": x.get("desc", "")}
+# Ustawienia wariantów z panelu admina (/variants, catalog.rebuild) nadpisują w VARIANTS szansę, wagę, opis i mnożnik
+# wartości - tu zostają wartości z kodu, do których wraca "Przywróć domyślne"
+VARIANT_DEFAULTS = {v: {"chance": x["chance"], "weight": x.get("weight"), "desc": x.get("desc", ""), "mult": x["mult"]}
                     for v, x in VARIANTS.items() if not x.get("combo")}
+VARIANT_MULT_MAX = 1000     # najwyższy mnożnik wartości wariantu ustawiany w panelu
 VARIANT_EVENT_MAX = 40      # najwięcej wydarzeń (wariant na czas) zapisanych przy jednym wariancie
 VARIANT_BOOST_MAX = 50      # najwyższy mnożnik szansy w wydarzeniu
 VARIANT_CHANCE_MAX = 0.2    # najwyższa szansa na jeden wariant ustawiana w panelu (20%)
@@ -235,7 +238,7 @@ def register_custom_variants(designs):
     for k, d in designs.items():
         VARIANTS[k] = {"name": d["name"], "chance": d["chance"], "mult": d["mult"], "off": True, "custom": True,
                        "stickers": True, "desc": d["desc"]}
-        VARIANT_DEFAULTS[k] = {"chance": d["chance"], "weight": None, "desc": d["desc"]}
+        VARIANT_DEFAULTS[k] = {"chance": d["chance"], "weight": None, "desc": d["desc"], "mult": d["mult"]}
     for layer in [v for v, x in VARIANTS.items() if x.get("layer")]:
         for base in designs:
             VARIANTS[f"{layer}+{base}"] = {
