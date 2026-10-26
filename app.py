@@ -4198,8 +4198,11 @@ def save_variant_settings(variant, settings):
 
 
 def admin_variant_json(variant):
-    """Wariant po zmianie - przeglądarka podmienia go w S.cfg (variants, variantCfg)."""
-    return {"ok": True, "variant": VARIANTS[variant], "cfg": catalog.variant_cfg_json(variant, admin=True)}
+    """Wariant po zmianie - przeglądarka podmienia go w S.cfg (variants, variantCfg), a także mnożniki jego połączeń
+    z warstwami (flag+gold) i kolejność wariantów (zależy od mnożników)."""
+    return {"ok": True, "variant": VARIANTS[variant], "cfg": catalog.variant_cfg_json(variant, admin=True),
+            "comboMults": {k: x["mult"] for k, x in VARIANTS.items() if x.get("combo") and variant in x["layers"]},
+            "variantOrder": VARIANT_ORDER}
 
 
 def admin_variant_or_404(variant):
@@ -4211,7 +4214,8 @@ def admin_variant_or_404(variant):
 @app.post("/api/admin/variants/<variant>")
 @admin_required
 def admin_variant_save(variant):
-    """Włączony / wyłączony, szansa (albo waga przy wariantach "always") i opis. null = wartość z kodu (data.py)."""
+    """Włączony / wyłączony, szansa (albo waga przy wariantach "always"), opis i mnożnik wartości. null = wartość z kodu
+    (data.py)."""
     err = admin_variant_or_404(variant)
     if err:
         return err
@@ -4219,13 +4223,13 @@ def admin_variant_save(variant):
         return bad("Warianty kart specjalnych ustawia się przy samych kartach")
     body = request.get_json(force=True) or {}
     settings = variant_settings_row(variant)
-    for k in ("enabled", "chance", "weight", "desc"):
+    for k in ("enabled", "chance", "weight", "desc", "mult"):
         if k in body:
             settings[k] = body[k]
     save_variant_settings(variant, settings)
     s = catalog.VARIANT_CFG[variant]
     log_admin("variant_save", details=f"{VARIANTS[variant]['name']}: {'włączony' if catalog.variant_enabled(variant) else 'wyłączony'}"
-                                      f" · szansa {VARIANTS[variant]['chance'] * 100:.3g}%"
+                                      f" · szansa {VARIANTS[variant]['chance'] * 100:.3g}% · wartość ×{VARIANTS[variant]['mult']:g}"
                                       + (f" · waga {s['weight']}" if s["weight"] is not None else ""))
     db().commit()
     return jsonify(admin_variant_json(variant))
