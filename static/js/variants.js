@@ -5,7 +5,7 @@
 // tu tylko pokazujemy to samo (crateVariants / variantEvent w app.js). Druga zakładka: propozycje nowych wariantów
 // (makiety z variant-mockups.js) do wyboru.
 
-const VR = { tab: "settings", variant: "bronze", pid: "pl_tusk", combo: "", zoom: null, bound: false };
+const VR = { tab: "settings", variant: "bronze", pid: "pl_tusk", combo: "", sub: "", zoom: null, bound: false };
 const VR_GROUPS = [
   ["Zwykłe warianty", v => !vrV(v).exclusive],
   ["Wyjątkowe (nie z kontraktu, ulepszacza ani kasyna)", v => vrV(v).exclusive && !vrV(v).always && !vrV(v).cards && !vrV(v).special],
@@ -44,7 +44,7 @@ function vrStatus(v) {
 
 // przykładowa karta w wariancie; warianty kart specjalnych - na chwilę zrobiona karta specjalna (jak /mockups)
 function vrCardHTML(pid, v) {
-  if (!vrV(v)?.special) return cardHTML(pid, v);
+  if (!vrV(v)?.special) return cardHTML(pid, v, vrUid(v));
   const base = person(pid), crate = crateList().find(c => c.special) || crateOf(base.crate), id = "__vr_" + v;
   S.cfg.people[id] = Object.assign({}, base, { id, rarity: "special", crate: crate.id, crates: [crate.id], number: 1, style: 1,
     fixedVariant: v, source: "casino", imgAs: base.id });
@@ -96,6 +96,8 @@ function vrSettingsHTML() {
             ${V.layer && !V.noCombo ? `<label>Połącz z <select class="sort-sel" data-vr="combo"><option value="">— sam wariant —</option>${
               S.cfg.variantOrder.filter(b => b !== "normal" && !vrV(b).combo && !vrV(b).layer && !vrV(b).special && !vrV(b).cards && S.cfg.variants[`${v}+${b}`])
                 .map(b => `<option value="${b}"${b === VR.combo ? " selected" : ""}>${esc(vrV(b).name)}</option>`).join("")}</select></label>` : ""}
+            ${V.subs ? `<label>Rodzaj <select class="sort-sel" data-vr="sub"><option value="">— ogólny wygląd —</option>${
+              V.subs.map(s => `<option value="${s.id}"${s.id === VR.sub ? " selected" : ""}>${esc(s.name)}</option>`).join("")}</select></label>` : ""}
             <button class="btn" type="button" data-vr="viewer">🔍 Jak w grze</button>
           </div>
           <div class="vr-stage" id="vrStage">${vrCardHTML(VR.pid, vrShown())}</div>
@@ -103,6 +105,7 @@ function vrSettingsHTML() {
         </div>
         <div class="vr-side">${vrFormHTML(v)}</div>
       </div>
+      ${V.subs ? `<div class="panel">${vrSubsHTML(v)}</div>` : ""}
       ${V.special ? "" : `<div class="panel">${vrWhereHTML(v)}</div><div class="panel">${vrEventsHTML(v)}</div>`}
       <div class="panel"><h3 class="stk-h">🎴 Na innych kartach</h3><div class="vr-others">${vrOthers().map(pid =>
         `<div class="vr-other" data-pid="${pid}">${vrCardHTML(pid, vrShown())}</div>`).join("")}</div></div>
@@ -112,6 +115,29 @@ function vrSettingsHTML() {
 
 // wariant na podglądzie: sam albo połączony z wybranym (np. flag+gold)
 function vrShown() { return VR.combo && S.cfg.variants[`${VR.variant}+${VR.combo}`] ? `${VR.variant}+${VR.combo}` : VR.variant; }
+
+// Podwarianty (np. rodzaje piwa Piwnej - VARIANTS.beer.subs): rodzaj wynika z numeru egzemplarza karty (beerSub w app.js),
+// więc do podglądu szukamy przykładowego numeru, który daje wybrany rodzaj. null = ogólny wygląd (jak w klaserze).
+function vrUid(v) {
+  if (!VR.sub || !vrV(VR.variant)?.subs || !variantParts(v).includes(VR.variant)) return null;
+  for (let u = 1; u < 100000; u++) if (beerSub(v, u)?.id === VR.sub) return u;
+  return null;
+}
+function vrSubsHTML(v) {
+  const subs = vrV(v).subs, total = subs.reduce((a, s) => a + s.weight, 0);
+  return `<h3 class="stk-h">🍺 Podwarianty — rodzaje piwa</h3>
+    <p class="muted small">Wariant wypada jako jeden („${esc(vrV(v).name)}”, ta sama szansa i wartość), a rodzaj piwa wynika z numeru
+      egzemplarza karty — ten sam egzemplarz jest zawsze tym samym piwem. Gracz widzi rodzaj na plakietce, w podpisie pod zdjęciem
+      i w podglądzie karty. W klaserze i na rynku (bez konkretnego egzemplarza) karta ma ogólny wygląd. Rodzaje i ich częstość
+      zmienia się w kodzie (<code>VARIANTS["beer"]["subs"]</code> w data.py).</p>
+    <table class="vr-subs">
+      <tr><th>Rodzaj</th><th>Plakietka</th><th>Podpis na karcie</th><th>Szansa</th><th></th></tr>
+      ${subs.map(s => `<tr class="${s.id === VR.sub ? "active" : ""}">
+        <td><b>${esc(s.name)}</b></td><td>${esc(s.tag)}</td><td class="muted">${esc(s.label)}</td>
+        <td>${Math.round(s.weight / total * 1000) / 10}%</td>
+        <td><button class="btn" type="button" data-vr-sub="${s.id}">${s.id === VR.sub ? "👁 Na podglądzie" : "Pokaż"}</button></td></tr>`).join("")}
+    </table>`;
+}
 
 // po jednej karcie z kilku rzadkości (i tajna, jeśli jest znana) - żeby zobaczyć wariant na różnych ramkach
 function vrOthers() {
@@ -330,8 +356,10 @@ function vrBind() {
     const tab = t.closest("[data-tab]");
     if (tab) { Sound.click(); VR.tab = tab.dataset.tab; return renderVariants(); }
     const item = t.closest(".vr-item");
-    if (item) { Sound.click(); VR.variant = item.dataset.v; VR.combo = ""; return renderVariants(); }
-    if (t.closest('[data-vr="viewer"]')) { Sound.click(); return vrV(VR.variant).special ? null : openViewer(VR.pid, vrShown()); }
+    if (item) { Sound.click(); VR.variant = item.dataset.v; VR.combo = ""; VR.sub = ""; return renderVariants(); }
+    if (t.closest('[data-vr="viewer"]')) { Sound.click(); return vrV(VR.variant).special ? null : openViewer(VR.pid, vrShown(), vrUid(vrShown())); }
+    const sub = t.closest("[data-vr-sub]");
+    if (sub) { Sound.click(); VR.sub = sub.dataset.vrSub; renderVariants(); return $("#vrStage")?.scrollIntoView({ block: "center", behavior: "smooth" }); }
     const other = t.closest(".vr-other");
     if (other) { Sound.click(); VR.pid = other.dataset.pid; return renderVariants(); }
     if (t.closest('[data-vr="defaults"]')) {
@@ -369,6 +397,7 @@ function vrBind() {
     const t = e.target;
     if (t.matches('[data-vr="card"]')) { VR.pid = t.value; renderVariants(); }
     if (t.matches('[data-vr="combo"]')) { VR.combo = t.value; renderVariants(); }
+    if (t.matches('[data-vr="sub"]')) { VR.sub = t.value; renderVariants(); }
     if (t.name === "crates" && t.checked) { const r = $('#vrEvForm input[name="scope"][value="some"]'); if (r) r.checked = true; }
     if (t.matches("[data-pin]")) { Sound.click(); vrPin([t.dataset.pin], t.checked); }
   };
