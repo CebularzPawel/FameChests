@@ -86,6 +86,8 @@ function rarityIdx(r) { return S.cfg.rarityOrder.indexOf(r); }
 function varRank(v) { return S.cfg.variantOrder.indexOf(v || "normal"); }
 // warianty wyjątkowe (Królewski, Flagowy...) nie wypadają z kontraktu, ulepszacza ani kasyna
 function isExclusive(v) { return !!S.cfg.variants[v]?.exclusive; }
+// wariant, który może dać kuźnia i kasyno: nie wyjątkowy i nie zablokowany przez admina ("noHouse", strona /variants)
+function houseVariant(v) { return !isExclusive(v) && !variantParts(v).some(x => S.cfg.variantCfg?.[x]?.noHouse); }
 // warianty specjalne, które mogą wypaść z tej skrzynki: każdy wariant tylko wtedy, gdy jest przypięty do skrzynki
 // (pole skrzynki "variants", panel admina) - flagowy tylko dla kart z ustawionym krajem
 // (warianty z polem "cards", np. Rzulty, należą do konkretnych kart - nie do skrzynki)
@@ -171,9 +173,10 @@ function kindIcon(k) { return KIND_ICONS[k] || KIND_ICONS.off; }
 
 // Sortowanie kart w listach do wyboru (kuźnia, kasyno, rynek, wymiany, ikona gracza): elementy { person, variant, value, id? }
 const CARD_SORTS = [["value", "💰 Najdroższe"], ["valueAsc", "💰 Najtańsze"], ["rarity", "💎 Rzadkość"],
-                    ["variant", "✨ Wariant"], ["name", "🔤 Nazwa"], ["new", "🕒 Najnowsze"], ["dupes", "🔁 Duplikaty"]];
+                    ["variant", "✨ Wariant"], ["name", "🔤 Nazwa"], ["new", "🕒 Najnowsze"], ["dupes", "🔁 Duplikaty: najwięcej"],
+                    ["dupesValue", "🔁 Duplikaty: najdroższe"]];
 // listy bez sensu dla "Duplikaty" (karty do zdobycia, nie egzemplarze gracza): cele ulepszacza, szukane na rynku, ikona gracza
-const UNIQUE_SORTS = CARD_SORTS.filter(([k]) => k !== "new" && k !== "dupes");
+const UNIQUE_SORTS = CARD_SORTS.filter(([k]) => k !== "new" && !k.startsWith("dupes"));
 // ile egzemplarzy tej karty w tym wariancie ma gracz (osoba + wariant)
 function dupKey(x) { return x.person + "|" + (x.variant || "normal"); }
 function ownCounts() {
@@ -186,7 +189,7 @@ function sortCards(list, mode = "value") {
   const byName = (a, b) => name(a).localeCompare(name(b), "pl");
   const num = x => (typeof x.id === "number" ? x.id : 0);
   let dup = () => 0;
-  if (mode === "dupes") {   // moje karty: ile mam ich łącznie (też ⭐), cudze (wymiany): ile jest ich na tej liście
+  if (mode.startsWith("dupes")) {   // moje karty: ile mam ich łącznie (też ⭐), cudze (wymiany): ile jest ich na tej liście
     const own = ownCounts(), mine = new Set(S.items.map(i => i.id)), here = new Map();
     for (const x of list) here.set(dupKey(x), (here.get(dupKey(x)) || 0) + 1);
     dup = x => (mine.has(x.id) ? own : here).get(dupKey(x)) || 0;
@@ -194,6 +197,8 @@ function sortCards(list, mode = "value") {
   const cmp = {
     // duplikaty na górze (najwięcej egzemplarzy najpierw), takie same karty obok siebie
     dupes: (a, b) => (dup(b) > 1) - (dup(a) > 1) || dup(b) - dup(a) || byName(a, b) || varRank(b.variant) - varRank(a.variant) || b.value - a.value,
+    // duplikaty na górze, najdroższe najpierw (wartość jednej karty), takie same karty obok siebie
+    dupesValue: (a, b) => (dup(b) > 1) - (dup(a) > 1) || b.value - a.value || byName(a, b) || varRank(b.variant) - varRank(a.variant),
     value: (a, b) => b.value - a.value || byName(a, b),
     valueAsc: (a, b) => a.value - b.value || byName(a, b),
     rarity: (a, b) => rarityIdx(person(b.person).rarity) - rarityIdx(person(a.person).rarity) || varRank(b.variant) - varRank(a.variant) || byName(a, b),
@@ -2330,7 +2335,7 @@ function openModal(pid) {
       ${list.length > 1 ? `<button class="btn sell" data-sell="${list.join(",")}">${nFav ? "Pozostałe" : "Wszystkie"} (${fmt(val * list.length)})</button>` : ""}</span>
     </div>`;
   }).join("");
-  const dupes = dupesOf(o);
+  const dupes = dupesOf(o), dupesVar = dupesOf(o, true);
   $("#modalBox").innerHTML = `
     ${cardHTML(pid, o.best)}
     <div class="modal-side">
@@ -2341,6 +2346,7 @@ function openModal(pid) {
       ${rows}
       <div class="modal-actions">
         ${dupes.length ? `<button class="btn sell" data-sell="${dupes.join(",")}">Sprzedaj duplikaty (zostaw najlepszą)</button>` : ""}
+        ${dupesVar.length && dupesVar.length !== dupes.length ? `<button class="btn sell" data-sell="${dupesVar.join(",")}">Sprzedaj duplikaty (zostaw po 1 z wariantu)</button>` : ""}
         <button class="btn" id="modalClose">Zamknij</button>
       </div>
     </div>`;
@@ -2348,12 +2354,14 @@ function openModal(pid) {
   $("#modal").dataset.pid = pid;
 }
 
-function dupesOf(o) {
-  // zostawiamy jedną kartę - w najlepszym wariancie (najlepiej ulubioną) - i wszystkie ulubione; karty specjalne zostają
+function dupesOf(o, perVariant = false) {
+  // zostawiamy jedną kartę - w najlepszym wariancie (najlepiej ulubioną) - albo (perVariant) po jednej w każdym wariancie,
+  // także zwykłym; ulubione zostają zawsze, karty specjalne też
   if (isSpecialCard(S.items.find(i => i.id === o.ids[0])?.person)) return [];
   const favs = new Set(S.items.filter(i => i.fav).map(i => i.id));
-  const keep = o.byVar[o.best].find(id => favs.has(id)) ?? o.byVar[o.best][0];
-  return o.ids.filter(id => id !== keep && !favs.has(id));
+  const keepOne = ids => ids.find(id => favs.has(id)) ?? ids[0];
+  const keep = new Set(perVariant ? Object.values(o.byVar).map(keepOne) : [keepOne(o.byVar[o.best])]);
+  return o.ids.filter(id => !keep.has(id) && !favs.has(id));
 }
 
 function closeModal() { $("#modal").hidden = true; }
@@ -2375,7 +2383,7 @@ function filteredItems() {
     rarity: (a, b) => rarityIdx(person(b.person).rarity) - rarityIdx(person(a.person).rarity) || varRank(b.variant) - varRank(a.variant) || byName(a, b),
     name: (a, b) => byName(a, b) || varRank(b.variant) - varRank(a.variant),
   }[f.sort];
-  if (f.sort === "dupes") return sortCards(list, "dupes");
+  if (f.sort.startsWith("dupes")) return sortCards(list, f.sort);
   return list.sort(by);
 }
 
@@ -2548,12 +2556,14 @@ async function sellSelected() {
   renderInventory();
 }
 
-async function sellAllDupes() {
+// perVariant: z każdej osoby zostaje po 1 karcie w każdym wariancie (także zwykłym), inaczej 1 karta w najlepszym wariancie
+async function sellAllDupes(perVariant = false) {
   const owned = ownedMap();
-  const ids = Object.values(owned).flatMap(dupesOf);
-  if (!ids.length) { toast("Nie masz duplikatów."); return; }
-  const value = S.items.filter(i => ids.includes(i.id)).reduce((a, i) => a + i.value, 0);
-  if (!confirm(`Sprzedać ${ids.length} ${plural(ids.length, "duplikat", "duplikaty", "duplikatów")} za ${fmt(value)}?\n(Z każdej osoby zostanie 1 karta — w najlepszym wariancie.)`)) return;
+  const ids = Object.values(owned).flatMap(o => dupesOf(o, perVariant));
+  if (!ids.length) { toast(perVariant ? "Nie masz duplikatów w tym samym wariancie." : "Nie masz duplikatów."); return; }
+  const sold = new Set(ids), value = S.items.filter(i => sold.has(i.id)).reduce((a, i) => a + i.value, 0);
+  if (!confirm(`Sprzedać ${ids.length} ${plural(ids.length, "duplikat", "duplikaty", "duplikatów")} za ${fmt(value)}?\n(Z każdej osoby zostanie ${
+    perVariant ? "po 1 karcie w każdym wariancie, także bez wariantu" : "1 karta — w najlepszym wariancie"}.)`)) return;
   try { await sellIds(ids); } catch (e) { Sound.error(); toast(e.message, true); }
   renderInventory();
 }
@@ -2791,7 +2801,8 @@ function bind() {
   $("#selAll").addEventListener("click", () => { filteredItems().forEach(i => S.inv.selected.add(i.id)); renderInventory(); });
   $("#selNone").addEventListener("click", () => { S.inv.selected.clear(); renderInventory(); });
   $("#sellSel").addEventListener("click", sellSelected);
-  $("#sellDupes").addEventListener("click", sellAllDupes);
+  $("#sellDupes").addEventListener("click", () => sellAllDupes(false));
+  $("#sellDupesVar").addEventListener("click", () => sellAllDupes(true));
 
   $("#invGrid").addEventListener("contextmenu", e => {
     if (e.target.closest(".ufo-item")) return e.preventDefault();

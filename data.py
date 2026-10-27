@@ -791,6 +791,11 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 19, "date": "2026-10-27", "title": "Duplikaty",
+     "items": [
+         "🔁 Sortowanie po duplikatach ma dwie wersje: <b>najwięcej</b> (karty, których masz najwięcej) i <b>najdroższe</b> (najcenniejsze duplikaty na górze).",
+         "💰 W ekwipunku są dwa przyciski sprzedaży duplikatów: <b>Sprzedaj duplikaty</b> (zostaje 1 karta w najlepszym wariancie) i <b>Sprzedaj duplikaty, zostaw warianty</b> (zostaje po 1 karcie w każdym wariancie i bez wariantu). Ulubione ⭐ zawsze zostają.",
+     ]},
     {"v": 18, "date": "2026-10-27", "title": "Więcej osiągnięć",
      "items": [
          "🏆 Ponad 30 nowych <b>osiągnięć</b>: pierwsza skrzynka, karty Mityczne i Legendarne, warianty, kasyno, Arena… Za każde są nagrody.",

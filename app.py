@@ -2918,7 +2918,8 @@ def house_cards(value):
     z CASINO_VARIANTS - za każdym razem jedna z najdroższych, które się mieszczą (CASINO_TOP).
     Zwraca ([(karta, wariant)], reszta w pieniądzach)."""
     pool = sorted(((card_value(p, v), p, v) for p in catalog.PEOPLE.values() if p.get("forge") and p["rarity"] != "secret"
-                   for v in CASINO_VARIANTS if v == "normal" or catalog.variant_enabled(v)), key=lambda x: -x[0])
+                   for v in CASINO_VARIANTS if v == "normal" or (catalog.variant_enabled(v) and catalog.variant_house_ok(v))),
+                  key=lambda x: -x[0])
     out, left = [], value
     while len(out) < ROULETTE["maxPayoutCards"]:
         fit = [x for x in pool if x[0] <= left]
@@ -4612,8 +4613,8 @@ def admin_variant_or_404(variant):
 @app.post("/api/admin/variants/<variant>")
 @admin_required
 def admin_variant_save(variant):
-    """Włączony / wyłączony, szansa (albo waga przy wariantach "always"), opis i mnożnik wartości. null = wartość z kodu
-    (data.py)."""
+    """Włączony / wyłączony, szansa (albo waga przy wariantach "always"), opis, mnożnik wartości i "noHouse" (ekskluzywny:
+    nie z kuźni ani kasyna). null = wartość z kodu (data.py)."""
     err = admin_variant_or_404(variant)
     if err:
         return err
@@ -4621,13 +4622,14 @@ def admin_variant_save(variant):
         return bad("Warianty kart specjalnych ustawia się przy samych kartach")
     body = request.get_json(force=True) or {}
     settings = variant_settings_row(variant)
-    for k in ("enabled", "chance", "weight", "desc", "mult"):
+    for k in ("enabled", "chance", "weight", "desc", "mult", "noHouse"):
         if k in body:
             settings[k] = body[k]
     save_variant_settings(variant, settings)
     s = catalog.VARIANT_CFG[variant]
     log_admin("variant_save", details=f"{VARIANTS[variant]['name']}: {'włączony' if catalog.variant_enabled(variant) else 'wyłączony'}"
                                       f" · szansa {VARIANTS[variant]['chance'] * 100:.3g}% · wartość ×{VARIANTS[variant]['mult']:g}"
+                                      + (" · ekskluzywny (nie z kuźni ani kasyna)" if s["noHouse"] else "")
                                       + (f" · waga {s['weight']}" if s["weight"] is not None else ""))
     db().commit()
     return jsonify(admin_variant_json(variant))

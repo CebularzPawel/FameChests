@@ -39,7 +39,7 @@ function renderForge() {
 
 function contractVariantChance(specials) {
   // kontrakt nie daje wariantów wyjątkowych (Królewski, Flagowy) - te wypadają tylko ze skrzynek - ani wyłączonych
-  const base = S.cfg.variantOrder.filter(v => isSpecial(v) && !isExclusive(v) && variantOn(v)).reduce((a, v) => a + S.cfg.variants[v].chance, 0);
+  const base = S.cfg.variantOrder.filter(v => isSpecial(v) && houseVariant(v) && variantOn(v)).reduce((a, v) => a + S.cfg.variants[v].chance, 0);
   return Math.min(0.9, base * (1 + S.cfg.contractVariantBonus * specials));
 }
 

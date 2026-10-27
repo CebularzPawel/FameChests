@@ -86,14 +86,15 @@ def clean_variant_events(raw):
 
 
 def clean_variant_settings(v, raw):
-    """Ustawienia wariantu z panelu: {"enabled", "chance", "weight", "desc", "mult", "events"} - None = jak w kodzie (data.py).
-    "mult" - mnożnik wartości karty w tym wariancie (połączenia z warstwami przeliczają się w rebuild)."""
+    """Ustawienia wariantu z panelu: {"enabled", "chance", "weight", "desc", "mult", "noHouse", "events"} - None = jak w kodzie
+    (data.py). "mult" - mnożnik wartości karty w tym wariancie (połączenia z warstwami przeliczają się w rebuild).
+    "noHouse" - wariant ekskluzywny: nie wypada z kontraktu, ulepszacza ani wygranych w kasynie (tylko ze skrzynek)."""
     raw = raw if isinstance(raw, dict) else {}
     x = data.VARIANTS[v]
     out = {"enabled": raw["enabled"] if isinstance(raw.get("enabled"), bool) else None,
            # "released": wariant był już kiedyś włączony - nawet wyłączony zostaje w klaserze (gracze mogą mieć te karty)
            "released": bool(raw.get("released")) or raw.get("enabled") is True,
-           "chance": None, "weight": None, "mult": None,
+           "chance": None, "weight": None, "mult": None, "noHouse": bool(raw.get("noHouse")) and not x.get("special"),
            "desc": str(raw["desc"]).strip()[:300] if isinstance(raw.get("desc"), str) else None,
            "events": [] if x.get("special") else clean_variant_events(raw.get("events"))}
     if raw.get("chance") is not None and not x.get("always") and not x.get("special"):
@@ -191,10 +192,16 @@ def drop_variants(crate, person=None, now=None):
     return avail, boost
 
 
+def variant_house_ok(v):
+    """Czy wariant może dać kuźnia (kontrakt, ulepszacz) i kasyno - admin może go zablokować ("noHouse", strona /variants);
+    w połączeniu warstw (flag+gold) blokuje każda zablokowana warstwa."""
+    return not any(VARIANT_CFG.get(x, {}).get("noHouse") for x in v.split("+"))
+
+
 def base_variants():
-    """Warianty z kontraktu, cele ulepszacza i wygrane w kasynie: włączone, nie wyjątkowe."""
+    """Warianty z kontraktu, cele ulepszacza i wygrane w kasynie: włączone, nie wyjątkowe, nie zablokowane przez admina."""
     return [v for v in data.VARIANT_ORDER if _variant_fits(v, None) and not data.VARIANTS[v].get("exclusive")
-            and variant_enabled(v)]
+            and variant_enabled(v) and variant_house_ok(v)]
 
 
 def event_variants(person, now=None):
@@ -212,10 +219,11 @@ def variant_cfg_json(v, admin=False):
     if not admin:
         events = [e for e in events if e["start"] <= now]
         events = [e for e in events if e["end"] > now] or events[-1:]
-    out = {"enabled": variant_enabled(v), "released": bool(variant_released(v)), "events": events}
+    out = {"enabled": variant_enabled(v), "released": bool(variant_released(v)), "events": events,
+           "noHouse": not variant_house_ok(v)}
     if admin:
         cfg = VARIANT_CFG.get(v, {})
-        out.update(saved={k: cfg.get(k) for k in ("enabled", "chance", "weight", "desc", "mult")},
+        out.update(saved={k: cfg.get(k) for k in ("enabled", "chance", "weight", "desc", "mult", "noHouse")},
                    defaults=data.VARIANT_DEFAULTS.get(v), off=bool(data.VARIANTS[v].get("off")))
     return out
 

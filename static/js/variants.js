@@ -80,7 +80,7 @@ function vrSettingsHTML() {
     return vs.length ? `<div class="vr-group"><div class="vr-group-t">${title}</div>${vs.map(x => {
       const st = vrStatus(x);
       return `<button type="button" class="vr-item${x === v ? " active" : ""} st-${st.cls}" data-v="${x}">
-        <span class="vdot ${vtClass(x)}"></span><span class="vr-iname">${esc(vrV(x).name)}<small>×${String(vrV(x).mult).replace(".", ",")}</small></span>
+        <span class="vdot ${vtClass(x)}"></span><span class="vr-iname">${esc(vrV(x).name)}${vrCfg(x).noHouse ? ' <span title="Ekskluzywny: nie z kuźni ani kasyna">🔒</span>' : ""}<small>×${String(vrV(x).mult).replace(".", ",")}</small></span>
         <span class="vr-ist">${st.txt}${st.extra ? `<small>${st.extra}</small>` : ""}</span></button>`;
     }).join("")}</div>` : "";
   }).join("");
@@ -129,7 +129,7 @@ function vrFormHTML(v) {
   if (V.special) return `<h3 class="stk-h">${esc(V.name)}</h3><p class="muted">${esc(V.desc || "")}</p>
     <p class="muted small">Wariant kart specjalnych — nie wypada ze skrzynek. Wariant i wygląd karty specjalnej ustawiasz przy samej
       karcie w panelu admina. <a href="/mockups">Makiety kart specjalnych</a></p>`;
-  const changed = ["enabled", "chance", "weight", "desc", "mult"].some(k => saved[k] !== null && saved[k] !== undefined);
+  const changed = ["enabled", "chance", "weight", "desc", "mult"].some(k => saved[k] !== null && saved[k] !== undefined) || saved.noHouse;
   return `<form class="vr-form" id="vrForm" autocomplete="off">
     <h3 class="stk-h vr-title"><span class="vdot ${vtClass(v)}"></span>${esc(V.name)}</h3>
     <label class="vr-switch"><input type="checkbox" name="enabled"${cfg.enabled ? " checked" : ""}>
@@ -140,10 +140,12 @@ function vrFormHTML(v) {
           saved.chance != null ? +(saved.chance * 100).toFixed(5) : ""}" placeholder="${+(def.chance * 100).toFixed(5)}"></label>`}
     <label>Mnożnik wartości karty (×)<input type="number" name="mult" min="0.01" max="1000" step="any" value="${saved.mult ?? ""}" placeholder="${def.mult ?? V.mult}">
       <small class="muted">Wartość karty = wartość rzadkości × ten mnożnik (połączenia z flagą itp. — iloczyn). Zmienia wartość także kart, które gracze już mają.</small></label>
+    ${V.exclusive ? "" : `<label class="vr-switch"><input type="checkbox" name="noHouse"${saved.noHouse ? " checked" : ""}>
+      <span><b>🔒 Ekskluzywny</b><small class="muted">Wypada tylko ze skrzynek — nie da się go dostać z kuźni (kontrakt), ulepszacza ani wygranych w kasynie.</small></span></label>`}
     <div class="vr-facts">
       <span>Teraz: <b>${V.always ? `waga ${V.weight}` : vrPct(V.chance)}</b>${V.chance ? ` · 1 na ${Math.round(1 / V.chance).toLocaleString("pl-PL")} kart` : ""}</span>
       <span>Wartość: <b>×${String(V.mult).replace(".", ",")}</b>${def.mult != null && def.mult !== V.mult ? ` <small class="muted">(w kodzie ×${String(def.mult).replace(".", ",")})</small>` : ""}</span>
-      ${V.exclusive ? `<span>✨ Wyjątkowy — nie z kontraktu ani ulepszacza</span>` : ""}
+      ${V.exclusive ? `<span>✨ Wyjątkowy — nie z kontraktu ani ulepszacza</span>` : saved.noHouse ? `<span>🔒 Ekskluzywny — nie z kuźni ani kasyna</span>` : ""}
       ${V.layer ? `<span>🧅 Warstwa — łączy się z innymi wariantami${V.extraChance ? ` (${Math.round(V.extraChance * 100)}% kart)` : ""}</span>` : ""}
     </div>
     <label>Opis<textarea name="desc" rows="3" maxlength="300" placeholder="${esc(def.desc || "")}">${esc(saved.desc ?? "")}</textarea></label>
@@ -250,7 +252,7 @@ function vrApply(res) {
 async function vrSave(form) {
   const f = new FormData(form), V = vrV(VR.variant);
   const num = k => f.get(k) === null || f.get(k) === "" ? null : +String(f.get(k)).replace(",", ".");
-  const body = { enabled: form.enabled.checked, desc: f.get("desc").trim() || null, mult: num("mult") };
+  const body = { enabled: form.enabled.checked, desc: f.get("desc").trim() || null, mult: num("mult"), noHouse: !!form.noHouse?.checked };
   if (V.always) body.weight = num("weight");
   else body.chance = num("chance") === null ? null : num("chance") / 100;
   try {
@@ -336,7 +338,7 @@ function vrBind() {
     if (other) { Sound.click(); VR.pid = other.dataset.pid; return renderVariants(); }
     if (t.closest('[data-vr="defaults"]')) {
       if (!confirm(`Przywrócić ustawienia z kodu dla „${vrV(VR.variant).name}”? (wydarzenia zostają)`)) return;
-      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null })); toast("↩️ Przywrócono"); }
+      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null, noHouse: false })); toast("↩️ Przywrócono"); }
       catch (err) { toast(err.message, true); }
       return;
     }
