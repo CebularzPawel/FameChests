@@ -129,7 +129,20 @@ VARIANTS = {
     "moro":    {"name": "Moro",         "chance": 0.016, "mult": 5.0, "off": True,
                 "desc": "Leśne moro, ramka z oliwkowego płótna z przeszyciem i nieśmiertelniki z nazwą karty na łańcuszku."},
     "beer":    {"name": "Piwna",        "chance": 0.012, "mult": 6.5, "off": True,
-                "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."},
+                "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają. Każda karta to inne piwo - jasne, ciemne, pszeniczne, radler, miodowe…",
+                # podwarianty: wariant wypada jako jeden ("beer", ta sama szansa i wartość), a rodzaj piwa wynika z numeru
+                # egzemplarza karty (beerSub w app.js - ten sam egzemplarz zawsze to samo piwo); weight - jak często
+                "subs": [
+                    {"id": "jasne",      "name": "Jasne pełne",          "tag": "🍺 JASNE",       "label": "JASNE PEŁNE · 5,6%",            "weight": 30},
+                    {"id": "pszeniczne", "name": "Pszeniczne",           "tag": "🌾 PSZENICZNE",  "label": "PSZENICZNE NIEFILTROWANE · 5,2%", "weight": 14},
+                    {"id": "radler",     "name": "Radler cytrynowy",     "tag": "🍋 RADLER",      "label": "RADLER CYTRYNOWY · 2,0%",       "weight": 12},
+                    {"id": "miodowe",    "name": "Miodowe",              "tag": "🍯 MIODOWE",     "label": "MIODOWE · MIÓD GRYCZANY · 5,8%", "weight": 12},
+                    {"id": "ipa",        "name": "IPA",                  "tag": "🌿 IPA",         "label": "IPA · AMERYKAŃSKI CHMIEL · 6,2%", "weight": 10},
+                    {"id": "ciemne",     "name": "Ciemne (porter bałtycki)", "tag": "🍺 CIEMNE",  "label": "PORTER BAŁTYCKI · 9,0%",        "weight": 10},
+                    {"id": "kozlak",     "name": "Koźlak",               "tag": "🐐 KOŹLAK",      "label": "KOŹLAK · 7,1%",                 "weight": 5},
+                    {"id": "wisniowe",   "name": "Wiśniowe",             "tag": "🍒 WIŚNIOWE",    "label": "WIŚNIOWE · 4,5%",               "weight": 5},
+                    {"id": "zero",       "name": "Bezalkoholowe 0,0%",   "tag": "🚗 0,0%",        "label": "BEZALKOHOLOWE · 0,0%",          "weight": 2},
+                ]},
     "electric": {"name": "Elektryczna", "chance": 0.006, "mult": 10.0, "off": True,
                 "desc": "Burzowe niebo z deszczem: co chwilę uderza piorun z odgałęzieniami, a cała karta na moment się rozjaśnia."},
     "synthwave": {"name": "Synthwave",  "chance": 0.005, "mult": 11.5, "off": True,
