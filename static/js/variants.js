@@ -322,7 +322,8 @@ function vrProposalCard(g, i, pid = person(g.pid) && !person(g.pid).masked ? g.p
   card.classList.remove("v-normal");
   card.classList.add("vm", `vm-${g.key}`, `vm-${g.key}-${i + 1}`, ...(l.cls ? l.cls.split(" ") : []));   // cls: wygląd pożyczony z wariantu
   const p = person(pid);
-  card.querySelector(".shine")?.insertAdjacentHTML("beforebegin", `${l.deco ? l.deco(p) : ""}<div class="var-tag vm-tag">${l.tag || g.tag}</div>`);
+  const stk = g.stickers ? stickersHTML(g.stickers, stickerList(g.stickers, p)) : "";   // naklejki prawdziwego wariantu (/stickers)
+  card.querySelector(".shine")?.insertAdjacentHTML("beforebegin", `${l.deco ? l.deco(p) : ""}${stk}<div class="var-tag vm-tag">${l.tag || g.tag}</div>`);
   if (l.bg) card.querySelector(".card-inner").insertAdjacentHTML("afterbegin", l.bg(p));
   if (l.photo) card.querySelector(".card-photo").insertAdjacentHTML("beforeend", l.photo(p));
   if (l.sub) card.querySelector(".card-sub").innerHTML = l.sub(p);

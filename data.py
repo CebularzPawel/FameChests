@@ -177,6 +177,9 @@ VARIANTS = {
                 "desc": "Retro kosmos: w tle prawdziwy film z Apollo 11, złoto-srebrna klisza, krzyżyki pomiarowe na zdjęciu i zegar misji nad nazwą."},
     "usa":     {"name": "Amerykańska",  "chance": 0.006, "mult": 9.0, "off": True,
                 "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."},
+    # wyjątkowy wariant Skrzynki PRL (jak MLG / Halloweenowe w swoich skrzynkach) - z naklejkami od admina (/stickers)
+    "komuna":  {"name": "Komunistyczna", "chance": 0.006, "mult": 11.0, "exclusive": True, "off": True, "stickers": True,
+                "desc": "Plakat propagandowy z PRL: czerwone promienie z prawego rogu, czarny ukośny pas, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, złota gwiazda i hasło."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
     # 1 na 2 137 000 skrzynek - Rzulty ma być trochę rzadszy: 1 na 2 137 420 (szansa na wariant przy wypadnięciu JP2).
     # Może mieć własne zdjęcie (panel admina, edycja karty).
@@ -282,7 +285,7 @@ def card_variants(pid):
     return [v for v, x in VARIANTS.items() if pid in (x.get("cards") or [])]
 # domyślne warianty wyjątkowe skrzynek - dopóki admin nie zapisze w panelu własnego wyboru (skrzynka bez "variantsAll"
 # dostaje do nich jeszcze włączone zwykłe warianty - catalog.chosen_crate_variants)
-DEFAULT_CRATE_VARIANTS ={"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"]}
+DEFAULT_CRATE_VARIANTS ={"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"], "prl": ["komuna"]}
 # wbudowane skrzynki dodane po tym, jak admini zaczęli edytować karty (catalog.rebuild dopisuje ich karty "shared"
 # także do kart zapisanych wcześniej w panelu)
 CRATES_ADDED_LATER = {"halloween"}

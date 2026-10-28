@@ -23,74 +23,73 @@ const vmId = p => `${p}${++vmIdN}`;
 
 // ---------------------------------------------------------------- PROPOZYCJE
 
-// ---------------------------------------------------------------- KOMUNISTYCZNA (nazwa robocza) - runda 2
-// Wariant wyjątkowy Skrzynki PRL (jak MLG i Halloweenowe w swoich skrzynkach): wypada tylko z niej, nie z kuźni ani kasyna.
-// Wybrany z rundy 1 plakat propagandowy, rozwinięty w sześć kierunków - wszystko statyczne (bez obracających się promieni),
-// jak druk z jednej-dwóch farb. Pokazane na karcie z tej skrzynki (pid). Klasy z prefiksem km-.
+// ---------------------------------------------------------------- KOMUNISTYCZNA - runda 3
+// Prawdziwy wariant `komuna` jest już w grze (wyłączony, z naklejkami jak MLG, wygląd = makieta 1). Makiety łączą
+// wybrane z rundy 2: czysty plakat z promieniami (1.) i stary plakat na murze (6.) - promienie wychodzą teraz z prawej
+// strony, wszystko statyczne. Naklejki naklejone na wariant Komunistyczna (/stickers) widać też na makietach (stickers).
+// Pokazane na karcie ze Skrzynki PRL (pid). Klasy z prefiksem km-.
 
 const kmStar = (fill = "currentColor") => vmSvg(vmStar(10, 10.6, 9.6, fill), "0 0 20 20", "", "xMidYMid meet");
-// promienie z jednego punktu (x, y w % karty), co "step" stopni - statyczne
-const kmRays = (x, y, a = "#ff3b30", b = "#b30e16", step = 6) =>
+// nieruchome promienie z punktu (x, y w % karty), co "step" stopni
+const kmRays = (x = 108, y = 96, a = "#ff3b30", b = "#b30e16", step = 6) =>
   `<i class="km-rays" style="--x:${x}%;--y:${y}%;--a:${a};--b:${b};--s:${step}deg"></i>`;
-// sylwetka fabryki: kominy, hala z szedami, dźwig (jednostki karty 63 x 88, linia ziemi y = 60 + 7 = w pasie pod zdjęciem)
-const kmFactory = (c = "#111") => vmSvg(`<g transform="translate(0 7)"><g fill="${c}">
-  <path d="M0 60 V50 L5 46 V50 L10 46 V50 L15 46 V50 L20 46 V60 Z"/>
-  <rect x="22" y="36" width="2.6" height="24"/><rect x="27" y="30" width="3" height="30"/><rect x="33" y="40" width="2.4" height="20"/>
-  <path d="M21 60 V52 H40 V60 Z"/><path d="M40 60 V44 H50 V60 Z"/>
-  <path d="M50 60 V54 H63 V60 Z"/><path d="M52 54 V34 H53.2 V54 Z M52.6 34 H63 V35.2 H52.6 Z M61 35.2 V41 H61.8 V35.2 Z"/>
-  </g><g fill="${c}" opacity=".35"><circle cx="25" cy="33" r="2.4"/><circle cx="27" cy="29.5" r="3"/><circle cx="30" cy="25.5" r="3.6"/>
-  <circle cx="29" cy="27" r="2.6"/><circle cx="34" cy="37.5" r="2"/><circle cx="36" cy="34.5" r="2.6"/></g></g>`, "0 0 63 88", "km-factory");
+// plakat: promienie z prawej, czarny pas, ziarno papieru / zdjęcie w czerwonej farbie / margines i gwiazda
+const kmPoster = (rays = kmRays()) => `<div class="vm-bg">${rays}<i class="km-band"></i><i class="km-paper"></i></div>`;
+const kmInk = () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>';
+const kmFrame = (extra = "") => `<div class="vm-deco"><i class="km-margin"></i><i class="km-star">${kmStar()}</i>${extra}</div>`;
+// zniszczenia: zagięcia na krzyż, plamy, taśma w rogach
+const kmFold = () => '<i class="km-fold"></i>';
+const kmStains = () => '<i class="km-stain"></i>';
+const kmTape = (corners = ["tl", "tr", "bl", "br"]) => corners.map(c => `<i class="km-tape ${c}"></i>`).join("");
 
 const VM_KOMUNA = {
-  key: "komuna", icon: "☭", name: "Komunistyczna (nazwa robocza)", tag: "★ PRL ★", pid: "prl_bareja",
-  about: "runda 2: wybrany plakat propagandowy w sześciu wersjach - wszystko statyczne, jak druk na papierze",
+  key: "komuna", icon: "☭", name: "Komunistyczna", tag: "★ PRL ★", pid: "prl_bareja", stickers: "komuna",
+  about: "runda 3: połączenie czystego plakatu (1.) i starego plakatu na murze (6.), promienie z prawej; prawdziwy wariant już jest w grze (wyłączony) - naklejki dodane na /stickers widać też tutaj",
   looks: [
     {
-      name: "Plakat z promieniami",
-      desc: "Jak 1. z poprzedniej rundy, ale nieruchomy i bardziej jak druk: nieruchome czerwone promienie z dolnego rogu, czarny ukośny pas, biały margines papieru dookoła, lekkie ziarno farby, zdjęcie w czerwieni i czerni z przesuniętą farbą, złota gwiazda na rogu zdjęcia.",
-      bg: () => `<div class="vm-bg">${kmRays(-8, 96)}<i class="km1-band"></i><i class="km-paper"></i></div>`,
-      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>',
-      deco: () => `<div class="vm-deco"><i class="km-margin"></i><i class="km1-star">${kmStar()}</i></div>`,
+      name: "Czysty plakat (jak w grze)",
+      desc: "Tak wygląda prawdziwy wariant: nieruchome czerwone promienie z prawego dolnego rogu, czarny pas opadający w lewo, kremowy margines papieru, zdjęcie w czerwonej farbie z lekko przesuniętą drugą warstwą, złota gwiazda na lewym rogu zdjęcia.",
+      bg: () => kmPoster(), photo: kmInk, deco: () => kmFrame(),
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Czerwony klin",
-      desc: "Konstruktywizm jak u El Lissitzky'ego: kremowy papier, czerwony klin wbija się w czarne koło w pasie pod zdjęciem, ukośne cienkie linie, nazwa czerwonymi literami na kremowym tle, czarne panele.",
-      bg: () => '<div class="vm-bg"><i class="km2-paper"></i><i class="km2-circle"></i><i class="km2-wedge"></i><i class="km2-lines"></i></div>',
-      photo: () => '<i class="vm-photo km2-half"></i>',
-      deco: () => '<div class="vm-deco"><i class="km2-bar"></i></div>',
-      sub: () => "CZERWONYM KLINEM BIJ BIAŁYCH!",
+      name: "Wyblakły na murze",
+      desc: "Ten sam plakat po latach na murze: wypłowiałe kolory, zagięcia papieru na krzyż, zacieki i przetarcia, wszystkie rogi przyklejone pożółkłą taśmą.",
+      bg: () => kmPoster(), photo: kmInk, deco: () => kmFrame(kmFold() + kmStains() + kmTape()),
+      cls: "km-faded",
+      sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Hasło na całą kartę",
-      desc: "Ogromne hasło „NAPRZÓD!” wydrukowane kremową farbą na czerwonym tle, przekrzywione za zdjęciem (widać je przy brzegach i pod zdjęciem), zdjęcie z rastra kropek jak w gazecie, czarne panele z kremowym tekstem.",
-      bg: () => '<div class="vm-bg"><i class="km3-word a">NAPRZÓD!</i><i class="km3-word b">NAPRZÓD!</i><i class="km3-word c">NAPRZÓD!</i><i class="km-paper"></i></div>',
-      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km3-dots"></i>',
-      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
-      sub: () => "PLAN SZEŚCIOLETNI WYKONAMY!",
+      name: "Zdarty róg",
+      desc: "Plakat prawie jak nowy, ale prawy górny róg ktoś oderwał - spod spodu widać ceglany mur, a kawałek papieru zawija się do środka. Lekkie zagięcia, taśma tylko na dole.",
+      bg: () => kmPoster(), photo: kmInk,
+      deco: () => kmFrame(kmFold() + kmTape(["bl", "br"]) + '<i class="km-brick"></i><i class="km-curl"></i>'),
+      cls: "km-light",
+      sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Fabryka o świcie",
-      desc: "Socrealistyczny plakat: nad fabryką z kominami i dźwigiem wschodzi słońce z nieruchomymi promieniami (żółć i czerwień), fabryka jako czarna sylwetka w pasie pod zdjęciem, dym z kominów, zdjęcie w ciepłej sepii z czerwienią.",
-      bg: () => `<div class="vm-bg">${kmRays(50, 72, "#ffd24a", "#f39a1e", 7.5)}<i class="km4-sun"></i>${kmFactory("#1a0c08")}<i class="km4-ground"></i><i class="km-paper"></i></div>`,
-      photo: () => '<i class="vm-photo km4-warm"></i>',
-      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
-      sub: () => "PRACA · POKÓJ · SOCJALIZM",
+      name: "Strzępy innych plakatów",
+      desc: "Plakat na tablicy ogłoszeń: przy brzegach przyklejone strzępy zerwanych plakatów (krem, błękit, żółć) z poszarpanymi krawędziami, pod papierem bąble kleju.",
+      bg: () => kmPoster(), photo: kmInk,
+      deco: () => kmFrame('<i class="km-under a"></i><i class="km-under b"></i><i class="km-under c"></i><i class="km-glue"></i>'),
+      cls: "km-light",
+      sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Pierwszy Maja",
-      desc: "Plakat na Święto Pracy w biało-czerwonym: tło przecięte po skosie na biel i czerwień, pod zdjęciem wielki biały napis „1 MAJA” z czarnym konturem i rząd białych gwiazd, zdjęcie czarno-białe, nazwa czarna na białym pasku.",
-      bg: () => `<div class="vm-bg"><i class="km5-split"></i><i class="km5-one">1 MAJA</i><i class="km5-stars">${[0, 1, 2, 3, 4].map(k => `<b style="--k:${k}">${kmStar()}</b>`).join("")}</i><i class="km-paper"></i></div>`,
-      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
-      sub: () => "1 MAJA · ŚWIĘTO PRACY",
+      name: "Promienie z gwiazdy",
+      desc: "Promienie wychodzą z wielkiej złotej gwiazdy przy prawej krawędzi pod zdjęciem - to ona jest źródłem światła; czarny pas pod nią, lekko wyblakły papier z zagięciami.",
+      bg: () => `<div class="vm-bg">${kmRays(92, 66)}<i class="km-band low"></i><i class="km-bigstar">${kmStar()}</i><i class="km-paper"></i></div>`,
+      photo: kmInk, deco: () => `<div class="vm-deco"><i class="km-margin"></i>${kmFold()}</div>`,
+      cls: "km-light km-short",
+      sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Stary plakat na murze",
-      desc: "Plakat z promieniami po latach na murze: wyblakłe kolory, zagięcia papieru na krzyż, plamy i przetarcia, rogi przyklejone taśmą, rysy - cały wygląd 1. wersji, ale zniszczony.",
-      bg: () => `<div class="vm-bg">${kmRays(-8, 96)}<i class="km1-band"></i><i class="km-paper"></i></div>`,
-      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>',
-      deco: () => `<div class="vm-deco"><i class="km-margin"></i><i class="km1-star">${kmStar()}</i><i class="km6-fold"></i><i class="km6-stain"></i>${
-        ["tl", "tr", "bl", "br"].map(c => `<i class="km6-tape ${c}"></i>`).join("")}</div>`,
+      name: "Przetarty sitodruk",
+      desc: "Druk z dwóch matryc, które się rozjechały: promienie z prawej jako rastrowe paski, czarna farba przesunięta względem czerwonej (nazwa i pas z cieniem obok), przetarcia na brzegach i jedno zagięcie.",
+      bg: () => `${kmPoster(kmRays())}`,
+      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset big"></i><i class="vm-photo km-raster"></i>',
+      deco: () => kmFrame('<i class="km-scuff"></i><i class="km-fold one"></i>'),
+      cls: "km-misreg",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
   ],

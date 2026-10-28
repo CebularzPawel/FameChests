@@ -54,6 +54,7 @@
 .avv-candy img { filter: saturate(1.15) brightness(1.04); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ff5aa8 !important; }
 .avv-reflective img { filter: saturate(1.1) brightness(1.05); box-shadow: 0 0 0 2px #e6ff2a, 0 0 10px #e6ff2a !important; }
 .avv-apollo img { filter: grayscale(1) sepia(.2) contrast(1.2); box-shadow: 0 0 0 2px #e8c870, 0 0 0 4px #05070a !important; }
+.avv-komuna img { filter: grayscale(1) contrast(1.5) sepia(1) hue-rotate(-30deg) saturate(3); box-shadow: 0 0 0 2px #d4161f, 0 0 0 4px #111 !important; }
 .avv-usa img { filter: grayscale(1) contrast(1.4); box-shadow: 0 0 0 2px #f2f2f2, 0 0 0 4px #111 !important; }
 .avv-noir img { filter: grayscale(1) contrast(1.4) brightness(.92); box-shadow: 0 0 0 2px #e8e8e8, 0 0 0 4px #000 !important; }
 .avv-neon img { filter: grayscale(1) contrast(1.6) brightness(.7) sepia(1) hue-rotate(260deg) saturate(5); box-shadow: 0 0 0 2px #ff3df0, 0 0 10px #ff3df0, 0 0 16px #3de0ff !important; }
@@ -86,7 +87,7 @@
 .av-vname.vt-pixel { color: #9fb6ff; } .av-vname.vt-popart { color: #ffe100; } .av-vname.vt-glass { color: #8ac0c0; } .av-vname.vt-thermal { color: #ffb347; }
 .av-vname.vt-blueprint { color: #9ac8ff; } .av-vname.vt-glitch { color: #00e5ff; } .av-vname.vt-mosaic { color: #f2cd37; } .av-vname.vt-noir { color: #e8e8e8; }
 .av-vname.vt-chocolate { color: #e8b27a; } .av-vname.vt-candy { color: #ff8ac4; } .av-vname.vt-hollywood { color: #ffb35a; } .av-vname.vt-cobalt { color: #7ac8ff; } .av-vname.vt-banana { color: #ffd93a; } .av-vname.vt-files { color: #e2c88a; } .av-vname.vt-copper { color: #f0a46a; } .av-vname.vt-uranium { color: #8aff4a; }
-.av-vname.vt-mercury { color: #dfe4ea; } .av-vname.vt-californium { color: #f4f6fa; } .av-vname.vt-reflective { color: #e6ff2a; } .av-vname.vt-usa { color: #f2f2f2; } .av-vname.vt-apollo { color: #f2d27a; }
+.av-vname.vt-mercury { color: #dfe4ea; } .av-vname.vt-californium { color: #f4f6fa; } .av-vname.vt-reflective { color: #e6ff2a; } .av-vname.vt-usa { color: #f2f2f2; } .av-vname.vt-komuna { color: #ff4a4a; } .av-vname.vt-apollo { color: #f2d27a; }
 .av-vname.vt-clear { color: #e0f7ff; } .av-vname.vt-negative { color: #000; background: #fff; }
 .av-vname.vt-holo { color: #ff9ff3; } .av-vname.vt-reverse { color: #c9d6ff; } .av-vname.vt-bw { color: #fff; }
 

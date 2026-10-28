@@ -545,6 +545,15 @@
    "off": true,
    "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."
   },
+  "komuna": {
+   "name": "Komunistyczna",
+   "chance": 0.006,
+   "mult": 11.0,
+   "exclusive": true,
+   "off": true,
+   "stickers": true,
+   "desc": "Plakat propagandowy z PRL: czerwone promienie z prawego rogu, czarny ukośny pas, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, złota gwiazda i hasło."
+  },
   "rzulty": {
    "name": "Rzulty",
    "chance": 0.000999803501417597,
@@ -598,6 +607,9 @@
    "halloween",
    "lantern",
    "devil"
+  ],
+  "prl": [
+   "komuna"
   ]
  },
  "cratesAddedLater": [
