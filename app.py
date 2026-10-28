@@ -716,6 +716,19 @@ def has_access(crate_id, user_id=None):
                         (user_id or uid(), crate_id)).fetchone() is not None
 
 
+def released_crates():
+    """Skrzynki, które są albo były kiedyś w sklepie (klucze crate_released:<id> w tabeli state) - klaser i filtr ekwipunku
+    pokazują tylko je, żeby nie zdradzać skrzynek, których jeszcze nie było. Skrzynki w sklepie dopisuje tu przy okazji."""
+    conn = db()
+    seen = {r[0].split(":", 1)[1] for r in conn.execute("SELECT key FROM state WHERE key LIKE 'crate_released:%'")}
+    new = [cid for cid, c in catalog.CRATES.items() if c["shop"] and cid not in seen]
+    for cid in new:
+        conn.execute("INSERT INTO state (key, value) VALUES (?, 1) ON CONFLICT DO NOTHING", (f"crate_released:{cid}",))
+    if new:
+        conn.commit()
+    return seen | set(new)
+
+
 def can_buy(crate):
     """Czy zalogowany gracz może KUPIĆ tę skrzynkę (otwieranie posiadanych skrzynek jest zawsze możliwe)."""
     if crate.get("special"):   # skrzynka kart specjalnych - nie da się jej kupić (nawet adminowi)
@@ -1285,7 +1298,7 @@ def crate_json(c):
 @app.get("/api/config")
 @login_required
 def config():
-    found = discovered()
+    found, released = discovered(), released_crates()
     return jsonify({
         "rarities": RARITIES,
         "rarityOrder": RARITY_ORDER,
@@ -1299,7 +1312,9 @@ def config():
         "arena": {"rules": ARENA, "effects": ARENA_EFFECTS, "visuals": ARENA_VISUALS, "targets": ARENA_TARGETS,
                   "effectTargets": ARENA_EFFECT_TARGETS} if current_user()["is_admin"] else None,
         "people": {pid: public_person(p, found) for pid, p in catalog.PEOPLE.items()},
-        "crates": {cid: crate_json(c) | {"canBuy": can_buy(c)} for cid, c in catalog.CRATES.items()},
+        # released - skrzynka jest / była w sklepie (albo to skrzynka kart specjalnych) - tylko takie widać w klaserze
+        "crates": {cid: crate_json(c) | {"canBuy": can_buy(c), "released": cid in released or bool(c.get("special"))}
+                   for cid, c in catalog.CRATES.items()},
         "crateOrder": list(catalog.CRATES),
         "maxOpen": MAX_OPEN,
         "startingBalance": STARTING_BALANCE,

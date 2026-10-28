@@ -243,6 +243,9 @@ function person(id) { return S.cfg.people[id]; }
 function isSpecialCard(p) { p = typeof p === "string" ? person(p) : p; return p?.rarity === "special"; }
 function crateOf(id) { return S.cfg.crates[id]; }
 function crateList() { return S.cfg.crateOrder.map(id => S.cfg.crates[id]); }
+// skrzynki, które są albo były już w sklepie (i skrzynka kart specjalnych) - klaser i filtr ekwipunku nie zdradzają
+// skrzynek, których jeszcze nie było (serwer: released_crates)
+function seenCrateList() { return crateList().filter(c => c.released !== false); }
 function isSpecial(v) { return !!v && v !== "normal"; }
 function variantName(v) { return S.cfg.variants[v || "normal"].name; }
 function cardValue(pid, v = "normal") {
@@ -2302,7 +2305,9 @@ function binderHTML(crate, owned, spread, { mine = true } = {}) {
 }
 
 function renderBinder() {
-  $("#binderSeg").innerHTML = crateList().map(c =>
+  const crates = seenCrateList();
+  if (!crates.some(c => c.id === S.binderCrate)) { S.binderCrate = crates[0]?.id; S.spread = 0; }
+  $("#binderSeg").innerHTML = crates.map(c =>
     `<button data-crate="${c.id}" class="${S.binderCrate === c.id ? "active" : ""}">${esc(c.emoji)} ${esc(c.short)}</button>`).join("");
   const crate = crateOf(S.binderCrate);
   if (!crate) { $("#binder").innerHTML = ""; return; }
@@ -2435,7 +2440,7 @@ function renderInventory() {
   renderChestShelf();
   const f = S.inv;
   const inCrate = id => S.items.filter(i => { const p = person(i.person); return (p.crates || [p.crate]).includes(id); }).length;
-  $("#invCrateSeg").innerHTML = [["all", "Wszystkie", S.items.length], ...crateList().map(c => [c.id, `${c.emoji} ${c.short}`, inCrate(c.id)])]
+  $("#invCrateSeg").innerHTML = [["all", "Wszystkie", S.items.length], ...seenCrateList().map(c => [c.id, `${c.emoji} ${c.short}`, inCrate(c.id)])]
     .map(([id, n, count]) => `<button data-crate="${id}" class="${f.crate === id ? "active" : ""}">${esc(n)} <small>${count}</small></button>`).join("");
   $("#invRarity").innerHTML = S.cfg.rarityOrder.map(r =>
     `<button class="rf rf-${r}${f.rarities.has(r) ? " active" : ""}" data-r="${r}" style="--rc:${S.cfg.rarities[r].color}"><i></i>${S.cfg.rarities[r].name}</button>`).join("");

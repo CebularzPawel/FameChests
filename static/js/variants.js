@@ -304,7 +304,7 @@ async function vrAddEvent(form) {
 
 function vrProposalsHTML() {
   const groups = typeof VARIANT_PROPOSALS === "undefined" ? [] : VARIANT_PROPOSALS;
-  return `<p class="muted vr-prop-intro">Makiety nowych wariantów na karcie ${esc(person(VR.pid)?.name || "")} — kliknij kartę, żeby ją powiększyć.
+  return `<p class="muted vr-prop-intro">Makiety nowych wariantów (na karcie ${esc(person(VR.pid)?.name || "")} albo na karcie ze skrzynki wariantu) — kliknij kartę, żeby ją powiększyć.
     Wybierz po jednej (albo połączenie kilku), a zrobię z nich prawdziwe warianty — na początku wyłączone, włączycie je tutaj.</p>
     ${groups.map(g => `<section class="panel mock-sec vr-prop" id="prop-${g.key}">
       <h3>${g.icon} ${esc(g.name)} <small class="muted">— ${esc(g.about)}</small></h3>
@@ -315,7 +315,7 @@ function vrProposalsHTML() {
 }
 
 // karta w makiecie: zwykła karta + klasy wyglądu (vm-<wariant> vm-<wariant>-<nr>) i ozdoby z makiety
-function vrProposalCard(g, i, pid = VR.pid) {
+function vrProposalCard(g, i, pid = person(g.pid) && !person(g.pid).masked ? g.pid : VR.pid) {
   const l = g.looks[i], box = document.createElement("div");
   box.innerHTML = cardHTML(pid, "normal");
   const card = box.firstElementChild;

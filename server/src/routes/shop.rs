@@ -46,6 +46,27 @@ pub struct ShopCrate {
     #[serde(flatten)]
     info: CrateJson,
     can_buy: bool,
+    /// skrzynka jest / była w sklepie (albo to skrzynka kart specjalnych) - tylko takie widać w klaserze
+    released: bool,
+}
+
+/// Skrzynki, które są albo były kiedyś w sklepie (klucze crate_released:<id> w tabeli state, jak released_crates
+/// w app.py); skrzynki w sklepie dopisuje przy okazji.
+async fn released_crates(c: &mut Conn, cat: &Catalog) -> sqlx::Result<HashSet<String>> {
+    let keys: Vec<String> = sqlx::query_scalar::<_, String>("SELECT key FROM state WHERE key LIKE 'crate_released:%'")
+        .fetch_all(&mut *c)
+        .await?;
+    let mut seen: HashSet<String> = keys.iter().filter_map(|k| k.split_once(':').map(|(_, id)| id.to_owned())).collect();
+    for (cid, cr) in &cat.crates {
+        if cr.shop && !seen.contains(cid) {
+            sqlx::query("INSERT INTO state (key, value) VALUES ($1, 1) ON CONFLICT DO NOTHING")
+                .bind(format!("crate_released:{cid}"))
+                .execute(&mut *c)
+                .await?;
+            seen.insert(cid.clone());
+        }
+    }
+    Ok(seen)
 }
 
 /// Wszystko, czego przeglądarka potrzebuje na start: zasady gry, karty, skrzynki
@@ -93,6 +114,7 @@ pub async fn config(State(st): State<AppState>, Me(me): Me) -> Res {
     let g: &'static GameData = g();
     let mut c = cx.st.db.acquire().await?;
     let found = discovered(&mut c, cx.uid()).await?;
+    let released = released_crates(&mut c, &cx.cat).await?;
     let people = cx
         .cat
         .people
@@ -101,7 +123,14 @@ pub async fn config(State(st): State<AppState>, Me(me): Me) -> Res {
         .collect();
     let mut crates = IndexMap::new();
     for (cid, cr) in &cx.cat.crates {
-        crates.insert(cid.clone(), ShopCrate { info: CrateJson::new(&cx.cat, cr), can_buy: can_buy(&mut c, &cx.me, cr).await? });
+        crates.insert(
+            cid.clone(),
+            ShopCrate {
+                info: CrateJson::new(&cx.cat, cr),
+                can_buy: can_buy(&mut c, &cx.me, cr).await?,
+                released: cr.special || released.contains(cid),
+            },
+        );
     }
     let arena = cx.me.admin().then(|| {
         json!({"rules": g.arena_json, "effects": g.arena_effects_json, "visuals": g.arena_visuals,
