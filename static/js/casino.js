@@ -794,7 +794,7 @@ function bindCasino() {
     if (won) {
       const last = won.closest(".bj-won") ? CS.bj.end : CS.tab === "slots" ? SL.last : CS.last;
       const it = [last?.special, ...(last?.items || [])].find(i => i?.id === +won.dataset.id);
-      if (it) openViewer(it.person, it.variant);
+      if (it) openViewer(it.person, it.variant, it.id);
       return;
     }
     const pick = t.closest(".cs-grid .pick");

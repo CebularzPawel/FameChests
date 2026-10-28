@@ -202,7 +202,7 @@ function showBulkResults(got, stake) {
       <h3>📜 ${got.length} ${plural(got.length, "kontrakt", "kontrakty", "kontraktów")}</h3>
       <p class="muted">Oddane karty: ${fmt(stake)} → otrzymane: <b>${fmt(gain)}</b></p>
       <div class="bulk-grid">${sorted.map((it, k) => `<div class="bulk-card${isSpecial(it.variant) ? " special" : ""}" style="animation-delay:${Math.min(k, 30) * 70}ms">
-        ${cardHTML(it.person, it.variant)}</div>`).join("")}</div>
+        ${cardHTML(it.person, it.variant, it.id)}</div>`).join("")}</div>
       <div class="daily-actions">
         <button class="btn sell" data-bulk-sell>💰 Sprzedaj wszystkie (${fmt(gain)})</button>
         <button class="btn primary" data-close>✔ Odbierz</button></div>
@@ -262,7 +262,7 @@ async function runContract() {
     <canvas class="fa-canvas"></canvas>
     <div class="fa-title">📜 KONTRAKT</div>
     <div class="fa-orb"></div>
-    <div class="fa-ring">${items.map(i => `<div class="fa-card">${cardHTML(i.person, i.variant)}</div>`).join("")}</div>
+    <div class="fa-ring">${items.map(i => `<div class="fa-card">${cardHTML(i.person, i.variant, i.id)}</div>`).join("")}</div>
     <div class="fa-reel reel" hidden><div class="strip fa-strip"></div><div class="reel-marker"></div></div>
     <div class="fa-result" hidden></div>
     <div class="flash fa-flash"></div>`;

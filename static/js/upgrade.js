@@ -205,7 +205,7 @@ function bindUpgrader() {
     const t = e.target;
     if (UPG.busy) {   // podgląd wygranej karty
       const c = t.closest("#upgResult .card");
-      if (c) openViewer(c.dataset.pid, c.dataset.variant);
+      if (c) openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid);
       return;
     }
     const pick = t.closest(".upg-mine .pick");

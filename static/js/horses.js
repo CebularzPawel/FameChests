@@ -832,7 +832,7 @@ function bindHorses() {
     const won = t.closest(".hr-left .rl-won .pick");
     if (won) {
       const it = [HR.last?.special, ...(HR.last?.items || [])].find(i => i?.id === +won.dataset.id);
-      if (it) openViewer(it.person, it.variant);
+      if (it) openViewer(it.person, it.variant, it.id);
     }
   });
 }

@@ -275,7 +275,7 @@ function crateStyle(c) {
 // ================================================================ KARTA
 
 // efekty wariantu na karcie - połączony wariant (np. flag+gold) dostaje efekty obu warstw i dwie plakietki
-function variantLayers(v, p = null) {
+function variantLayers(v, p = null, sub = null) {
   const parts = variantParts(v).filter(isSpecial);
   let html = "";
   for (const x of parts) {
@@ -305,9 +305,21 @@ function variantLayers(v, p = null) {
     const cls = `var-tag vt-${x}${i ? " vt-second" : ""}`;
     html += x === "flag" && p?.country
       ? `<div class="${cls}"><img src="${flagUrl(p.country)}" alt="">${esc(p.country.toUpperCase())}</div>`
-      : `<div class="${cls}">${VARIANT_TAGS[x] ?? esc(cvOf(x)?.tag || variantName(x))}</div>`;
+      : `<div class="${cls}">${x === "beer" && sub ? esc(sub.tag) : VARIANT_TAGS[x] ?? esc(cvOf(x)?.tag || variantName(x))}</div>`;
   });
   return html;
+}
+// Piwna: podwariant (rodzaj piwa, VARIANTS.beer.subs w data.py) wynika z numeru egzemplarza karty - wariant wypada jako
+// jeden, a ten sam egzemplarz jest zawsze tym samym piwem (losowanie wg "weight" z mieszanki bitów numeru). Bez numeru
+// (klaser, podgląd z listy kart) - null: ogólna Piwna w kolorach jasnego piwa.
+function beerSub(variant, uid) {
+  const subs = S.cfg.variants.beer?.subs;
+  if (uid == null || uid === "" || !subs?.length || !variantParts(variant).includes("beer")) return null;
+  let h = Math.imul((+uid >>> 0) ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;   // >>> 0 - bez tego wynik bywa ujemny
+  let r = h % subs.reduce((a, s) => a + s.weight, 0);
+  return subs.find(s => (r -= s.weight) < 0) || subs[0];
 }
 
 // Galaktyczna: ruchome tło kosmosu w środku karty (pod napisami i zdjęciem) - trzy mgławice i dwie warstwy gwiazd
@@ -783,11 +795,11 @@ function brFoam(y, c1 = "#fffdf6", c2 = "#efe0b8", ring = "#d9c79a") {
   const g = vxId("brFoam");
   let d = `M-3 -3 H66 V${y}`;
   for (let x = 66; x > -3;) { const w = rand(1.6, 3.4); d += ` Q${(x - w / 2).toFixed(1)} ${(y + rand(.9, 2.4)).toFixed(1)} ${(x - w).toFixed(1)} ${(y + rand(-.4, .5)).toFixed(1)}`; x -= w; }
-  let s = `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".7" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+  let s = `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--br-f1, ${c1})"/><stop offset=".7" style="stop-color:var(--br-f1, ${c1})"/><stop offset="1" style="stop-color:var(--br-f2, ${c2})"/></linearGradient></defs>
     <path d="${d} Z" fill="url(#${g})"/>`;
   for (let k = 0; k < 80; k++) {
     const x = rand(-1, 64), yy = rand(-1, y + 1.5), r = rand(.2, .9) * (yy > y - 2.5 ? 1.5 : 1);
-    s += `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(2)}" fill="none" stroke="${ring}" stroke-width=".14" opacity=".75"/>`;
+    s += `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(2)}" fill="none" style="stroke:var(--br-ring, ${ring})" stroke-width=".14" opacity=".75"/>`;
     if (r > .5) s += `<circle cx="${(x - r * .35).toFixed(1)}" cy="${(yy - r * .35).toFixed(1)}" r="${(r * .22).toFixed(2)}" fill="#fff"/>`;
   }
   for (let k = 0; k < 9; k++) {
@@ -1218,8 +1230,9 @@ function flagStyle(p, variant) { return variantParts(variant).includes("flag") &
 // własne napisy na karcie z panelu admina (pole "texts", karty specjalne): T(miejsce, zwykły tekst w HTML)
 function cardTexts(p) { return (k, html) => p.texts?.[k] != null ? esc(p.texts[k]) : html; }
 
-function cardHTML(pid, variant = "normal") {
+function cardHTML(pid, variant = "normal", uid = null) {
   const p = person(pid);
+  const bs = beerSub(variant, uid);
   if (p.masked) return mysteryCardHTML(p);
   if (p.rarity === "secret") return secretCardHTML(p, variant);
   const r = S.cfg.rarities[p.rarity];
@@ -1232,7 +1245,7 @@ function cardHTML(pid, variant = "normal") {
   // napis rzadkości: wariant może mieć własny (UFO - alfabet obcych zamiast "Specjalna")
   const rarityName = variantParts(variant).map(x => S.cfg.variants[x]?.rarityName).find(Boolean) || r.name;
   return `
-  <div class="card r-${p.rarity} ${vClass(variant)}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${flagStyle(p, variant)}>
+  <div class="card r-${p.rarity} ${vClass(variant)}${bs ? " brs-" + bs.id : ""}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${uid != null ? ` data-uid="${uid}"` : ""}${flagStyle(p, variant)}>
     <div class="card-inner">
       ${baseVariant(variant) === "reverse" ? '<div class="rev-foil"></div>' : ""}
       ${galaxyBG(variant)}${devilBG(variant)}${mlgBG(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
@@ -1244,7 +1257,7 @@ function cardHTML(pid, variant = "normal") {
       </div>
       <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(name)}" loading="lazy" draggable="false"${photoFx(variant)}>${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
       <div class="card-sub${p.subtitle || p.texts?.sub ? " has-subtitle" : ""}">${T("sub", p.subtitle ? esc(p.subtitle)
-        : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
+        : bs ? esc(bs.label) : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
       ${abils.map((a, i) => `<div class="card-attack${i ? " atk2" : ""}${a.kind !== "off" ? " " + a.kind : ""}">
         <span class="atk-cost">${T(`atk${i + 1}Cost`, a.kind === "off" ? cost + (i ? type.icon : "") : S.cfg.abilityKinds[a.kind]?.icon || "")}</span>
         <span class="atk-name">${T(`atk${i + 1}Name`, esc(a.name))}</span>
@@ -1261,7 +1274,7 @@ function cardHTML(pid, variant = "normal") {
         <span class="card-value">${T("value", fmt(cardValue(pid, variant)))}</span>
       </div>
     </div>
-    ${variantLayers(variant, p)}
+    ${variantLayers(variant, p, bs)}
     <div class="shine"></div>
   </div>`;
 }
@@ -2067,7 +2080,7 @@ function showResults(afterEpic = false) {
     return `<div class="result r-${p.rarity}${big ? " big" : ""}" data-id="${d.id}"
               style="--rc:${S.cfg.rarities[p.rarity].color}; animation-delay:${i * (o.fast ? 25 : 70)}ms">
       ${isNew ? '<span class="new-badge">NOWA!</span>' : ""}
-      ${cardHTML(d.person, d.variant)}
+      ${cardHTML(d.person, d.variant, d.id)}
       <div class="rbtns">${favBtnHTML(d.id, d.fav)}<button class="btn sell rsell" data-id="${d.id}" title="Sprzedaj" ${d.fav ? "disabled" : ""}>💰 ${fmt(d.value)}</button></div>
     </div>`;
   }).join("");
@@ -2440,7 +2453,7 @@ function renderInventory() {
     grid.innerHTML = ufoItemHTML() + `<div class="empty" style="grid-column:1/-1">${S.items.length ? "Brak kart pasujących do filtrów." : "Ekwipunek jest pusty. Otwórz jakąś skrzynkę! 📦"}</div>`;
   } else {
     grid.innerHTML = ufoItemHTML() + list.slice(0, f.limit).map(i =>
-      `<div class="inv-item${f.selected.has(i.id) ? " sel" : ""}${i.fav ? " fav" : ""}" data-id="${i.id}"><span class="tick">✓</span><button class="zoom-btn" title="Powiększ">🔍</button>${favBtnHTML(i.id, i.fav)}${cardHTML(i.person, i.variant)}</div>`).join("");
+      `<div class="inv-item${f.selected.has(i.id) ? " sel" : ""}${i.fav ? " fav" : ""}" data-id="${i.id}"><span class="tick">✓</span><button class="zoom-btn" title="Powiększ">🔍</button>${favBtnHTML(i.id, i.fav)}${cardHTML(i.person, i.variant, i.id)}</div>`).join("");
   }
   $("#invMore").parentElement.hidden = list.length <= f.limit;
   $("#invMore").textContent = `Pokaż więcej (${list.length - f.limit})`;
@@ -2807,7 +2820,7 @@ function bind() {
   $("#invGrid").addEventListener("contextmenu", e => {
     if (e.target.closest(".ufo-item")) return e.preventDefault();
     const c = e.target.closest(".inv-item .card"); if (!c) return;
-    e.preventDefault(); openViewer(c.dataset.pid, c.dataset.variant);
+    e.preventDefault(); openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid);
   });
 
   // powiększanie kart
@@ -2815,7 +2828,7 @@ function bind() {
     const z = e.target.closest(".zoom-btn");
     const c = z ? z.parentElement.querySelector(".card")
                 : e.target.closest("#contentsGrid .card, #results .card, #modalBox .card, .fa-result .card");
-    if (c) { e.stopPropagation(); openViewer(c.dataset.pid, c.dataset.variant); }
+    if (c) { e.stopPropagation(); openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid); }
   }, true);
 
   bindForge();
