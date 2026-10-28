@@ -23,73 +23,71 @@ const vmId = p => `${p}${++vmIdN}`;
 
 // ---------------------------------------------------------------- PROPOZYCJE
 
-// ---------------------------------------------------------------- KOMUNISTYCZNA - runda 3
-// Prawdziwy wariant `komuna` jest już w grze (wyłączony, z naklejkami jak MLG, wygląd = makieta 1). Makiety łączą
-// wybrane z rundy 2: czysty plakat z promieniami (1.) i stary plakat na murze (6.) - promienie wychodzą teraz z prawej
-// strony, wszystko statyczne. Naklejki naklejone na wariant Komunistyczna (/stickers) widać też na makietach (stickers).
-// Pokazane na karcie ze Skrzynki PRL (pid). Klasy z prefiksem km-.
+// ---------------------------------------------------------------- KOMUNISTYCZNA - runda 4
+// Prawdziwy wariant `komuna` jest już w grze (wyłączony, z naklejkami jak MLG). Wybrany czysty plakat (1.) w lekko
+// wyblakłych kolorach z 4. wersji poprzedniej rundy - i sześć pomysłów zamiast czarno-żółtego pasa w tle. Naklejki
+// z /stickers widać na makietach (stickers). Pokazane na karcie ze Skrzynki PRL (pid). Klasy z prefiksem km-.
 
 const kmStar = (fill = "currentColor") => vmSvg(vmStar(10, 10.6, 9.6, fill), "0 0 20 20", "", "xMidYMid meet");
-// nieruchome promienie z punktu (x, y w % karty), co "step" stopni
-const kmRays = (x = 108, y = 96, a = "#ff3b30", b = "#b30e16", step = 6) =>
-  `<i class="km-rays" style="--x:${x}%;--y:${y}%;--a:${a};--b:${b};--s:${step}deg"></i>`;
-// plakat: promienie z prawej, czarny pas, ziarno papieru / zdjęcie w czerwonej farbie / margines i gwiazda
-const kmPoster = (rays = kmRays()) => `<div class="vm-bg">${rays}<i class="km-band"></i><i class="km-paper"></i></div>`;
+// nieruchome promienie z prawego dolnego rogu
+const kmRays = () => '<i class="km-rays"></i>';
 const kmInk = () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>';
-const kmFrame = (extra = "") => `<div class="vm-deco"><i class="km-margin"></i><i class="km-star">${kmStar()}</i>${extra}</div>`;
-// zniszczenia: zagięcia na krzyż, plamy, taśma w rogach
-const kmFold = () => '<i class="km-fold"></i>';
-const kmStains = () => '<i class="km-stain"></i>';
-const kmTape = (corners = ["tl", "tr", "bl", "br"]) => corners.map(c => `<i class="km-tape ${c}"></i>`).join("");
+const kmFrame = () => `<div class="vm-deco"><i class="km-margin"></i><i class="km-star">${kmStar()}</i></div>`;
+// tło: promienie + to, co zamiast pasa + ziarno papieru
+const kmBg = (extra = "") => `<div class="vm-bg">${kmRays()}${extra}<i class="km-paper"></i></div>`;
+// sylwetka pochodu: maszty ze sztandarami (jednostki karty 63 x 88, sztandary w pasie pod zdjęciem, ziemia y = 78)
+const kmBanners = (c = "#3a0608") => vmSvg(`<g fill="${c}">${[[4, 57, 1], [14, 60, -1], [23, 56, 1], [33, 59, 1], [43, 56.5, -1], [52, 60, 1], [60, 57, -1]].map(([x, y, d]) =>
+  `<rect x="${x}" y="${y}" width=".7" height="${78 - y}"/><path d="M${x + (d > 0 ? .7 : 0)} ${y} q${d * 4} -1 ${d * 7} 1.2 v6 q${-d * 3} -1.4 ${-d * 7} -.6 Z"/>`).join("")}
+  <path d="M-2 78 q4 -4 8 0 q4 -5 8 0 q4 -4 8 0 q4 -5 8 0 q4 -4 8 0 q4 -5 8 0 q4 -4 8 0 q4 -5 8 0 V88 H-2 Z"/></g>`, "0 0 63 88", "km-svg");
+// sylwetka fabryki (ziemia y = 76)
+const kmFactory = (c = "#3a0608") => vmSvg(`<g fill="${c}"><path d="M-1 76 V64 L5 60 V64 L11 60 V64 L17 60 V64 L23 60 V76 Z"/>
+  <rect x="26" y="46" width="2.8" height="30"/><rect x="32" y="40" width="3.2" height="36"/><rect x="39" y="50" width="2.6" height="26"/>
+  <path d="M24 76 V66 H46 V76 Z M46 76 V58 H54 V76 Z M54 76 V70 H64 V76 Z"/><path d="M-2 76 H66 V88 H-2 Z"/></g>
+  <g fill="${c}" opacity=".45"><circle cx="29" cy="43" r="2.4"/><circle cx="31" cy="39.5" r="3"/><circle cx="34" cy="35.5" r="3.4"/><circle cx="40" cy="47" r="2.2"/></g>`, "0 0 63 88", "km-svg");
 
 const VM_KOMUNA = {
   key: "komuna", icon: "☭", name: "Komunistyczna", tag: "★ PRL ★", pid: "prl_bareja", stickers: "komuna",
-  about: "runda 3: połączenie czystego plakatu (1.) i starego plakatu na murze (6.), promienie z prawej; prawdziwy wariant już jest w grze (wyłączony) - naklejki dodane na /stickers widać też tutaj",
+  about: "runda 4: czysty plakat w lekko wyblakłych kolorach - sześć pomysłów zamiast czarno-żółtego pasa; naklejki z /stickers widać też tutaj",
   looks: [
     {
-      name: "Czysty plakat (jak w grze)",
-      desc: "Tak wygląda prawdziwy wariant: nieruchome czerwone promienie z prawego dolnego rogu, czarny pas opadający w lewo, kremowy margines papieru, zdjęcie w czerwonej farbie z lekko przesuniętą drugą warstwą, złota gwiazda na lewym rogu zdjęcia.",
-      bg: () => kmPoster(), photo: kmInk, deco: () => kmFrame(),
+      name: "Same promienie",
+      desc: "Bez pasa: nieruchome promienie z prawego dolnego rogu przez całe tło, przy dole karty ciemniejsza czerwień (jak farba gęściej nałożona), kolory lekko wyblakłe.",
+      bg: () => kmBg('<i class="km-dark"></i>'), photo: kmInk, deco: kmFrame,
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Wyblakły na murze",
-      desc: "Ten sam plakat po latach na murze: wypłowiałe kolory, zagięcia papieru na krzyż, zacieki i przetarcia, wszystkie rogi przyklejone pożółkłą taśmą.",
-      bg: () => kmPoster(), photo: kmInk, deco: () => kmFrame(kmFold() + kmStains() + kmTape()),
-      cls: "km-faded",
+      name: "Bordowy pas",
+      desc: "Zamiast czarno-żółtego - szeroki pas w ciemnym bordo, bez obwódki, prawie ton w ton z promieniami (spokojniejszy, jak druga farba na plakacie).",
+      bg: () => kmBg('<i class="km-band2"></i>'), photo: kmInk, deco: kmFrame,
+      cls: "km-short",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Zdarty róg",
-      desc: "Plakat prawie jak nowy, ale prawy górny róg ktoś oderwał - spod spodu widać ceglany mur, a kawałek papieru zawija się do środka. Lekkie zagięcia, taśma tylko na dole.",
-      bg: () => kmPoster(), photo: kmInk,
-      deco: () => kmFrame(kmFold() + kmTape(["bl", "br"]) + '<i class="km-brick"></i><i class="km-curl"></i>'),
-      cls: "km-light",
+      name: "Hasło na kremowym pasie",
+      desc: "Pas z kremowego papieru (jak margines plakatu), a na nim czerwone hasło „NAPRZÓD!” powtarzane przez całą szerokość - pas widać pod zdjęciem.",
+      bg: () => kmBg(`<i class="km-slogan"><b>NAPRZÓD! ★ NAPRZÓD! ★ NAPRZÓD! ★ NAPRZÓD!</b></i>`), photo: kmInk, deco: kmFrame,
+      cls: "km-short",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Strzępy innych plakatów",
-      desc: "Plakat na tablicy ogłoszeń: przy brzegach przyklejone strzępy zerwanych plakatów (krem, błękit, żółć) z poszarpanymi krawędziami, pod papierem bąble kleju.",
-      bg: () => kmPoster(), photo: kmInk,
-      deco: () => kmFrame('<i class="km-under a"></i><i class="km-under b"></i><i class="km-under c"></i><i class="km-glue"></i>'),
-      cls: "km-light",
+      name: "Pochód ze sztandarami",
+      desc: "Pod zdjęciem ciemnobordowa sylwetka pochodu pierwszomajowego: tłum i maszty z powiewającymi sztandarami na tle promieni.",
+      bg: () => kmBg(kmBanners()), photo: kmInk, deco: kmFrame,
+      cls: "km-short",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Promienie z gwiazdy",
-      desc: "Promienie wychodzą z wielkiej złotej gwiazdy przy prawej krawędzi pod zdjęciem - to ona jest źródłem światła; czarny pas pod nią, lekko wyblakły papier z zagięciami.",
-      bg: () => `<div class="vm-bg">${kmRays(92, 66)}<i class="km-band low"></i><i class="km-bigstar">${kmStar()}</i><i class="km-paper"></i></div>`,
-      photo: kmInk, deco: () => `<div class="vm-deco"><i class="km-margin"></i>${kmFold()}</div>`,
-      cls: "km-light km-short",
+      name: "Fabryka",
+      desc: "Pod zdjęciem ciemnobordowa sylwetka fabryki - hale z szedami, kominy z dymem - promienie wychodzą zza niej jak wschód słońca nad zakładem.",
+      bg: () => kmBg(kmFactory()), photo: kmInk, deco: kmFrame,
+      cls: "km-short",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Przetarty sitodruk",
-      desc: "Druk z dwóch matryc, które się rozjechały: promienie z prawej jako rastrowe paski, czarna farba przesunięta względem czerwonej (nazwa i pas z cieniem obok), przetarcia na brzegach i jedno zagięcie.",
-      bg: () => `${kmPoster(kmRays())}`,
-      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset big"></i><i class="vm-photo km-raster"></i>',
-      deco: () => kmFrame('<i class="km-scuff"></i><i class="km-fold one"></i>'),
-      cls: "km-misreg",
+      name: "Wielka gwiazda",
+      desc: "Zamiast pasa - wielka gwiazda w ciemnym bordo z cienką złotą obwódką, częściowo schowana za zdjęciem i panelami; promienie rozchodzą się za nią.",
+      bg: () => kmBg(`<i class="km-bigstar">${kmStar()}</i>`), photo: kmInk, deco: kmFrame,
+      cls: "km-short",
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
   ],

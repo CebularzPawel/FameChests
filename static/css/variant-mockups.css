@@ -20,10 +20,10 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 @keyframes vmBlink { 50% { opacity: .15; } }
 @keyframes vmSpin { to { transform: rotate(360deg); } }
 
-/* ============================================================ KOMUNISTYCZNA (vm-komuna, klasy km-) - runda 3
-   Plakat z promieniami z prawej (prawdziwy wariant: .v-komuna w cards2.css) w sześciu stanach - od czystego do zniszczonego. */
+/* ============================================================ KOMUNISTYCZNA (vm-komuna, klasy km-) - runda 4
+   Czysty plakat z promieniami z prawej w lekko wyblakłych kolorach - sześć pomysłów zamiast czarno-żółtego pasa. */
 .card.vm-komuna { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); box-shadow: 0 6px 18px #000a; }
-.card.vm-komuna .card-inner { background: #d4161f; color: #f6e7c8; }
+.card.vm-komuna .card-inner { background: #d4161f; color: #f6e7c8; filter: saturate(.85) sepia(.08); }
 .card.vm-komuna :is(.card-sub, .card-attack, .card-stats, .card-foot) { background: #111111e6; border: none; border-radius: .15em; }
 .card.vm-komuna .card-attack { padding-inline: .35em; margin-top: 1.5%; }
 .card.vm-komuna .card-foot { padding: .1em .35em; }
@@ -34,55 +34,27 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 .card.vm-komuna .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: -.3em .3em 0 #111; }
 .card.vm-komuna .card-photo > img { filter: grayscale(1) contrast(1.6) brightness(1.05); }
 .card.vm-komuna .vm-tag { background: #c8102e; color: #f6e7c8; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; }
-.card.vm-komuna :is(.km-star, .km-bigstar) svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.card.vm-komuna :is(.km-star, .km-bigstar) svg, .card.vm-komuna svg.km-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* krótsze zdjęcie - to, co zamiast pasa, widać pod nim (ok. 62-77% wysokości karty) */
+.card.km-short .card-photo { aspect-ratio: 1 / .74; }
+.card.km-short .card-sub { margin-bottom: auto; }
 
-.km-rays { inset: 0; background: repeating-conic-gradient(from 0deg at var(--x) var(--y), var(--a) 0 var(--s), var(--b) var(--s) calc(var(--s) * 2)); }
-.km-band { left: -20%; right: -20%; top: 58%; height: 13%; background: #111; rotate: 16deg; box-shadow: 0 0 0 .5cqw #f6d77a; }
-.km-band.low { top: 70%; rotate: 8deg; }
+.km-rays { inset: 0; background: repeating-conic-gradient(from 0deg at 108% 96%, #ff3b30 0 6deg, #b30e16 6deg 12deg); }
 .km-paper { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .22; mix-blend-mode: multiply; }
 .km-ink { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .85; }
 .km-offset { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .35; translate: -1.4% 1%; }
 .km-margin { inset: 2.2%; border: .9cqw solid #f1e6cc; border-radius: 2.4%/1.7%; box-shadow: inset 0 0 0 .25cqw #111; }
 .km-star { left: 2.5%; top: 41%; width: 16%; aspect-ratio: 1; color: #f6d77a; rotate: -12deg; filter: drop-shadow(-.4cqw .4cqw 0 #111); }
 
-/* zniszczenia */
-.km-fold { inset: 0; background: linear-gradient(90deg, transparent 49.6%, #0003 49.8%, #fff3 50.2%, transparent 50.6%),
-  linear-gradient(180deg, transparent 49.6%, #0003 49.8%, #fff3 50.2%, transparent 50.6%); mix-blend-mode: overlay; }
-.km-fold.one { background: linear-gradient(180deg, transparent 49.6%, #0003 49.8%, #fff3 50.2%, transparent 50.6%); }
-.km-stain { inset: 0; background: radial-gradient(30% 18% at 80% 80%, #5a3a1a33, transparent 70%), radial-gradient(22% 14% at 18% 22%, #5a3a1a2a, transparent 70%),
-  radial-gradient(40% 10% at 40% 96%, #0003, transparent 70%), linear-gradient(190deg, #fff1 0 30%, transparent 30%); }
-.km-tape { width: 16%; height: 4.4%; background: #f2ecd0b8; box-shadow: 0 .2cqw .3cqw #0003; }
-.km-tape.tl { left: -2%; top: 1.6%; rotate: -36deg; } .km-tape.tr { right: -2%; top: 1.6%; rotate: 36deg; }
-.km-tape.bl { left: -2%; bottom: 1.6%; rotate: 36deg; } .km-tape.br { right: -2%; bottom: 1.6%; rotate: -36deg; }
-.card.km-faded .card-inner { filter: saturate(.62) sepia(.22) brightness(1.02); }
-.card.km-light .card-inner { filter: saturate(.85) sepia(.08); }
-
-/* 3. zdarty róg: mur z cegły w prawym górnym rogu i zawinięty kawałek papieru */
-.km-brick { right: 0; top: 0; width: 22%; height: 12%; border-top-right-radius: 1.2cqw;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 82% 86%, 70% 92%, 58% 70%, 44% 64%, 30% 40%, 18% 30%, 8% 12%);
-  background: linear-gradient(#cfc6b4 .35cqw, transparent .35cqw) 0 0 / 7cqw 3.2cqw, linear-gradient(90deg, #cfc6b4 .35cqw, transparent .35cqw) 0 0 / 7cqw 6.4cqw,
-    linear-gradient(90deg, #cfc6b4 .35cqw, transparent .35cqw) 3.5cqw 3.2cqw / 7cqw 6.4cqw, #9a4a32; box-shadow: inset 0 0 1.5cqw #0008; }
-.km-curl { right: 9%; top: 3.4%; width: 10%; height: 7%; background: linear-gradient(225deg, #e8dcc2, #b8a888); clip-path: polygon(100% 0, 0 30%, 60% 100%);
-  filter: drop-shadow(-.4cqw .5cqw .4cqw #0008); }
-
-/* 4. strzępy zerwanych plakatów przy brzegach (poszarpane krawędzie) */
-.km-under { width: 15%; height: 8%; box-shadow: 0 .2cqw .4cqw #0006;
-  clip-path: polygon(0 0, 100% 0, 92% 22%, 100% 40%, 86% 58%, 96% 78%, 80% 100%, 0 100%); }
-.km-under.a { left: -1%; top: 30%; background: #e8dcc0; rotate: -8deg; }
-.km-under.b { right: -1%; top: 62%; background: #4a7aa8; rotate: 172deg; }
-.km-under.c { left: 40%; bottom: -1%; width: 18%; height: 5%; background: #e8c040; rotate: -3deg; }
-.km-glue { inset: 0; background: radial-gradient(5% 3% at 30% 66%, #fff4, transparent 70%), radial-gradient(4% 2.5% at 62% 74%, #fff3, transparent 70%),
-  radial-gradient(6% 3% at 78% 30%, #fff3, transparent 70%), radial-gradient(4% 2% at 20% 88%, #fff3, transparent 70%); }
-
-/* 5. promienie z gwiazdy */
-.card.km-short .card-photo { aspect-ratio: 1 / .74; }
-.card.km-short .card-sub { margin-bottom: auto; }
-.km-bigstar { left: 92%; top: 66%; width: 26%; aspect-ratio: 1; translate: -50% -50%; color: #f6d77a; filter: drop-shadow(0 0 2cqw #ffd24a) drop-shadow(.4cqw .4cqw 0 #111); }
-
-/* 6. przetarty sitodruk */
-.card.km-misreg .card-name { text-shadow: -.08em .06em 0 #d4161f; }
-.card.km-misreg .km-band { box-shadow: 0 0 0 .5cqw #f6d77a, -1.2cqw .8cqw 0 #111a; }
-.km-offset.big { translate: -3% 2%; opacity: .45; }
-.km-raster { background: repeating-linear-gradient(0deg, transparent 0 .9cqw, #11111122 .9cqw 1.2cqw); }
-.km-scuff { inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.4cqw #f1e6cc44, inset 0 0 3cqw #fff3;
-  background: radial-gradient(14% 6% at 6% 50%, #f1e6cc55, transparent 70%), radial-gradient(12% 5% at 94% 22%, #f1e6cc44, transparent 70%); }
+/* 1. same promienie: ciemniejsza czerwień przy dole */
+.km-dark { inset: 0; background: linear-gradient(180deg, transparent 45%, #5a040855 75%, #3a0206aa); }
+/* 2. bordowy pas bez obwódki */
+.km-band2 { left: -20%; right: -20%; top: 61%; height: 15%; background: #7a0a12; rotate: 16deg; opacity: .9; }
+/* 3. kremowy pas z hasłem */
+.km-slogan { left: -30%; right: -30%; top: 64%; height: 9%; background: #f1e6cc; rotate: -6deg; display: flex !important; align-items: center;
+  box-shadow: 0 .4cqw 0 #111; overflow: hidden; }
+.km-slogan b { white-space: nowrap; font: 400 5.4cqw/1 "Black Ops One", sans-serif; letter-spacing: .06em; color: #c8102e; padding-left: 4%; }
+/* 4-5. sylwetki: pochód, fabryka - w ciemnym bordo */
+/* 6. wielka gwiazda */
+.km-bigstar { left: 58%; top: 70%; width: 74%; aspect-ratio: 1; translate: -50% -50%; color: #7a0a12; rotate: 8deg;
+  filter: drop-shadow(0 0 .25cqw #f6d77a) drop-shadow(0 0 .25cqw #f6d77a); }
