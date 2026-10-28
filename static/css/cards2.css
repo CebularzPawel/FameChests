@@ -2228,9 +2228,10 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-usa img { filter: grayscale(1) contrast(1.4); }
 .pick.v-usa { box-shadow: inset 0 0 0 2px #f2f2f2, inset 0 0 0 4px #111, inset 0 -26px 26px -18px var(--rc); }
 
-/* Komunistyczna - wyjątkowy wariant Skrzynki PRL (DEFAULT_CRATE_VARIANTS), z naklejkami od admina (/stickers): plakat
-   propagandowy - nieruchome czerwone promienie z prawego dolnego rogu, czarny ukośny pas, kremowy margines papieru,
-   zdjęcie w czerwieni i czerni z przesuniętą drugą warstwą farby, złota gwiazda. VX_BG / VX_PHOTO / VX_DECO komuna. */
+/* Komunistyczna - wyjątkowy wariant Skrzynki PRL (DEFAULT_CRATE_VARIANTS), z naklejkami od admina (/stickers): lekko
+   wyblakły plakat propagandowy - nieruchome czerwone promienie z prawego dolnego rogu, ciemniejsza czerwień przy dole,
+   kremowy margines papieru, zdjęcie w czerwieni i czerni z przesuniętą drugą warstwą farby, złota gwiazda.
+   VX_BG / VX_PHOTO / VX_DECO komuna. */
 .card.v-komuna .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
 .card.v-komuna :is(.card-sub, .card-attack, .card-stats, .card-foot) { background: #111111e6; border: none; border-radius: .15em; }
 .card.v-komuna .card-attack { padding-inline: .35em; margin-top: 1.5%; }
@@ -2239,7 +2240,7 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .vdot.vt-komuna { background: repeating-conic-gradient(from 0deg at 100% 100%, #ff3b30 0 8deg, #b30e16 8deg 16deg); box-shadow: 0 0 0 1px #111; }
 .odd.odd-v.vt-komuna { border-left-color: #d4161f; }
 .card.v-komuna { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); --spin: initial; box-shadow: 0 6px 18px #000a; }
-.card.v-komuna .card-inner { background: #d4161f; color: #f6e7c8; }
+.card.v-komuna .card-inner { background: #d4161f; color: #f6e7c8; filter: saturate(.85) sepia(.08); }   /* lekko wyblakłe kolory */
 .card.v-komuna :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f6e7c8; }
 .card.v-komuna .card-head { background: #111; margin: -1% -2% 1%; padding: .15em .4em; clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%); }
 .card.v-komuna .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: #f6e7c8; }
@@ -2247,7 +2248,7 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .card.v-komuna .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: -.3em .3em 0 #111; }
 .card.v-komuna .card-photo > img, .r-secret.v-komuna .sc-art img { filter: grayscale(1) contrast(1.6) brightness(1.05); }
 .kv-rays { inset: 0; background: repeating-conic-gradient(from 0deg at 108% 96%, #ff3b30 0 6deg, #b30e16 6deg 12deg); }
-.kv-band { left: -20%; right: -20%; top: 58%; height: 13%; background: #111; rotate: 16deg; box-shadow: 0 0 0 .5cqw #f6d77a; }
+.kv-dark { inset: 0; background: linear-gradient(180deg, transparent 45%, #5a040855 75%, #3a0206aa); }
 .kv-paper { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .22; mix-blend-mode: multiply; }
 .kv-ink { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .85; }
 .kv-offset { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .35; translate: -1.4% 1%; }

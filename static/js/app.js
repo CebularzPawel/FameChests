@@ -926,8 +926,8 @@ const apTick = () => '<span class="ap-tick"><i>0<br>1<br>2<br>3<br>4<br>5<br>6<b
 const apScratches = n => Array.from({ length: n }, () =>
   `<i class="ap-scratch" style="left:${vxN(2, 96)}%;animation-delay:-${vxN(0, 6, 1)}s;animation-duration:${vxN(1.2, 3, 1)}s"></i>`).join("");
 const VX_BG = {
-  // Komunistyczna: nieruchome promienie z prawego dolnego rogu, czarny ukośny pas, ziarno papieru
-  komuna: () => '<i class="kv-rays"></i><i class="kv-band"></i><i class="kv-paper"></i>',
+  // Komunistyczna: nieruchome promienie z prawego dolnego rogu, ciemniejsza czerwień przy dole, ziarno papieru
+  komuna: () => '<i class="kv-rays"></i><i class="kv-dark"></i><i class="kv-paper"></i>',
   apollo: () => '<video class="ap-film" src="/static/video/space/lm-orbit.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>' +
     '<span class="ap2-tm l">ALT 47 920 FT<br>VEL 1 604 FT/S</span><span class="ap2-tm r">ORZEŁ ▲<br>KOLUMBIA ▼</span><i class="ap-shade"></i>',
   copper: () => `<i class="cu-brush"></i><i class="cu-dark"></i>${cuSpots(16)}<i class="cu-full"></i>`,

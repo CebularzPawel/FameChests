@@ -179,7 +179,7 @@ VARIANTS = {
                 "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."},
     # wyjątkowy wariant Skrzynki PRL (jak MLG / Halloweenowe w swoich skrzynkach) - z naklejkami od admina (/stickers)
     "komuna":  {"name": "Komunistyczna", "chance": 0.006, "mult": 11.0, "exclusive": True, "off": True, "stickers": True,
-                "desc": "Plakat propagandowy z PRL: czerwone promienie z prawego rogu, czarny ukośny pas, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, złota gwiazda i hasło."},
+                "desc": "Lekko wyblakły plakat propagandowy z PRL: czerwone promienie z prawego dolnego rogu, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, kremowy margines papieru, złota gwiazda i hasło."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
     # 1 na 2 137 000 skrzynek - Rzulty ma być trochę rzadszy: 1 na 2 137 420 (szansa na wariant przy wypadnięciu JP2).
     # Może mieć własne zdjęcie (panel admina, edycja karty).
