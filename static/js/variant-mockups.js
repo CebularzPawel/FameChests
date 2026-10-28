@@ -23,69 +23,75 @@ const vmId = p => `${p}${++vmIdN}`;
 
 // ---------------------------------------------------------------- PROPOZYCJE
 
-// ---------------------------------------------------------------- KOMUNISTYCZNA (nazwa robocza) - runda 1
+// ---------------------------------------------------------------- KOMUNISTYCZNA (nazwa robocza) - runda 2
 // Wariant wyjątkowy Skrzynki PRL (jak MLG i Halloweenowe w swoich skrzynkach): wypada tylko z niej, nie z kuźni ani kasyna.
-// Sześć pomysłów na wygląd z życia w PRL. Pokazane na karcie z tej skrzynki (pid). Klasy z prefiksem km-.
+// Wybrany z rundy 1 plakat propagandowy, rozwinięty w sześć kierunków - wszystko statyczne (bez obracających się promieni),
+// jak druk z jednej-dwóch farb. Pokazane na karcie z tej skrzynki (pid). Klasy z prefiksem km-.
 
 const kmStar = (fill = "currentColor") => vmSvg(vmStar(10, 10.6, 9.6, fill), "0 0 20 20", "", "xMidYMid meet");
-// kratki kartki żywnościowej: nazwa towaru i miesiąc; część kratek już wycięta (wykorzystana)
-const KM_GOODS = ["MIĘSO", "CUKIER", "MASŁO", "MĄKA", "WÓDKA", "CZEKOL.", "BENZYNA", "MYDŁO", "KAWA", "RYŻ", "OBUWIE", "MIĘSO"];
-const kmCoupons = () => Array.from({ length: 24 }, (_, k) => {
-  const cut = Math.random() < .3;
-  return `<em class="${cut ? "cut" : ""}"><small>${["VII", "VIII", "IX"][k % 3]}</small>${KM_GOODS[k % KM_GOODS.length]}<small>${vmPick(["1 kg", "0,5 kg", "2,5 kg", "1 szt.", "0,5 l", "10 l"])}</small></em>`;
-}).join("");
+// promienie z jednego punktu (x, y w % karty), co "step" stopni - statyczne
+const kmRays = (x, y, a = "#ff3b30", b = "#b30e16", step = 6) =>
+  `<i class="km-rays" style="--x:${x}%;--y:${y}%;--a:${a};--b:${b};--s:${step}deg"></i>`;
+// sylwetka fabryki: kominy, hala z szedami, dźwig (jednostki karty 63 x 88, linia ziemi y = 60 + 7 = w pasie pod zdjęciem)
+const kmFactory = (c = "#111") => vmSvg(`<g transform="translate(0 7)"><g fill="${c}">
+  <path d="M0 60 V50 L5 46 V50 L10 46 V50 L15 46 V50 L20 46 V60 Z"/>
+  <rect x="22" y="36" width="2.6" height="24"/><rect x="27" y="30" width="3" height="30"/><rect x="33" y="40" width="2.4" height="20"/>
+  <path d="M21 60 V52 H40 V60 Z"/><path d="M40 60 V44 H50 V60 Z"/>
+  <path d="M50 60 V54 H63 V60 Z"/><path d="M52 54 V34 H53.2 V54 Z M52.6 34 H63 V35.2 H52.6 Z M61 35.2 V41 H61.8 V35.2 Z"/>
+  </g><g fill="${c}" opacity=".35"><circle cx="25" cy="33" r="2.4"/><circle cx="27" cy="29.5" r="3"/><circle cx="30" cy="25.5" r="3.6"/>
+  <circle cx="29" cy="27" r="2.6"/><circle cx="34" cy="37.5" r="2"/><circle cx="36" cy="34.5" r="2.6"/></g></g>`, "0 0 63 88", "km-factory");
 
 const VM_KOMUNA = {
   key: "komuna", icon: "☭", name: "Komunistyczna (nazwa robocza)", tag: "★ PRL ★", pid: "prl_bareja",
-  about: "wariant wyjątkowy Skrzynki PRL (jak MLG i Halloweenowe) - sześć pomysłów na wygląd z życia w PRL",
+  about: "runda 2: wybrany plakat propagandowy w sześciu wersjach - wszystko statyczne, jak druk na papierze",
   looks: [
     {
-      name: "Plakat propagandowy",
-      desc: "Konstruktywistyczny plakat: z rogu karty powoli obracają się czerwone promienie, przez tło idzie czarny ukośny pas, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, nazwa na czarnym pasku, złota gwiazda w rogu.",
-      bg: () => '<div class="vm-bg"><i class="km1-rays"></i><i class="km1-band"></i></div>',
-      photo: () => '<i class="vm-photo km1-ink"></i>',
-      deco: () => `<div class="vm-deco"><i class="km1-frame"></i><i class="km1-star">${kmStar()}</i></div>`,
+      name: "Plakat z promieniami",
+      desc: "Jak 1. z poprzedniej rundy, ale nieruchomy i bardziej jak druk: nieruchome czerwone promienie z dolnego rogu, czarny ukośny pas, biały margines papieru dookoła, lekkie ziarno farby, zdjęcie w czerwieni i czerni z przesuniętą farbą, złota gwiazda na rogu zdjęcia.",
+      bg: () => `<div class="vm-bg">${kmRays(-8, 96)}<i class="km1-band"></i><i class="km-paper"></i></div>`,
+      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>',
+      deco: () => `<div class="vm-deco"><i class="km-margin"></i><i class="km1-star">${kmStar()}</i></div>`,
       sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
     {
-      name: "Kartki na żywność",
-      desc: "Karta jak kartka zaopatrzenia z 1981 r.: szary papier z kratkami (mięso, cukier, wódka…), część kratek już wycięta, brzegi z perforacją, na zdjęciu fioletowa pieczątka „WYKORZYSTANO”, zdjęcie w sepii.",
-      top: () => '<div class="km2-top">KARTA ZAOPATRZENIA · M-I</div>',
-      bg: () => `<div class="vm-bg"><div class="km2-grid">${kmCoupons()}</div></div>`,
-      photo: () => '<i class="vm-photo km2-stamp"><b>WYKORZYSTANO</b><small>WRZ 1981</small></i>',
-      deco: () => '<div class="vm-deco"><i class="km2-perf"></i></div>',
-      sub: () => "KARTKA ŻYWNOŚCIOWA · IX 1981",
+      name: "Czerwony klin",
+      desc: "Konstruktywizm jak u El Lissitzky'ego: kremowy papier, czerwony klin wbija się w czarne koło w pasie pod zdjęciem, ukośne cienkie linie, nazwa czerwonymi literami na kremowym tle, czarne panele.",
+      bg: () => '<div class="vm-bg"><i class="km2-paper"></i><i class="km2-circle"></i><i class="km2-wedge"></i><i class="km2-lines"></i></div>',
+      photo: () => '<i class="vm-photo km2-half"></i>',
+      deco: () => '<div class="vm-deco"><i class="km2-bar"></i></div>',
+      sub: () => "CZERWONYM KLINEM BIJ BIAŁYCH!",
     },
     {
-      name: "Legitymacja partyjna",
-      desc: "Okładka legitymacji z czerwonej skóry: tłoczone złote ramki, napis „LEGITYMACJA CZŁONKOWSKA” nad nazwą, wypukła pieczęć w rogu zdjęcia, przez złocenia co chwilę przechodzi połysk.",
-      top: () => '<div class="km3-top">★ LEGITYMACJA CZŁONKOWSKA ★</div>',
-      bg: () => '<div class="vm-bg"><i class="km3-leather"></i><i class="km3-emboss"></i><i class="km3-sheen"></i></div>',
-      photo: () => `<i class="vm-photo km3-seal"><b>${kmStar("#e8c870")}</b></i>`,
-      sub: () => "Nr 2137 · ważna do odwołania",
+      name: "Hasło na całą kartę",
+      desc: "Ogromne hasło „NAPRZÓD!” wydrukowane kremową farbą na czerwonym tle, przekrzywione za zdjęciem (widać je przy brzegach i pod zdjęciem), zdjęcie z rastra kropek jak w gazecie, czarne panele z kremowym tekstem.",
+      bg: () => '<div class="vm-bg"><i class="km3-word a">NAPRZÓD!</i><i class="km3-word b">NAPRZÓD!</i><i class="km3-word c">NAPRZÓD!</i><i class="km-paper"></i></div>',
+      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km3-dots"></i>',
+      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
+      sub: () => "PLAN SZEŚCIOLETNI WYKONAMY!",
     },
     {
-      name: "Mozaika na bloku",
-      desc: "Socrealistyczna mozaika ze ściany bloku z wielkiej płyty: tło z małych płytek (czerwień, ochra, błękit) z wielką gwiazdą, zdjęcie poprzecinane fugami jak z płytek, ramka z betonu.",
-      bg: () => `<div class="vm-bg"><i class="km4-tiles"></i><i class="km4-star">${kmStar()}</i><i class="km4-grout"></i></div>`,
-      photo: () => '<i class="vm-photo km4-grid"></i>',
-      deco: () => '<div class="vm-deco"><i class="km4-concrete"></i></div>',
-      sub: () => "BUDUJEMY SOCJALIZM · OSIEDLE 1974",
+      name: "Fabryka o świcie",
+      desc: "Socrealistyczny plakat: nad fabryką z kominami i dźwigiem wschodzi słońce z nieruchomymi promieniami (żółć i czerwień), fabryka jako czarna sylwetka w pasie pod zdjęciem, dym z kominów, zdjęcie w ciepłej sepii z czerwienią.",
+      bg: () => `<div class="vm-bg">${kmRays(50, 72, "#ffd24a", "#f39a1e", 7.5)}<i class="km4-sun"></i>${kmFactory("#1a0c08")}<i class="km4-ground"></i><i class="km-paper"></i></div>`,
+      photo: () => '<i class="vm-photo km4-warm"></i>',
+      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
+      sub: () => "PRACA · POKÓJ · SOCJALIZM",
     },
     {
-      name: "Dziennik Telewizyjny",
-      desc: "Karta jak telewizor z lat 70.: obudowa z fornirowanego drewna, zdjęcie na wypukłym ekranie z liniami obrazu i migotaniem, nad nazwą panel z napisem „DZIENNIK TELEWIZYJNY 19:30” i gałkami.",
-      top: () => '<div class="km5-top"><span><i></i>DZIENNIK TELEWIZYJNY · 19:30</span><span class="km5-knobs"><b></b><b></b></span></div>',
-      bg: () => '<div class="vm-bg"><i class="km5-wood"></i></div>',
-      photo: () => '<i class="vm-photo km5-scan"></i><i class="vm-photo km5-glass"></i>',
-      sub: () => "PROGRAM I · TVP",
+      name: "Pierwszy Maja",
+      desc: "Plakat na Święto Pracy w biało-czerwonym: tło przecięte po skosie na biel i czerwień, pod zdjęciem wielki biały napis „1 MAJA” z czarnym konturem i rząd białych gwiazd, zdjęcie czarno-białe, nazwa czarna na białym pasku.",
+      bg: () => `<div class="vm-bg"><i class="km5-split"></i><i class="km5-one">1 MAJA</i><i class="km5-stars">${[0, 1, 2, 3, 4].map(k => `<b style="--k:${k}">${kmStar()}</b>`).join("")}</i><i class="km-paper"></i></div>`,
+      deco: () => '<div class="vm-deco"><i class="km-margin"></i></div>',
+      sub: () => "1 MAJA · ŚWIĘTO PRACY",
     },
     {
-      name: "Czerwony sztandar",
-      desc: "Pod zdjęciem przez całą kartę powiewa czerwony sztandar ze złotymi frędzlami (fale przesuwają się po materiale), tło jak wieczorne niebo nad pochodem, złota ramka, w rogu zdjęcia order na biało-czerwonej wstążce.",
-      bg: () => '<div class="vm-bg"><i class="km6-sky"></i><i class="km6-flag"><i class="km6-ripple"></i></i><i class="km6-fringe"></i></div>',
-      deco: () => `<div class="vm-deco"><i class="km6-medal"><b class="rib"></b><b class="disc">${kmStar("#c8102e")}</b></i></div>`,
-      sub: () => "ORDER SZTANDARU PRACY I KLASY",
+      name: "Stary plakat na murze",
+      desc: "Plakat z promieniami po latach na murze: wyblakłe kolory, zagięcia papieru na krzyż, plamy i przetarcia, rogi przyklejone taśmą, rysy - cały wygląd 1. wersji, ale zniszczony.",
+      bg: () => `<div class="vm-bg">${kmRays(-8, 96)}<i class="km1-band"></i><i class="km-paper"></i></div>`,
+      photo: () => '<i class="vm-photo km-ink"></i><i class="vm-photo km-offset"></i>',
+      deco: () => `<div class="vm-deco"><i class="km-margin"></i><i class="km1-star">${kmStar()}</i><i class="km6-fold"></i><i class="km6-stain"></i>${
+        ["tl", "tr", "bl", "br"].map(c => `<i class="km6-tape ${c}"></i>`).join("")}</div>`,
+      sub: () => "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!",
     },
   ],
 };

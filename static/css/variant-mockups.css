@@ -20,135 +20,98 @@ img.vm-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50
 @keyframes vmBlink { 50% { opacity: .15; } }
 @keyframes vmSpin { to { transform: rotate(360deg); } }
 
-/* ============================================================ KOMUNISTYCZNA (vm-komuna, klasy km-) - runda 1
-   Wariant wyjątkowy Skrzynki PRL - sześć pomysłów na wygląd z życia w PRL. */
+/* ============================================================ KOMUNISTYCZNA (vm-komuna, klasy km-) - runda 2
+   Wariant wyjątkowy Skrzynki PRL - plakat propagandowy w sześciu wersjach, wszystko statyczne (druk z 1-2 farb). */
 .card.vm-komuna { box-shadow: 0 6px 18px #000a; }
-.card.vm-komuna :is(.card-sub, .card-attack, .card-stats) { border: none; border-radius: .25em; }
+.card.vm-komuna :is(.card-sub, .card-attack, .card-stats) { border: none; border-radius: .15em; }
 .card.vm-komuna .card-attack { padding-inline: .35em; margin-top: 1.5%; }
-.card.vm-komuna .card-sub { font-style: normal; font-weight: 700; letter-spacing: .08em; }
-.card.vm-komuna .vm-tag { background: #c8102e; color: #f6d77a; border: 1px solid #f6d77a; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; }
-.km1-star svg, .km3-seal svg, .km4-star svg, .km6-medal svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.card.vm-komuna .card-sub { font-style: normal; font-weight: 900; letter-spacing: .08em; }
+.card.vm-komuna .vm-tag { background: #c8102e; color: #f6e7c8; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; }
+.card.vm-komuna .km1-star svg, .card.vm-komuna .km5-stars svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.card.vm-komuna svg.km-factory { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* wspólne: plakat czerwony z czarnymi panelami i kremowym tekstem */
+.card:is(.vm-komuna-1, .vm-komuna-3, .vm-komuna-6) { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); }
+.card:is(.vm-komuna-1, .vm-komuna-3, .vm-komuna-6) .card-inner { background: #d4161f; color: #f6e7c8; }
+.card.vm-komuna :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f6e7c8; }
+.card.vm-komuna :is(.card-sub, .card-attack, .card-stats) { background: #111111e6; }
+.card.vm-komuna .card-foot { background: #111111e6; border-radius: .15em; padding: .1em .35em; }
+.card.vm-komuna .card-sub { color: #f6d77a; }
+.card:is(.vm-komuna-1, .vm-komuna-3, .vm-komuna-6) .card-head { background: #111; margin: -1% -2% 1%; padding: .15em .4em; clip-path: polygon(0 0, 100% 0, 97% 100%, 0 100%); }
+.card.vm-komuna .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: #f6e7c8; }
+.card.vm-komuna .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: .3em .3em 0 #111; }
+.card.vm-komuna .card-photo > img { filter: grayscale(1) contrast(1.6) brightness(1.05); }
 
-/* 1. Plakat propagandowy */
-.card.vm-komuna-1 { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); }
-.card.vm-komuna-1 .card-inner { background: #d4161f; color: #fff4e0; }
-.card.vm-komuna-1 :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #fff4e0; }
-.card.vm-komuna-1 :is(.card-sub, .card-attack, .card-stats) { background: #111111d8; }
-.card.vm-komuna-1 .card-head { background: #111; margin: -1% -2% 1%; padding: .15em .4em; clip-path: polygon(0 0, 100% 0, 97% 100%, 0 100%); }
-.card.vm-komuna-1 .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: #fff4e0; }
-.card.vm-komuna-1 .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: .3em .3em 0 #111; }
-.card.vm-komuna-1 .card-photo > img { filter: grayscale(1) contrast(1.6) brightness(1.05); }
-.card.vm-komuna-1 .card-sub { color: #f6d77a; }
-.km1-rays { left: -60%; top: 40%; width: 220%; aspect-ratio: 1; translate: 0 -50%; animation: vmSpin 60s linear infinite;
-  background: repeating-conic-gradient(from 0deg, #ff3b30 0 6deg, #b30e16 6deg 12deg); border-radius: 50%; opacity: .9; }
+/* nieruchome promienie z punktu (--x, --y) */
+.km-rays { inset: 0; background: repeating-conic-gradient(from 0deg at var(--x) var(--y), var(--a) 0 var(--s), var(--b) var(--s) calc(var(--s) * 2)); }
+/* papier i farba: ziarno, biały margines plakatu, czerwona farba na zdjęciu i lekko przesunięta druga warstwa */
+.km-paper { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .22; mix-blend-mode: multiply; }
+.km-margin { inset: 2.2%; border: .9cqw solid #f1e6cc; border-radius: 2.4%/1.7%; box-shadow: inset 0 0 0 .25cqw #111; }
+.km-ink { background: linear-gradient(160deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .85; }
+.km-offset { background: linear-gradient(160deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .35; translate: 1.4% 1%; }
+
+/* 1. Plakat z promieniami */
 .km1-band { left: -20%; right: -20%; top: 58%; height: 13%; background: #111; rotate: -16deg; box-shadow: 0 0 0 .5cqw #f6d77a; }
-.km1-star { right: 2.5%; top: 41%; width: 16%; rotate: 12deg; aspect-ratio: 1; color: #f6d77a; filter: drop-shadow(.4cqw .4cqw 0 #111); }
-.km1-ink { background: linear-gradient(160deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .85; }
-.km1-frame { inset: 2.6%; border: .5cqw solid #111; border-radius: 2.4%/1.7%; }
+.km1-star { right: 2.5%; top: 41%; width: 16%; aspect-ratio: 1; color: #f6d77a; rotate: 12deg; filter: drop-shadow(.4cqw .4cqw 0 #111); }
 
-/* 2. Kartki na żywność */
-.card.vm-komuna-2 { --frame: radial-gradient(circle at 50% 50%, transparent 0 .9cqw, #d9d0b8 1cqw) 0 0 / 3.2cqw 3.2cqw, #d9d0b8; }
-.card.vm-komuna-2 .card-inner { background: #e9e2cc; color: #2a2418; }
-.card.vm-komuna-2 :is(.card-sub, .card-attack, .card-stats) { background: #f6f1e2e8; box-shadow: 0 0 0 1px #6a604a66; }
-.card.vm-komuna-2 .card-name { font-family: "Special Elite", monospace; font-weight: 400; color: #2a2418; }
-.card.vm-komuna-2 .card-sub { font-family: "Special Elite", monospace; font-weight: 400; color: #5a2a6a; }
-.card.vm-komuna-2 .card-photo { border: .14em solid #6a604a; border-image: none; border-radius: 0; aspect-ratio: 1 / .78; }
+/* 2. Czerwony klin */
+.card.vm-komuna-2 { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); }
+.card.vm-komuna-2 .card-inner { background: #efe4cc; color: #111; }
+.card.vm-komuna-2 .card-name { font-family: Bungee, Rubik, sans-serif; color: #c8102e; letter-spacing: .02em; }
+.card.vm-komuna-2 .card-hp { color: #111; }
+.card.vm-komuna-2 .card-photo { box-shadow: .3em .3em 0 #c8102e; aspect-ratio: 1 / .78; }
 .card.vm-komuna-2 .card-sub { margin-bottom: auto; }
-.card.vm-komuna-2 .card-photo > img { filter: sepia(.65) contrast(1.05) brightness(1.02); }
-.km2-top { position: relative; z-index: 1; text-align: center; font: 400 .4em/1 "Special Elite", monospace; letter-spacing: .14em; color: #2a2418;
-  border-bottom: 1px dashed #6a604a; padding: .2em 0 .3em; margin-bottom: 1.5%; }
-.km2-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(6, 1fr);
-  background: var(--tx-grain) 0 0 / 110px, #e9e2cc; }
-.km2-grid em { font: 400 2.3cqw/1.15 "Special Elite", monospace; color: #4a4232; border: 1px dashed #6a604aaa; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; font-style: normal; }
-.km2-grid em small { font-size: 1.4cqw; opacity: .8; }
-.km2-grid em.cut { background: #2a241866; border-color: transparent; opacity: .35; clip-path: polygon(4% 6%, 96% 2%, 94% 96%, 6% 92%); color: transparent; }
-.km2-stamp { inset: auto 4% 6% auto !important; width: 46%; aspect-ratio: 1; border-radius: 50%; border: .55cqw double #6a2a8acc;
-  display: flex !important; flex-direction: column; align-items: center; justify-content: center; rotate: -14deg; color: #6a2a8acc;
-  font: 400 2.6cqw/1.1 "Special Elite", monospace; letter-spacing: .06em; mix-blend-mode: multiply; }
-.km2-stamp b { font-weight: 400; } .km2-stamp small { font-size: 2cqw; }
-.km2-perf { inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .3cqw #6a604a44; }
+.km2-paper { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .25; mix-blend-mode: multiply; }
+.km2-circle { right: -8%; top: 54%; width: 42%; aspect-ratio: 1; border-radius: 50%; background: #111; }
+/* trójkąt z dwóch gradientów (clip-path na obracanej karcie bywa nierysowany) */
+.km2-wedge { left: -3%; top: 62.5%; width: 78%; height: 14%;
+  background: linear-gradient(to top right, #c8102e 50%, transparent 50%) 0 0 / 100% 50% no-repeat,
+              linear-gradient(to bottom right, #c8102e 50%, transparent 50%) 0 100% / 100% 50% no-repeat; }
+.km2-lines { inset: 0; background: linear-gradient(-30deg, transparent 47%, #111 47.2% 47.8%, transparent 48%), linear-gradient(-30deg, transparent 77%, #111 77.2% 77.6%, transparent 78%),
+  linear-gradient(60deg, transparent 20%, #c8102e 20.2% 20.6%, transparent 21%); }
+.km2-half { background: linear-gradient(105deg, transparent 55%, #c8102e 55%); mix-blend-mode: multiply; opacity: .9; }
+.km2-bar { left: 2.4%; top: 2.2%; bottom: 2.2%; width: 1.4%; background: #c8102e; border-radius: .4cqw; }
 
-/* 3. Legitymacja partyjna */
-.card.vm-komuna-3 { --frame: linear-gradient(135deg, #5a0a10, #8a1018 50%, #4a080c); }
-.card.vm-komuna-3 .card-inner { background: #7a0e16; color: #f2d58a; }
-.card.vm-komuna-3 :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2d58a; }
-.card.vm-komuna-3 :is(.card-sub, .card-attack, .card-stats) { background: #3a0408a8; box-shadow: inset 0 0 0 .08em #c9a24a88; }
-.card.vm-komuna-3 .card-name { font-family: Cinzel, serif; font-weight: 900; background: linear-gradient(180deg, #fff1c1, #e8c870 45%, #a87a28 55%, #f2d58a);
-  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .06em 0 #2a0204); }
-.card.vm-komuna-3 .card-sub { font-family: Cinzel, serif; font-weight: 700; letter-spacing: .04em; }
-.card.vm-komuna-3 .card-photo { border: .16em solid #c9a24a; border-image: none; border-radius: .15em; box-shadow: 0 0 0 .1em #3a0408, 0 .2em .5em #000a; }
-.card.vm-komuna-3 .card-photo > img { filter: grayscale(.85) sepia(.25) contrast(1.15); }
-.km3-top { position: relative; z-index: 1; text-align: center; font: 700 .42em/1 Cinzel, serif; letter-spacing: .16em; color: #e8c870; margin: .2em 0 1.5%; }
-.km3-leather { inset: 0; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4'/><feDiffuseLighting lighting-color='%23c0303a' surfaceScale='1.4'><feDistantLight azimuth='235' elevation='55'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>") 0 0 / 80px;
-  opacity: .35; mix-blend-mode: multiply; }
-.km3-emboss { inset: 3.5%; border: .35cqw solid #c9a24a; border-radius: 2%/1.5%; box-shadow: inset 0 0 0 .9cqw transparent, inset 0 0 0 1.15cqw #c9a24a88, 0 .2cqw .3cqw #2a0204; }
-.km3-sheen { inset: -20% -60%; background: linear-gradient(115deg, transparent 44%, #fff1c133 50%, transparent 56%); animation: km3Sheen 6s ease-in-out infinite; will-change: transform; }
-@keyframes km3Sheen { 0%, 20% { transform: translateX(-40%); } 80%, 100% { transform: translateX(40%); } }
-.km3-seal { inset: auto 3% 4% auto !important; width: 24%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff1c1, #c9a24a 45%, #7a5a14); box-shadow: 0 .3cqw .6cqw #0008, inset 0 0 0 .5cqw #a87a28; }
-.km3-seal b { position: absolute; inset: 22%; display: block; filter: drop-shadow(0 .15cqw 0 #5a3a08); }
+/* 3. Hasło na całą kartę */
+.km3-word { left: -10%; font: 400 21cqw/1 "Black Ops One", sans-serif; color: #f1e6cc; white-space: nowrap; rotate: -6deg; letter-spacing: .02em; opacity: .92; }
+.km3-word.a { top: 6%; left: -30%; } .km3-word.b { top: 34%; left: -46%; } .km3-word.c { top: 61%; left: -4%; }
+.card.vm-komuna-3 .card-photo { aspect-ratio: 1 / .74; }
+.card.vm-komuna-3 .card-sub { margin-bottom: auto; }
+.km3-dots { background: radial-gradient(circle, #111 0 32%, transparent 36%) 0 0 / 1.6cqw 1.6cqw; mix-blend-mode: screen; opacity: .9; }
+.card.vm-komuna-3 .card-photo > img { filter: grayscale(1) contrast(1.9) brightness(1.1); }
 
-/* 4. Mozaika na bloku */
-.card.vm-komuna-4 { --frame: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .62  0 0 0 0 .6  0 0 0 -1.2 1.3'/></filter><rect width='100%25' height='100%25' fill='%239a9a96'/><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>") 0 0 / 60px, #9a9a96; }
-.card.vm-komuna-4 .card-inner { background: #c8b48a; color: #1e1a14; }
-.card.vm-komuna-4 :is(.card-sub, .card-attack, .card-stats, .card-head, .card-foot) { background: #b4b2aaee; box-shadow: inset 0 .1em 0 #ffffff55, 0 .1em .2em #0005; border-radius: .2em; }
-.card.vm-komuna-4 :is(.card-head, .card-foot) { padding: .1em .35em; }
+/* 4. Fabryka o świcie */
+.card.vm-komuna-4 { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); }
+.card.vm-komuna-4 .card-inner { background: #f6b62e; color: #111; }
+.card.vm-komuna-4 .card-name { font-family: Rubik, sans-serif; font-weight: 900; color: #c8102e; text-shadow: .06em .06em 0 #111; }
+.card.vm-komuna-4 .card-hp { color: #111; }
+.card.vm-komuna-4 .card-photo { box-shadow: .3em .3em 0 #1a0c08; aspect-ratio: 1 / .76; }
+.card.vm-komuna-4 .card-photo > img { filter: grayscale(1) sepia(.6) contrast(1.4) brightness(1.05); }
 .card.vm-komuna-4 .card-sub { margin-bottom: auto; }
-.card.vm-komuna-4 .card-name { font-family: Bungee, Rubik, sans-serif; font-weight: 400; color: #8a1a10; }
-.card.vm-komuna-4 .card-photo { border: .2em solid #9a9a96; border-image: none; border-radius: 0; box-shadow: inset 0 0 0 .1em #6a6a66; aspect-ratio: 1 / .74; }
-.card.vm-komuna-4 .card-photo > img { filter: saturate(1.3) contrast(1.15) sepia(.2); }
-.km4-tiles { inset: 0; background:
-  repeating-conic-gradient(#c43a24 0 25%, #d8a440 0 50%) 0 0 / 7cqw 7cqw,
-  linear-gradient(170deg, #2e5a8a 0 30%, transparent 30%); background-blend-mode: multiply; opacity: .9; }
-.km4-star { left: 50%; top: 63%; width: 62%; aspect-ratio: 1; translate: -50% -50%; color: #c8102e; opacity: .9; }
-.km4-grout { inset: 0; background: linear-gradient(90deg, #d8d2c4 .35cqw, transparent .35cqw) 0 0 / 3.5cqw 3.5cqw, linear-gradient(#d8d2c4 .35cqw, transparent .35cqw) 0 0 / 3.5cqw 3.5cqw; opacity: .9; }
-.km4-grid { background: linear-gradient(90deg, #e8e2d466 .2cqw, transparent .2cqw) 0 0 / 2.2cqw 2.2cqw, linear-gradient(#e8e2d466 .2cqw, transparent .2cqw) 0 0 / 2.2cqw 2.2cqw; }
-.km4-concrete { inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 .4cqw #6a6a66, inset 0 0 2cqw #0006; }
+.km4-sun { left: 50%; top: 72%; width: 30%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, #fff0b0, #ffd24a 60%, #f39a1e); }
+.km4-ground { left: 0; right: 0; top: 76%; bottom: 0; background: #1a0c08; }
+.km4-warm { background: linear-gradient(180deg, #f39a1e55, #c8102e66); mix-blend-mode: multiply; }
 
-/* 5. Dziennik Telewizyjny */
-.card.vm-komuna-5 { --frame: linear-gradient(180deg, #2a1a0e, #1a0f06); }
-.card.vm-komuna-5 .card-inner { background: #5a3418; color: #f2e4cc; }
-.card.vm-komuna-5 :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f2e4cc; }
-.card.vm-komuna-5 :is(.card-sub, .card-attack, .card-stats) { background: #1a0f06c0; box-shadow: inset 0 .06em 0 #ffffff1a; }
-.card.vm-komuna-5 .card-name { font-family: "Share Tech Mono", monospace; font-weight: 700; color: #f2e4cc; letter-spacing: .02em; }
-.card.vm-komuna-5 .card-photo { border: .45em solid #1a1a1a; border-image: none; border-radius: 1.1em / .9em; box-shadow: 0 0 0 .14em #8a7a5a, inset 0 0 1em #000; }
-.card.vm-komuna-5 .card-photo > img { filter: grayscale(1) contrast(1.25) brightness(1.08) blur(.2px); }
-.km5-top { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5%; padding: .2em .45em;
-  font: 700 .38em/1 "Share Tech Mono", monospace; letter-spacing: .1em; color: #f2e4cc; background: #1a0f06c0; border-radius: .2em; }
-.km5-top i { display: inline-block; width: .7em; aspect-ratio: 1; border-radius: 50%; background: #e3262e; margin-right: .4em; animation: vmBlink 1.2s steps(1) infinite; }
-.km5-wood { inset: 0; background: repeating-linear-gradient(92deg, #6a3e1c 0 .6cqw, #5a3418 .6cqw 1.4cqw, #7a4a24 1.4cqw 1.7cqw, #5a3418 1.7cqw 3cqw),
-  linear-gradient(180deg, #ffffff10, transparent 30%, #00000030); }
-.km5-scan { background: repeating-linear-gradient(180deg, #0000 0 .5cqw, #00000040 .5cqw .8cqw); animation: km5Roll 4s linear infinite; }
-@keyframes km5Roll { to { background-position: 0 4cqw; } }
-.km5-glass { border-radius: inherit; background: radial-gradient(120% 90% at 30% 20%, #ffffff40, transparent 45%), radial-gradient(100% 100% at 50% 50%, transparent 55%, #000a);
-  animation: km5Flick .2s steps(2) infinite; }
-@keyframes km5Flick { 50% { opacity: .85; } }
-.km5-knobs { display: flex; gap: .45em; }
-.km5-knobs b { width: 1.5em; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #d8d0c0, #8a8070 55%, #3a342a); box-shadow: 0 .1em .15em #000a; }
+/* 5. Pierwszy Maja */
+.card.vm-komuna-5 { --frame: linear-gradient(135deg, #f4f1ea, #d8d2c4 50%, #f4f1ea); }
+.card.vm-komuna-5 .card-inner { background: #f4f1ea; color: #111; }
+.card.vm-komuna-5 .card-head { background: #f4f1ea; margin: -1% -2% 1%; padding: .15em .4em; box-shadow: 0 .12em 0 #c8102e; }
+.card.vm-komuna-5 .card-name { color: #111; }
+.card.vm-komuna-5 .card-hp { color: #111; }
+.card.vm-komuna-5 .card-photo { box-shadow: .3em .3em 0 #c8102e; aspect-ratio: 1 / .76; }
+.card.vm-komuna-5 .card-sub { margin-bottom: auto; }
+.card.vm-komuna-5 .card-photo > img { filter: grayscale(1) contrast(1.5); }
+.km5-split { inset: 0; background: linear-gradient(-28deg, #c8102e 52%, #f4f1ea 52%); }
+.km5-one { left: 5%; top: 62.5%; font: 400 12cqw/1 "Black Ops One", sans-serif; color: #f4f1ea; -webkit-text-stroke: .35cqw #111; white-space: nowrap; rotate: -6deg; }
+.km5-stars { left: 58%; top: 64.5%; width: 40%; height: 7%; rotate: -6deg; }
+.km5-stars b { width: 14% !important; }
+.km5-stars b { position: absolute; top: 0; left: calc(var(--k) * 20%); width: 11%; aspect-ratio: 1; color: #f4f1ea; }
 
-/* 6. Czerwony sztandar */
-.card.vm-komuna-6 { --frame: linear-gradient(135deg, #e8c870, #a87a28 50%, #f6d77a); }
-.card.vm-komuna-6 .card-inner { background: linear-gradient(180deg, #1a2238, #2a2e44 55%, #3a3448); color: #fff4e0; }
-.card.vm-komuna-6 :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #fff4e0; }
-.card.vm-komuna-6 :is(.card-sub, .card-attack, .card-stats) { background: #12141ef0; }
-.card.vm-komuna-6 .card-sub { margin-bottom: auto; }
-.card.vm-komuna-6 .card-foot { background: #12141ef0; border-radius: .25em; padding: .1em .35em; }
-.card.vm-komuna-6 .card-name { font-family: Rubik, sans-serif; font-weight: 900; color: #f6d77a; text-transform: uppercase; letter-spacing: .03em; text-shadow: 0 .06em 0 #5a0a10; }
-.card.vm-komuna-6 .card-sub { color: #f6d77a; }
-.card.vm-komuna-6 .card-photo { border: .16em solid #e8c870; border-image: none; border-radius: .15em; aspect-ratio: 1 / .74; }
-.km6-sky { inset: 0; background: radial-gradient(80% 40% at 50% 100%, #c8102e55, transparent 70%), radial-gradient(60% 30% at 20% 10%, #f6d77a22, transparent 70%); }
-.km6-flag { left: -6%; right: -6%; top: 54%; height: 17%; background: linear-gradient(180deg, #e3262e, #b30e16); transform-origin: 0 50%;
-  animation: km6Wave 5s ease-in-out infinite; overflow: hidden; box-shadow: 0 .6cqw 1.2cqw #0008; }
-@keyframes km6Wave { 50% { transform: skewY(2.5deg) scaleY(1.06); } }
-.km6-ripple { position: absolute; top: 0; bottom: 0; left: -50%; width: 200%; animation: km6Ripple 3s linear infinite; will-change: transform;
-  background: repeating-linear-gradient(95deg, transparent 0 4cqw, #00000040 8cqw, transparent 12cqw, #ffffff30 15cqw, transparent 18cqw); }
-@keyframes km6Ripple { to { transform: translateX(18cqw); } }
-.km6-fringe { left: -6%; right: -6%; top: 70.6%; height: 2.4%; background: repeating-linear-gradient(90deg, #f6d77a 0 .5cqw, #a87a28 .5cqw .9cqw);
-  -webkit-mask: linear-gradient(#000 40%, transparent); mask: linear-gradient(#000 40%, transparent); animation: km6Wave 5s ease-in-out infinite; transform-origin: 0 50%; }
-.km6-medal { right: 4%; top: 13%; width: 11%; height: 16%; filter: drop-shadow(0 .4cqw .5cqw #000a); animation: km6Swing 4s ease-in-out infinite; transform-origin: 50% 0; }
-@keyframes km6Swing { 50% { rotate: 6deg; } }
-.km6-medal .rib { position: absolute; left: 18%; right: 18%; top: 0; height: 48%; background: linear-gradient(90deg, #c8102e 0 30%, #f4f4f4 30% 70%, #c8102e 70%);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%); }
-.km6-medal .disc { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1c1, #e8c870 45%, #8a6a20); }
-.km6-medal .disc svg { inset: 16%; width: 68%; height: 68%; }
+/* 6. Stary plakat na murze (wygląd 1. + zniszczenia) */
+.card.vm-komuna-6 .card-inner { filter: saturate(.62) sepia(.22) brightness(1.02); }
+.km6-fold { inset: 0; background: linear-gradient(90deg, transparent 49.6%, #0003 49.8%, #fff3 50.2%, transparent 50.6%),
+  linear-gradient(180deg, transparent 49.6%, #0003 49.8%, #fff3 50.2%, transparent 50.6%); mix-blend-mode: overlay; }
+.km6-stain { inset: 0; background: radial-gradient(30% 18% at 20% 80%, #5a3a1a33, transparent 70%), radial-gradient(22% 14% at 82% 22%, #5a3a1a2a, transparent 70%),
+  radial-gradient(40% 10% at 60% 96%, #0003, transparent 70%), linear-gradient(170deg, #fff1 0 30%, transparent 30%); }
+.km6-tape { width: 16%; height: 4.4%; background: #f2ecd0b8; box-shadow: 0 .2cqw .3cqw #0003; }
+.km6-tape.tl { left: -2%; top: 1.6%; rotate: -36deg; } .km6-tape.tr { right: -2%; top: 1.6%; rotate: 36deg; }
+.km6-tape.bl { left: -2%; bottom: 1.6%; rotate: 36deg; } .km6-tape.br { right: -2%; bottom: 1.6%; rotate: -36deg; }
