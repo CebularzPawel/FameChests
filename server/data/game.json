@@ -366,7 +366,72 @@
    "chance": 0.012,
    "mult": 6.5,
    "off": true,
-   "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."
+   "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają. Każda karta to inne piwo - jasne, ciemne, pszeniczne, radler, miodowe…",
+   "subs": [
+    {
+     "id": "jasne",
+     "name": "Jasne pełne",
+     "tag": "🍺 JASNE",
+     "label": "JASNE PEŁNE · 5,6%",
+     "weight": 30
+    },
+    {
+     "id": "pszeniczne",
+     "name": "Pszeniczne",
+     "tag": "🌾 PSZENICZNE",
+     "label": "PSZENICZNE NIEFILTROWANE · 5,2%",
+     "weight": 14
+    },
+    {
+     "id": "radler",
+     "name": "Radler cytrynowy",
+     "tag": "🍋 RADLER",
+     "label": "RADLER CYTRYNOWY · 2,0%",
+     "weight": 12
+    },
+    {
+     "id": "miodowe",
+     "name": "Miodowe",
+     "tag": "🍯 MIODOWE",
+     "label": "MIODOWE · MIÓD GRYCZANY · 5,8%",
+     "weight": 12
+    },
+    {
+     "id": "ipa",
+     "name": "IPA",
+     "tag": "🌿 IPA",
+     "label": "IPA · AMERYKAŃSKI CHMIEL · 6,2%",
+     "weight": 10
+    },
+    {
+     "id": "ciemne",
+     "name": "Ciemne (porter bałtycki)",
+     "tag": "🍺 CIEMNE",
+     "label": "PORTER BAŁTYCKI · 9,0%",
+     "weight": 10
+    },
+    {
+     "id": "kozlak",
+     "name": "Koźlak",
+     "tag": "🐐 KOŹLAK",
+     "label": "KOŹLAK · 7,1%",
+     "weight": 5
+    },
+    {
+     "id": "wisniowe",
+     "name": "Wiśniowe",
+     "tag": "🍒 WIŚNIOWE",
+     "label": "WIŚNIOWE · 4,5%",
+     "weight": 5
+    },
+    {
+     "id": "zero",
+     "name": "Bezalkoholowe 0,0%",
+     "tag": "🚗 0,0%",
+     "label": "BEZALKOHOLOWE · 0,0%",
+     "weight": 2
+    }
+   ]
   },
   "electric": {
    "name": "Elektryczna",
@@ -480,6 +545,15 @@
    "off": true,
    "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."
   },
+  "komuna": {
+   "name": "Komunistyczna",
+   "chance": 0.006,
+   "mult": 11.0,
+   "exclusive": true,
+   "off": true,
+   "stickers": true,
+   "desc": "Lekko wyblakły plakat propagandowy z PRL: czerwone promienie z prawego dolnego rogu, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, kremowy margines papieru, złota gwiazda i hasło."
+  },
   "rzulty": {
    "name": "Rzulty",
    "chance": 0.000999803501417597,
@@ -533,6 +607,9 @@
    "halloween",
    "lantern",
    "devil"
+  ],
+  "prl": [
+   "komuna"
   ]
  },
  "cratesAddedLater": [
@@ -3421,6 +3498,25 @@
   "expireHours": 24
  },
  "patchNotes": [
+  {
+   "v": 19,
+   "date": "2026-10-27",
+   "title": "Duplikaty",
+   "items": [
+    "🔁 Sortowanie po duplikatach ma dwie wersje: <b>najwięcej</b> (karty, których masz najwięcej) i <b>najdroższe</b> (najcenniejsze duplikaty na górze).",
+    "💰 W ekwipunku są dwa przyciski sprzedaży duplikatów: <b>Sprzedaj duplikaty</b> (zostaje 1 karta w najlepszym wariancie) i <b>Sprzedaj duplikaty, zostaw warianty</b> (zostaje po 1 karcie w każdym wariancie i bez wariantu). Ulubione ⭐ zawsze zostają."
+   ]
+  },
+  {
+   "v": 18,
+   "date": "2026-10-27",
+   "title": "Więcej osiągnięć",
+   "items": [
+    "🏆 Ponad 30 nowych <b>osiągnięć</b>: pierwsza skrzynka, karty Mityczne i Legendarne, warianty, kasyno, Arena… Za każde są nagrody.",
+    "🕵️ Osiągnięcia na profilu mają teraz dwie zakładki: <b>zwykłe</b> i <b>ukryte</b> - ukryte poznasz dopiero, gdy je zdobędziesz.",
+    "🔧 Poprawka: liczą się też karty z wymiany, rynku i jackpota, a powiadomienie nie gubi się po grze w jackpot."
+   ]
+  },
   {
    "v": 17,
    "date": "2026-10-26",

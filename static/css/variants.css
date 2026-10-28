@@ -25,6 +25,13 @@
 .vr-main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .vr-top { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
 .vr-tools { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+/* podwarianty (rodzaje piwa Piwnej) */
+.vr-subs { width: 100%; border-collapse: collapse; font-size: 13px; }
+.vr-subs th { text-align: left; font-weight: 600; color: var(--muted); padding: 4px 8px; }
+.vr-subs td { padding: 5px 8px; border-top: 1px solid var(--line); }
+.vr-subs tr.active td { background: #ffffff0d; }
+.vr-subs .btn { padding: 4px 10px; font-size: 12px; }
+@media (max-width: 640px) { .vr-subs td:nth-child(3), .vr-subs th:nth-child(3) { display: none; } }
 .vr-tools label { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .vr-stage { display: flex; justify-content: center; padding: 50px 10px 30px; }
 .vr-stage .card { width: min(340px, 100%); --cw: min(340px, 100%); }

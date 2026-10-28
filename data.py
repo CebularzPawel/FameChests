@@ -129,7 +129,20 @@ VARIANTS = {
     "moro":    {"name": "Moro",         "chance": 0.016, "mult": 5.0, "off": True,
                 "desc": "Leśne moro, ramka z oliwkowego płótna z przeszyciem i nieśmiertelniki z nazwą karty na łańcuszku."},
     "beer":    {"name": "Piwna",        "chance": 0.012, "mult": 6.5, "off": True,
-                "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają."},
+                "desc": "Zimne piwo w zaparowanym szkle: bąbelki wznoszące się z dna, gęsta piana u góry i krople rosy, które co chwilę spływają. Każda karta to inne piwo - jasne, ciemne, pszeniczne, radler, miodowe…",
+                # podwarianty: wariant wypada jako jeden ("beer", ta sama szansa i wartość), a rodzaj piwa wynika z numeru
+                # egzemplarza karty (beerSub w app.js - ten sam egzemplarz zawsze to samo piwo); weight - jak często
+                "subs": [
+                    {"id": "jasne",      "name": "Jasne pełne",          "tag": "🍺 JASNE",       "label": "JASNE PEŁNE · 5,6%",            "weight": 30},
+                    {"id": "pszeniczne", "name": "Pszeniczne",           "tag": "🌾 PSZENICZNE",  "label": "PSZENICZNE NIEFILTROWANE · 5,2%", "weight": 14},
+                    {"id": "radler",     "name": "Radler cytrynowy",     "tag": "🍋 RADLER",      "label": "RADLER CYTRYNOWY · 2,0%",       "weight": 12},
+                    {"id": "miodowe",    "name": "Miodowe",              "tag": "🍯 MIODOWE",     "label": "MIODOWE · MIÓD GRYCZANY · 5,8%", "weight": 12},
+                    {"id": "ipa",        "name": "IPA",                  "tag": "🌿 IPA",         "label": "IPA · AMERYKAŃSKI CHMIEL · 6,2%", "weight": 10},
+                    {"id": "ciemne",     "name": "Ciemne (porter bałtycki)", "tag": "🍺 CIEMNE",  "label": "PORTER BAŁTYCKI · 9,0%",        "weight": 10},
+                    {"id": "kozlak",     "name": "Koźlak",               "tag": "🐐 KOŹLAK",      "label": "KOŹLAK · 7,1%",                 "weight": 5},
+                    {"id": "wisniowe",   "name": "Wiśniowe",             "tag": "🍒 WIŚNIOWE",    "label": "WIŚNIOWE · 4,5%",               "weight": 5},
+                    {"id": "zero",       "name": "Bezalkoholowe 0,0%",   "tag": "🚗 0,0%",        "label": "BEZALKOHOLOWE · 0,0%",          "weight": 2},
+                ]},
     "electric": {"name": "Elektryczna", "chance": 0.006, "mult": 10.0, "off": True,
                 "desc": "Burzowe niebo z deszczem: co chwilę uderza piorun z odgałęzieniami, a cała karta na moment się rozjaśnia."},
     "synthwave": {"name": "Synthwave",  "chance": 0.005, "mult": 11.5, "off": True,
@@ -164,6 +177,9 @@ VARIANTS = {
                 "desc": "Retro kosmos: w tle prawdziwy film z Apollo 11, złoto-srebrna klisza, krzyżyki pomiarowe na zdjęciu i zegar misji nad nazwą."},
     "usa":     {"name": "Amerykańska",  "chance": 0.006, "mult": 9.0, "off": True,
                 "desc": "Czarno-biały plakat filmu „opartego na faktach”: przekrzywiona flaga USA powiewa w tle, szare pasy płyną przez zdjęcie, w rogu pole z gwiazdami, ramka w ukośne pasy."},
+    # wyjątkowy wariant Skrzynki PRL (jak MLG / Halloweenowe w swoich skrzynkach) - z naklejkami od admina (/stickers)
+    "komuna":  {"name": "Komunistyczna", "chance": 0.006, "mult": 11.0, "exclusive": True, "off": True, "stickers": True,
+                "desc": "Lekko wyblakły plakat propagandowy z PRL: czerwone promienie z prawego dolnego rogu, zdjęcie w czerwieni i czerni jak druk z jednej matrycy, kremowy margines papieru, złota gwiazda i hasło."},
     # wariant jednej karty (pole "cards"): Jan Paweł II. Tajna karta wypada raz na 2137 skrzynek, więc Negatyw JP2 to
     # 1 na 2 137 000 skrzynek - Rzulty ma być trochę rzadszy: 1 na 2 137 420 (szansa na wariant przy wypadnięciu JP2).
     # Może mieć własne zdjęcie (panel admina, edycja karty).
@@ -269,7 +285,7 @@ def card_variants(pid):
     return [v for v, x in VARIANTS.items() if pid in (x.get("cards") or [])]
 # domyślne warianty wyjątkowe skrzynek - dopóki admin nie zapisze w panelu własnego wyboru (skrzynka bez "variantsAll"
 # dostaje do nich jeszcze włączone zwykłe warianty - catalog.chosen_crate_variants)
-DEFAULT_CRATE_VARIANTS ={"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"]}
+DEFAULT_CRATE_VARIANTS ={"skrzynia_krolow": ["royal"], "halloween": ["halloween", "lantern", "devil"], "prl": ["komuna"]}
 # wbudowane skrzynki dodane po tym, jak admini zaczęli edytować karty (catalog.rebuild dopisuje ich karty "shared"
 # także do kart zapisanych wcześniej w panelu)
 CRATES_ADDED_LATER = {"halloween"}
@@ -791,6 +807,11 @@ JACKPOT = {"maxCards": 20, "expireHours": 24}
 # ============================================================ LISTA ZMIAN (pokazywana raz po aktualizacji)
 # Najnowsza na górze. "v" musi rosnąć z każdą nową wersją - gracz zobaczy wpisy nowsze niż ostatnio obejrzany.
 PATCH_NOTES = [
+    {"v": 19, "date": "2026-10-27", "title": "Duplikaty",
+     "items": [
+         "🔁 Sortowanie po duplikatach ma dwie wersje: <b>najwięcej</b> (karty, których masz najwięcej) i <b>najdroższe</b> (najcenniejsze duplikaty na górze).",
+         "💰 W ekwipunku są dwa przyciski sprzedaży duplikatów: <b>Sprzedaj duplikaty</b> (zostaje 1 karta w najlepszym wariancie) i <b>Sprzedaj duplikaty, zostaw warianty</b> (zostaje po 1 karcie w każdym wariancie i bez wariantu). Ulubione ⭐ zawsze zostają.",
+     ]},
     {"v": 18, "date": "2026-10-27", "title": "Więcej osiągnięć",
      "items": [
          "🏆 Ponad 30 nowych <b>osiągnięć</b>: pierwsza skrzynka, karty Mityczne i Legendarne, warianty, kasyno, Arena… Za każde są nagrody.",

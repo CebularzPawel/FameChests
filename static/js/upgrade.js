@@ -17,7 +17,7 @@ function upgChance(stake, goal) {
 // wartości możliwych celów (jak upgrade_pool na serwerze): karty ze skrzynek w sklepie, bez tajnych i specjalnych,
 // w zwykłym wariancie albo we włączonych, nie wyjątkowych wariantach
 function upgPoolValues() {
-  const vs = S.cfg.variantOrder.filter(v => v === "normal" || (isSpecial(v) && !isExclusive(v) && variantOn(v) &&
+  const vs = S.cfg.variantOrder.filter(v => v === "normal" || (isSpecial(v) && houseVariant(v) && variantOn(v) &&
     !S.cfg.variants[v].combo && !S.cfg.variants[v].special && !S.cfg.variants[v].cards));
   const out = new Set();
   Object.values(S.cfg.people).filter(p => p.forge && p.rarity !== "secret" && p.rarity !== "special")
@@ -205,7 +205,7 @@ function bindUpgrader() {
     const t = e.target;
     if (UPG.busy) {   // podgląd wygranej karty
       const c = t.closest("#upgResult .card");
-      if (c) openViewer(c.dataset.pid, c.dataset.variant);
+      if (c) openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid);
       return;
     }
     const pick = t.closest(".upg-mine .pick");

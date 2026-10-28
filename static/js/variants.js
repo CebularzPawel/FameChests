@@ -5,7 +5,7 @@
 // tu tylko pokazujemy to samo (crateVariants / variantEvent w app.js). Druga zakładka: propozycje nowych wariantów
 // (makiety z variant-mockups.js) do wyboru.
 
-const VR = { tab: "settings", variant: "bronze", pid: "pl_tusk", combo: "", zoom: null, bound: false };
+const VR = { tab: "settings", variant: "bronze", pid: "pl_tusk", combo: "", sub: "", zoom: null, bound: false };
 const VR_GROUPS = [
   ["Zwykłe warianty", v => !vrV(v).exclusive],
   ["Wyjątkowe (nie z kontraktu, ulepszacza ani kasyna)", v => vrV(v).exclusive && !vrV(v).always && !vrV(v).cards && !vrV(v).special],
@@ -44,7 +44,7 @@ function vrStatus(v) {
 
 // przykładowa karta w wariancie; warianty kart specjalnych - na chwilę zrobiona karta specjalna (jak /mockups)
 function vrCardHTML(pid, v) {
-  if (!vrV(v)?.special) return cardHTML(pid, v);
+  if (!vrV(v)?.special) return cardHTML(pid, v, vrUid(v));
   const base = person(pid), crate = crateList().find(c => c.special) || crateOf(base.crate), id = "__vr_" + v;
   S.cfg.people[id] = Object.assign({}, base, { id, rarity: "special", crate: crate.id, crates: [crate.id], number: 1, style: 1,
     fixedVariant: v, source: "casino", imgAs: base.id });
@@ -80,7 +80,7 @@ function vrSettingsHTML() {
     return vs.length ? `<div class="vr-group"><div class="vr-group-t">${title}</div>${vs.map(x => {
       const st = vrStatus(x);
       return `<button type="button" class="vr-item${x === v ? " active" : ""} st-${st.cls}" data-v="${x}">
-        <span class="vdot ${vtClass(x)}"></span><span class="vr-iname">${esc(vrV(x).name)}<small>×${String(vrV(x).mult).replace(".", ",")}</small></span>
+        <span class="vdot ${vtClass(x)}"></span><span class="vr-iname">${esc(vrV(x).name)}${vrCfg(x).noHouse ? ' <span title="Ekskluzywny: nie z kuźni ani kasyna">🔒</span>' : ""}<small>×${String(vrV(x).mult).replace(".", ",")}</small></span>
         <span class="vr-ist">${st.txt}${st.extra ? `<small>${st.extra}</small>` : ""}</span></button>`;
     }).join("")}</div>` : "";
   }).join("");
@@ -96,6 +96,8 @@ function vrSettingsHTML() {
             ${V.layer && !V.noCombo ? `<label>Połącz z <select class="sort-sel" data-vr="combo"><option value="">— sam wariant —</option>${
               S.cfg.variantOrder.filter(b => b !== "normal" && !vrV(b).combo && !vrV(b).layer && !vrV(b).special && !vrV(b).cards && S.cfg.variants[`${v}+${b}`])
                 .map(b => `<option value="${b}"${b === VR.combo ? " selected" : ""}>${esc(vrV(b).name)}</option>`).join("")}</select></label>` : ""}
+            ${V.subs ? `<label>Rodzaj <select class="sort-sel" data-vr="sub"><option value="">— ogólny wygląd —</option>${
+              V.subs.map(s => `<option value="${s.id}"${s.id === VR.sub ? " selected" : ""}>${esc(s.name)}</option>`).join("")}</select></label>` : ""}
             <button class="btn" type="button" data-vr="viewer">🔍 Jak w grze</button>
           </div>
           <div class="vr-stage" id="vrStage">${vrCardHTML(VR.pid, vrShown())}</div>
@@ -103,6 +105,7 @@ function vrSettingsHTML() {
         </div>
         <div class="vr-side">${vrFormHTML(v)}</div>
       </div>
+      ${V.subs ? `<div class="panel">${vrSubsHTML(v)}</div>` : ""}
       ${V.special ? "" : `<div class="panel">${vrWhereHTML(v)}</div><div class="panel">${vrEventsHTML(v)}</div>`}
       <div class="panel"><h3 class="stk-h">🎴 Na innych kartach</h3><div class="vr-others">${vrOthers().map(pid =>
         `<div class="vr-other" data-pid="${pid}">${vrCardHTML(pid, vrShown())}</div>`).join("")}</div></div>
@@ -112,6 +115,29 @@ function vrSettingsHTML() {
 
 // wariant na podglądzie: sam albo połączony z wybranym (np. flag+gold)
 function vrShown() { return VR.combo && S.cfg.variants[`${VR.variant}+${VR.combo}`] ? `${VR.variant}+${VR.combo}` : VR.variant; }
+
+// Podwarianty (np. rodzaje piwa Piwnej - VARIANTS.beer.subs): rodzaj wynika z numeru egzemplarza karty (beerSub w app.js),
+// więc do podglądu szukamy przykładowego numeru, który daje wybrany rodzaj. null = ogólny wygląd (jak w klaserze).
+function vrUid(v) {
+  if (!VR.sub || !vrV(VR.variant)?.subs || !variantParts(v).includes(VR.variant)) return null;
+  for (let u = 1; u < 100000; u++) if (beerSub(v, u)?.id === VR.sub) return u;
+  return null;
+}
+function vrSubsHTML(v) {
+  const subs = vrV(v).subs, total = subs.reduce((a, s) => a + s.weight, 0);
+  return `<h3 class="stk-h">🍺 Podwarianty — rodzaje piwa</h3>
+    <p class="muted small">Wariant wypada jako jeden („${esc(vrV(v).name)}”, ta sama szansa i wartość), a rodzaj piwa wynika z numeru
+      egzemplarza karty — ten sam egzemplarz jest zawsze tym samym piwem. Gracz widzi rodzaj na plakietce, w podpisie pod zdjęciem
+      i w podglądzie karty. W klaserze i na rynku (bez konkretnego egzemplarza) karta ma ogólny wygląd. Rodzaje i ich częstość
+      zmienia się w kodzie (<code>VARIANTS["beer"]["subs"]</code> w data.py).</p>
+    <table class="vr-subs">
+      <tr><th>Rodzaj</th><th>Plakietka</th><th>Podpis na karcie</th><th>Szansa</th><th></th></tr>
+      ${subs.map(s => `<tr class="${s.id === VR.sub ? "active" : ""}">
+        <td><b>${esc(s.name)}</b></td><td>${esc(s.tag)}</td><td class="muted">${esc(s.label)}</td>
+        <td>${Math.round(s.weight / total * 1000) / 10}%</td>
+        <td><button class="btn" type="button" data-vr-sub="${s.id}">${s.id === VR.sub ? "👁 Na podglądzie" : "Pokaż"}</button></td></tr>`).join("")}
+    </table>`;
+}
 
 // po jednej karcie z kilku rzadkości (i tajna, jeśli jest znana) - żeby zobaczyć wariant na różnych ramkach
 function vrOthers() {
@@ -129,7 +155,7 @@ function vrFormHTML(v) {
   if (V.special) return `<h3 class="stk-h">${esc(V.name)}</h3><p class="muted">${esc(V.desc || "")}</p>
     <p class="muted small">Wariant kart specjalnych — nie wypada ze skrzynek. Wariant i wygląd karty specjalnej ustawiasz przy samej
       karcie w panelu admina. <a href="/mockups">Makiety kart specjalnych</a></p>`;
-  const changed = ["enabled", "chance", "weight", "desc", "mult"].some(k => saved[k] !== null && saved[k] !== undefined);
+  const changed = ["enabled", "chance", "weight", "desc", "mult"].some(k => saved[k] !== null && saved[k] !== undefined) || saved.noHouse;
   return `<form class="vr-form" id="vrForm" autocomplete="off">
     <h3 class="stk-h vr-title"><span class="vdot ${vtClass(v)}"></span>${esc(V.name)}</h3>
     <label class="vr-switch"><input type="checkbox" name="enabled"${cfg.enabled ? " checked" : ""}>
@@ -140,10 +166,12 @@ function vrFormHTML(v) {
           saved.chance != null ? +(saved.chance * 100).toFixed(5) : ""}" placeholder="${+(def.chance * 100).toFixed(5)}"></label>`}
     <label>Mnożnik wartości karty (×)<input type="number" name="mult" min="0.01" max="1000" step="any" value="${saved.mult ?? ""}" placeholder="${def.mult ?? V.mult}">
       <small class="muted">Wartość karty = wartość rzadkości × ten mnożnik (połączenia z flagą itp. — iloczyn). Zmienia wartość także kart, które gracze już mają.</small></label>
+    ${V.exclusive ? "" : `<label class="vr-switch"><input type="checkbox" name="noHouse"${saved.noHouse ? " checked" : ""}>
+      <span><b>🔒 Ekskluzywny</b><small class="muted">Wypada tylko ze skrzynek — nie da się go dostać z kuźni (kontrakt), ulepszacza ani wygranych w kasynie.</small></span></label>`}
     <div class="vr-facts">
       <span>Teraz: <b>${V.always ? `waga ${V.weight}` : vrPct(V.chance)}</b>${V.chance ? ` · 1 na ${Math.round(1 / V.chance).toLocaleString("pl-PL")} kart` : ""}</span>
       <span>Wartość: <b>×${String(V.mult).replace(".", ",")}</b>${def.mult != null && def.mult !== V.mult ? ` <small class="muted">(w kodzie ×${String(def.mult).replace(".", ",")})</small>` : ""}</span>
-      ${V.exclusive ? `<span>✨ Wyjątkowy — nie z kontraktu ani ulepszacza</span>` : ""}
+      ${V.exclusive ? `<span>✨ Wyjątkowy — nie z kontraktu ani ulepszacza</span>` : saved.noHouse ? `<span>🔒 Ekskluzywny — nie z kuźni ani kasyna</span>` : ""}
       ${V.layer ? `<span>🧅 Warstwa — łączy się z innymi wariantami${V.extraChance ? ` (${Math.round(V.extraChance * 100)}% kart)` : ""}</span>` : ""}
     </div>
     <label>Opis<textarea name="desc" rows="3" maxlength="300" placeholder="${esc(def.desc || "")}">${esc(saved.desc ?? "")}</textarea></label>
@@ -250,7 +278,7 @@ function vrApply(res) {
 async function vrSave(form) {
   const f = new FormData(form), V = vrV(VR.variant);
   const num = k => f.get(k) === null || f.get(k) === "" ? null : +String(f.get(k)).replace(",", ".");
-  const body = { enabled: form.enabled.checked, desc: f.get("desc").trim() || null, mult: num("mult") };
+  const body = { enabled: form.enabled.checked, desc: f.get("desc").trim() || null, mult: num("mult"), noHouse: !!form.noHouse?.checked };
   if (V.always) body.weight = num("weight");
   else body.chance = num("chance") === null ? null : num("chance") / 100;
   try {
@@ -276,7 +304,7 @@ async function vrAddEvent(form) {
 
 function vrProposalsHTML() {
   const groups = typeof VARIANT_PROPOSALS === "undefined" ? [] : VARIANT_PROPOSALS;
-  return `<p class="muted vr-prop-intro">Makiety nowych wariantów na karcie ${esc(person(VR.pid)?.name || "")} — kliknij kartę, żeby ją powiększyć.
+  return `<p class="muted vr-prop-intro">Makiety nowych wariantów (na karcie ${esc(person(VR.pid)?.name || "")} albo na karcie ze skrzynki wariantu) — kliknij kartę, żeby ją powiększyć.
     Wybierz po jednej (albo połączenie kilku), a zrobię z nich prawdziwe warianty — na początku wyłączone, włączycie je tutaj.</p>
     ${groups.map(g => `<section class="panel mock-sec vr-prop" id="prop-${g.key}">
       <h3>${g.icon} ${esc(g.name)} <small class="muted">— ${esc(g.about)}</small></h3>
@@ -287,14 +315,15 @@ function vrProposalsHTML() {
 }
 
 // karta w makiecie: zwykła karta + klasy wyglądu (vm-<wariant> vm-<wariant>-<nr>) i ozdoby z makiety
-function vrProposalCard(g, i, pid = VR.pid) {
+function vrProposalCard(g, i, pid = person(g.pid) && !person(g.pid).masked ? g.pid : VR.pid) {
   const l = g.looks[i], box = document.createElement("div");
   box.innerHTML = cardHTML(pid, "normal");
   const card = box.firstElementChild;
   card.classList.remove("v-normal");
   card.classList.add("vm", `vm-${g.key}`, `vm-${g.key}-${i + 1}`, ...(l.cls ? l.cls.split(" ") : []));   // cls: wygląd pożyczony z wariantu
   const p = person(pid);
-  card.querySelector(".shine")?.insertAdjacentHTML("beforebegin", `${l.deco ? l.deco(p) : ""}<div class="var-tag vm-tag">${l.tag || g.tag}</div>`);
+  const stk = g.stickers ? stickersHTML(g.stickers, stickerList(g.stickers, p)) : "";   // naklejki prawdziwego wariantu (/stickers)
+  card.querySelector(".shine")?.insertAdjacentHTML("beforebegin", `${l.deco ? l.deco(p) : ""}${stk}<div class="var-tag vm-tag">${l.tag || g.tag}</div>`);
   if (l.bg) card.querySelector(".card-inner").insertAdjacentHTML("afterbegin", l.bg(p));
   if (l.photo) card.querySelector(".card-photo").insertAdjacentHTML("beforeend", l.photo(p));
   if (l.sub) card.querySelector(".card-sub").innerHTML = l.sub(p);
@@ -330,13 +359,15 @@ function vrBind() {
     const tab = t.closest("[data-tab]");
     if (tab) { Sound.click(); VR.tab = tab.dataset.tab; return renderVariants(); }
     const item = t.closest(".vr-item");
-    if (item) { Sound.click(); VR.variant = item.dataset.v; VR.combo = ""; return renderVariants(); }
-    if (t.closest('[data-vr="viewer"]')) { Sound.click(); return vrV(VR.variant).special ? null : openViewer(VR.pid, vrShown()); }
+    if (item) { Sound.click(); VR.variant = item.dataset.v; VR.combo = ""; VR.sub = ""; return renderVariants(); }
+    if (t.closest('[data-vr="viewer"]')) { Sound.click(); return vrV(VR.variant).special ? null : openViewer(VR.pid, vrShown(), vrUid(vrShown())); }
+    const sub = t.closest("[data-vr-sub]");
+    if (sub) { Sound.click(); VR.sub = sub.dataset.vrSub; renderVariants(); return $("#vrStage")?.scrollIntoView({ block: "center", behavior: "smooth" }); }
     const other = t.closest(".vr-other");
     if (other) { Sound.click(); VR.pid = other.dataset.pid; return renderVariants(); }
     if (t.closest('[data-vr="defaults"]')) {
       if (!confirm(`Przywrócić ustawienia z kodu dla „${vrV(VR.variant).name}”? (wydarzenia zostają)`)) return;
-      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null })); toast("↩️ Przywrócono"); }
+      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null, noHouse: false })); toast("↩️ Przywrócono"); }
       catch (err) { toast(err.message, true); }
       return;
     }
@@ -369,6 +400,7 @@ function vrBind() {
     const t = e.target;
     if (t.matches('[data-vr="card"]')) { VR.pid = t.value; renderVariants(); }
     if (t.matches('[data-vr="combo"]')) { VR.combo = t.value; renderVariants(); }
+    if (t.matches('[data-vr="sub"]')) { VR.sub = t.value; renderVariants(); }
     if (t.name === "crates" && t.checked) { const r = $('#vrEvForm input[name="scope"][value="some"]'); if (r) r.checked = true; }
     if (t.matches("[data-pin]")) { Sound.click(); vrPin([t.dataset.pin], t.checked); }
   };

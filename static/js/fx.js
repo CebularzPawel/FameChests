@@ -120,7 +120,7 @@ function epicReveal(drop, { fast = false, auto = false } = {}) {
           <div class="epic-glow"></div>
           <div class="epic-flipper">
             <div class="epic-face epic-back">${cardBackHTML()}</div>
-            <div class="epic-face epic-front">${cardHTML(drop.person, drop.variant)}</div>
+            <div class="epic-face epic-front">${cardHTML(drop.person, drop.variant, drop.id)}</div>
           </div>
         </div>
         <div class="epic-name">${esc(p.name)}${isSpecial(drop.variant) ? ` <span class="epic-holo">✨ ${variantName(drop.variant)}</span>` : ""}<b>${fmt(drop.value)}</b></div>
@@ -211,16 +211,27 @@ function epicOpen() { return !!document.querySelector(".epic, .sreveal"); }
 
 // ================================================================ PODGLĄD KARTY
 
-function openViewer(pid, variant = "normal") {
+// Piwna: rodzaj piwa tego egzemplarza (i jak często wypada), a w podglądzie bez egzemplarza - lista wszystkich rodzajów
+function beerRow(variant, uid) {
+  const subs = S.cfg.variants.beer?.subs;
+  if (!subs?.length || !variantParts(variant).includes("beer")) return "";
+  const sub = beerSub(variant, uid), total = subs.reduce((a, s) => a + s.weight, 0);
+  return sub
+    ? `<tr><td>Rodzaj piwa</td><td><b>${esc(sub.name)}</b> <span class="muted">(${Math.round(sub.weight / total * 100)}% Piwnych kart)</span></td></tr>`
+    : `<tr><td>Rodzaje piwa</td><td>${subs.map(s => esc(s.name)).join(", ")}</td></tr>`;
+}
+// uid - numer egzemplarza (jeśli podgląd jest dla konkretnej karty gracza): od niego zależy podwariant Piwnej
+function openViewer(pid, variant = "normal", uid = null) {
   closeViewer();
   const p = person(pid);
   variant = variant || "normal";
+  uid = uid || null;
   const el = document.createElement("div");
   el.className = "viewer";
   const stage = `
     <div class="viewer-stage">
       <div class="viewer-flipper">
-        <div class="vf vf-front">${cardHTML(pid, variant)}</div>
+        <div class="vf vf-front">${cardHTML(pid, variant, uid)}</div>
         <div class="vf vf-back">${cardBackHTML()}</div>
       </div>
     </div>`;
@@ -271,6 +282,7 @@ function openViewer(pid, variant = "normal") {
           ${abilitiesOf(p).map((a, i, all) => `<tr><td>${a.kind !== "off" ? kindIcon(a.kind) + " " : ""}${KIND_LABELS[a.kind] || "Atak"}${all.length > 1 ? " " + (i + 1) : ""}</td><td>${esc(a.name)} <b>${a.value}</b></td></tr>`).join("")}
           <tr><td>Słabość / odporność</td><td>${S.cfg.types[type.weak].icon} ×2 · ${S.cfg.types[type.resist].icon} −20</td></tr>
           <tr><td>Wartość</td><td><b>${fmt(cardValue(pid, variant))}</b> <span class="muted">(×${String(S.cfg.variants[variant].mult).replace(".", ",")})</span></td></tr>
+          ${beerRow(variant, uid)}
           ${isSpecialCard(p) ? `<tr><td>Karta specjalna</td><td>tylko w wariancie ${esc(variantName(p.fixedVariant))} · nie da się jej sprzedać grze, postawić ani zużyć</td></tr>`
             : `<tr><td>Szansa z 1 skrzynki</td><td>${chance ? "1 na " + Math.round(1 / chance).toLocaleString("pl-PL") : "—"}</td></tr>`}
           ${cratesRow}
@@ -297,9 +309,9 @@ function openViewer(pid, variant = "normal") {
     const act = e.target.closest("[data-act]")?.dataset.act;
     const v = e.target.closest("[data-var]")?.dataset.var;
     if (act === "close" || e.target === el) return closeViewer();
-    if (v) return openViewer(pid, v);
+    if (v) return openViewer(pid, v, v === variant ? uid : null);
     if (act === "share") return openShowDialog(pid, variant);
-    if (act === "pin") return toggleShowcase(pid, variant).then(() => openViewer(pid, variant));
+    if (act === "pin") return toggleShowcase(pid, variant).then(() => openViewer(pid, variant, uid));
     if (act === "flip" || e.target.closest(".viewer-flipper")) {
       el.querySelector(".viewer-flipper").classList.toggle("flipped");
       Sound.page();
@@ -363,7 +375,7 @@ function secretReveal(drop, { fast = false } = {}) {
         `<i style="--a:${(i * 22.5 + rand(-8, 8)).toFixed(1)}deg; --l:${rand(35, 70).toFixed(0)}vmax; --d:${rand(0, 0.6).toFixed(2)}s"></i>`).join("")}</div>
       <div class="sr-content">
         <div class="sr-title">${[...title].map((ch, i) => `<span style="--i:${i}">${ch === " " ? "&nbsp;" : ch}</span>`).join("")}</div>
-        <div class="sr-card"><div class="sr-halo"></div>${cardHTML(drop.person, drop.variant)}</div>
+        <div class="sr-card"><div class="sr-halo"></div>${cardHTML(drop.person, drop.variant, drop.id)}</div>
         <div class="sr-name">${esc(p.name)}</div>
         <div class="sr-sub">${isSpecial(drop.variant) ? `<span class="holo-txt">✨ ${variantName(drop.variant)}</span> · ` : ""}<b>${fmt(drop.value)}</b></div>
         <div class="sr-hint">Kliknij lub naciśnij spację, aby kontynuować</div>

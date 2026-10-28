@@ -716,6 +716,19 @@ def has_access(crate_id, user_id=None):
                         (user_id or uid(), crate_id)).fetchone() is not None
 
 
+def released_crates():
+    """Skrzynki, które są albo były kiedyś w sklepie (klucze crate_released:<id> w tabeli state) - klaser i filtr ekwipunku
+    pokazują tylko je, żeby nie zdradzać skrzynek, których jeszcze nie było. Skrzynki w sklepie dopisuje tu przy okazji."""
+    conn = db()
+    seen = {r[0].split(":", 1)[1] for r in conn.execute("SELECT key FROM state WHERE key LIKE 'crate_released:%'")}
+    new = [cid for cid, c in catalog.CRATES.items() if c["shop"] and cid not in seen]
+    for cid in new:
+        conn.execute("INSERT INTO state (key, value) VALUES (?, 1) ON CONFLICT DO NOTHING", (f"crate_released:{cid}",))
+    if new:
+        conn.commit()
+    return seen | set(new)
+
+
 def can_buy(crate):
     """Czy zalogowany gracz może KUPIĆ tę skrzynkę (otwieranie posiadanych skrzynek jest zawsze możliwe)."""
     if crate.get("special"):   # skrzynka kart specjalnych - nie da się jej kupić (nawet adminowi)
@@ -1285,7 +1298,7 @@ def crate_json(c):
 @app.get("/api/config")
 @login_required
 def config():
-    found = discovered()
+    found, released = discovered(), released_crates()
     return jsonify({
         "rarities": RARITIES,
         "rarityOrder": RARITY_ORDER,
@@ -1299,7 +1312,9 @@ def config():
         "arena": {"rules": ARENA, "effects": ARENA_EFFECTS, "visuals": ARENA_VISUALS, "targets": ARENA_TARGETS,
                   "effectTargets": ARENA_EFFECT_TARGETS} if current_user()["is_admin"] else None,
         "people": {pid: public_person(p, found) for pid, p in catalog.PEOPLE.items()},
-        "crates": {cid: crate_json(c) | {"canBuy": can_buy(c)} for cid, c in catalog.CRATES.items()},
+        # released - skrzynka jest / była w sklepie (albo to skrzynka kart specjalnych) - tylko takie widać w klaserze
+        "crates": {cid: crate_json(c) | {"canBuy": can_buy(c), "released": cid in released or bool(c.get("special"))}
+                   for cid, c in catalog.CRATES.items()},
         "crateOrder": list(catalog.CRATES),
         "maxOpen": MAX_OPEN,
         "startingBalance": STARTING_BALANCE,
@@ -2918,7 +2933,8 @@ def house_cards(value):
     z CASINO_VARIANTS - za każdym razem jedna z najdroższych, które się mieszczą (CASINO_TOP).
     Zwraca ([(karta, wariant)], reszta w pieniądzach)."""
     pool = sorted(((card_value(p, v), p, v) for p in catalog.PEOPLE.values() if p.get("forge") and p["rarity"] != "secret"
-                   for v in CASINO_VARIANTS if v == "normal" or catalog.variant_enabled(v)), key=lambda x: -x[0])
+                   for v in CASINO_VARIANTS if v == "normal" or (catalog.variant_enabled(v) and catalog.variant_house_ok(v))),
+                  key=lambda x: -x[0])
     out, left = [], value
     while len(out) < ROULETTE["maxPayoutCards"]:
         fit = [x for x in pool if x[0] <= left]
@@ -4612,8 +4628,8 @@ def admin_variant_or_404(variant):
 @app.post("/api/admin/variants/<variant>")
 @admin_required
 def admin_variant_save(variant):
-    """Włączony / wyłączony, szansa (albo waga przy wariantach "always"), opis i mnożnik wartości. null = wartość z kodu
-    (data.py)."""
+    """Włączony / wyłączony, szansa (albo waga przy wariantach "always"), opis, mnożnik wartości i "noHouse" (ekskluzywny:
+    nie z kuźni ani kasyna). null = wartość z kodu (data.py)."""
     err = admin_variant_or_404(variant)
     if err:
         return err
@@ -4621,13 +4637,14 @@ def admin_variant_save(variant):
         return bad("Warianty kart specjalnych ustawia się przy samych kartach")
     body = request.get_json(force=True) or {}
     settings = variant_settings_row(variant)
-    for k in ("enabled", "chance", "weight", "desc", "mult"):
+    for k in ("enabled", "chance", "weight", "desc", "mult", "noHouse"):
         if k in body:
             settings[k] = body[k]
     save_variant_settings(variant, settings)
     s = catalog.VARIANT_CFG[variant]
     log_admin("variant_save", details=f"{VARIANTS[variant]['name']}: {'włączony' if catalog.variant_enabled(variant) else 'wyłączony'}"
                                       f" · szansa {VARIANTS[variant]['chance'] * 100:.3g}% · wartość ×{VARIANTS[variant]['mult']:g}"
+                                      + (" · ekskluzywny (nie z kuźni ani kasyna)" if s["noHouse"] else "")
                                       + (f" · waga {s['weight']}" if s["weight"] is not None else ""))
     db().commit()
     return jsonify(admin_variant_json(variant))

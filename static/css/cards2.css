@@ -1591,7 +1591,8 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .card:is(.v-beer, .v-moro, .v-electric, .v-synthwave, .v-motor) .card-attack { padding-inline: .35em; margin-top: 1.5%; }
 
 /* tagi, kropki, zawartość skrzynki */
-.var-tag.vt-beer, .ph.vt-beer { background: linear-gradient(180deg, #ffe58a, #f6b42a); color: #5a2e04; border: 1px solid #b86a08; text-shadow: none; box-shadow: 0 0 .6em #f6b42a88; }
+.var-tag.vt-beer, .ph.vt-beer { background: linear-gradient(180deg, var(--br-tag1, #ffe58a), var(--br-tag2, #f6b42a)); color: var(--br-tagink, #5a2e04);
+  border: 1px solid var(--br-tagb, #b86a08); text-shadow: none; box-shadow: 0 0 .6em color-mix(in srgb, var(--br-tag2, #f6b42a) 55%, transparent); }
 .var-tag.vt-moro, .ph.vt-moro { background: #3a3f24; color: #e8e2c8; border: 1px solid #1c1f14; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .1em; text-shadow: none; }
 
 .var-tag.vt-electric, .ph.vt-electric { background: #0a1020; color: #9fdcff; border: 1px solid #4fb8ff; box-shadow: 0 0 .7em #4fb8ff; font-family: Orbitron, sans-serif; text-shadow: none; }
@@ -1605,15 +1606,27 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .odd.odd-v.vt-electric { border-left-color: #4fb8ff; } .odd.odd-v.vt-synthwave { border-left-color: #ff2bd6; }
 .odd.odd-v.vt-motor { border-left-color: #e8202f; }
 
-/* Piwna - zimne piwo w zaparowanym szkle: głębia koloru, bąbelki z dna, piana z koronką, rosa (część kropel spływa) */
-.card.v-beer { --panel: #fff6dc70; --frame: linear-gradient(135deg, #f6fbfe, #dce9f0 30%, #ffffff 50%, #d0e0e8 70%, #f2f8fb); --spin: initial; box-shadow: 0 6px 18px #0008, 0 0 18px #f6b42a44; }
-.card.v-beer .card-inner { background: #e9a01c; color: #2a1402; }
+/* Piwna - zimne piwo w zaparowanym szkle: głębia koloru, bąbelki z dna, piana z koronką, rosa (część kropel spływa).
+   Kolory w zmiennych --br-*: domyślnie jasne piwo, podwarianty (rodzaje piwa, VARIANTS.beer.subs w data.py, beerSub
+   w app.js) to klasy .brs-<podwariant> niżej - piwo c1..c5 (od piany do dna), napisy ink/name, piana f1/f2/ring,
+   zabarwienie zdjęcia a1/a2/aop, zmętnienie haze, plakietka tag1/tag2/tagink/tagb. */
+.card.v-beer { --br-c1: #ffe48a; --br-c2: #f7bf3a; --br-c3: #e9a01c; --br-c4: #cf7a0c; --br-c5: #a85a06; --br-ink: #2a1402; --br-name: #4a2604;
+  --br-glow: #fffdf6; --br-panel: #fff6dc70; --br-f1: #fffdf6; --br-f2: #efe0b8; --br-ring: #d9c79a; --br-a1: #ffd56a; --br-a2: #e08a12; --br-aop: .24;
+  --br-haze: 0; --br-hazec: #fff6dc; --br-tag1: #ffe58a; --br-tag2: #f6b42a; --br-tagink: #5a2e04; --br-tagb: #b86a08;
+  --panel: var(--br-panel); --frame: linear-gradient(135deg, #f6fbfe, #dce9f0 30%, #ffffff 50%, #d0e0e8 70%, #f2f8fb); --spin: initial;
+  box-shadow: 0 6px 18px #0008, 0 0 18px color-mix(in srgb, var(--br-c2) 27%, transparent); }
+.card.v-beer .card-inner { background: var(--br-c3); color: var(--br-ink); }
+.card.v-beer :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name) { color: var(--br-ink); }
+.card.v-beer .card-hp { color: var(--br-name); }   /* nagłówek leży na pianie - jak nazwa */
 .card.v-beer .card-head { z-index: 5; }   /* nazwa nad pianą */
-.card.v-beer .card-name { color: #4a2604; text-shadow: 0 0 .3em #fffdf6, 0 0 .5em #fffdf6; }
+.card.v-beer .card-name { color: var(--br-name); text-shadow: 0 0 .3em var(--br-glow), 0 0 .5em var(--br-glow); }
 .card.v-beer :is(.card-sub, .card-attack, .card-stats) { box-shadow: inset 0 .1em 0 #ffffff88; }
 .card.v-beer .card-photo { border: .2em solid #fff6dcaa; border-image: none; box-shadow: 0 .3em .6em #6a3a0855; }
 .br-body { inset: 0; background: linear-gradient(90deg, #00000038, transparent 16%, transparent 84%, #0000003a), linear-gradient(90deg, transparent 11%, #ffffff3a 14%, transparent 19%),
-  linear-gradient(180deg, #ffe48a 0%, #f7bf3a 16%, #e9a01c 45%, #cf7a0c 80%, #a85a06); }
+  linear-gradient(180deg, var(--br-c1) 0%, var(--br-c2) 16%, var(--br-c3) 45%, var(--br-c4) 80%, var(--br-c5)); }
+/* niefiltrowane piwo (pszeniczne, radler): mleczne zmętnienie, gęstsze przy dnie */
+.br-body::after { content: ""; position: absolute; inset: 0; opacity: var(--br-haze);
+  background: radial-gradient(90% 60% at 40% 70%, var(--br-hazec), transparent 75%), linear-gradient(180deg, transparent 20%, var(--br-hazec)); }
 /* bąbelek: przezroczysty środek, jasny brzeg i odblask; rośnie, przyspiesza i chwieje się na boki (--sw) */
 .br-bub { bottom: -2%; aspect-ratio: 1; border-radius: 50%; will-change: transform, opacity; animation: brBub linear infinite;
   background: radial-gradient(circle at 33% 30%, #fff 0 12%, transparent 24%), radial-gradient(circle, #ffe9a018 0 50%, #fff6d0c0 63%, #ffffff60 71%, transparent 76%);
@@ -1621,7 +1634,7 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 @keyframes brBub { 0% { transform: translate(0, 0) scale(.35); opacity: 0; } 6% { opacity: 1; }
   40% { transform: translate(var(--sw), -30cqw) scale(.62); } 75% { transform: translate(calc(var(--sw) * -.5), -78cqw) scale(.9); }
   93% { opacity: 1; } 100% { transform: translate(var(--sw), -122cqw) scale(1.12); opacity: 0; } }
-.br-amber { background: linear-gradient(180deg, #ffd56a, #e08a12); mix-blend-mode: multiply; opacity: .24; }
+.br-amber { background: linear-gradient(180deg, var(--br-a1), var(--br-a2)); mix-blend-mode: multiply; opacity: var(--br-aop); }
 .br-bubs { overflow: hidden; opacity: .85; }
 .br-bubs > .br-bub { position: absolute; display: block; animation-name: brBubP; }
 @keyframes brBubP { 0% { transform: translate(0, 0) scale(.35); opacity: 0; } 8% { opacity: 1; }
@@ -1639,6 +1652,30 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 @keyframes brRun { 0%, 70% { transform: translateY(0); } 100% { transform: translateY(55cqw); } }
 @keyframes brTrail { 0%, 70% { height: 0; } 100% { height: 55cqw; } }
 .r-secret.v-beer .sc-border { background: linear-gradient(135deg, #f6fbfe, #f7bf3a 40%, #fffdf6 60%, #cf7a0c); animation: none; }
+/* podwarianty Piwnej - rodzaje piwa (VARIANTS.beer.subs) */
+.card.v-beer.brs-pszeniczne { --br-c1: #fff3c4; --br-c2: #ffdc84; --br-c3: #f4c45c; --br-c4: #e2a640; --br-c5: #c4862a; --br-haze: .55; --br-hazec: #fff4d4;
+  --br-f1: #ffffff; --br-f2: #f4ecd8; --br-ring: #e2d8be; --br-a1: #ffe9a8; --br-a2: #f2b850; --br-aop: .2;
+  --br-tag1: #fff6d0; --br-tag2: #f2c45a; --br-tagink: #5a3a06; --br-tagb: #c8922a; }
+.card.v-beer.brs-radler { --br-c1: #fbffc8; --br-c2: #f0f68c; --br-c3: #dfec6a; --br-c4: #c8d850; --br-c5: #a6bc36; --br-haze: .45; --br-hazec: #fbffe0;
+  --br-ink: #262c04; --br-name: #3a4206; --br-panel: #fbffe070; --br-f1: #ffffff; --br-f2: #eef3d2; --br-ring: #d4dcaa; --br-a1: #f4fa9a; --br-a2: #c8d84e;
+  --br-tag1: #fff57a; --br-tag2: #cfe24a; --br-tagink: #2e3604; --br-tagb: #8aa020; }
+.card.v-beer.brs-miodowe { --br-c1: #ffc65a; --br-c2: #ec9012; --br-c3: #cc6a04; --br-c4: #a44a02; --br-c5: #7a3002; --br-ink: #241002; --br-name: #3a1a02;
+  --br-panel: #fff0d070; --br-f1: #fff4d8; --br-f2: #f0d49a; --br-ring: #d8b070; --br-a1: #ffc860; --br-a2: #d0700a; --br-aop: .3;
+  --br-tag1: #ffd65a; --br-tag2: #e4900e; --br-tagink: #3a1a02; --br-tagb: #9a5004; }
+.card.v-beer.brs-ipa { --br-c1: #ffcf86; --br-c2: #fa9e3c; --br-c3: #ee7e22; --br-c4: #d06014; --br-c5: #a0440c; --br-haze: .4; --br-hazec: #ffd8a8;
+  --br-f1: #fffaf0; --br-f2: #f2e4c8; --br-ring: #dcc8a0; --br-a1: #ffcf8a; --br-a2: #d8742a;
+  --br-tag1: #c4ea86; --br-tag2: #6eae3a; --br-tagink: #16340a; --br-tagb: #3e7a1e; }
+.card.v-beer.brs-ciemne { --br-c1: #7c4c28; --br-c2: #4c2612; --br-c3: #301608; --br-c4: #1e0c04; --br-c5: #120602; --br-ink: #f6e6d0; --br-name: #2a1206;
+  --br-glow: #fbeedc; --br-panel: #00000066; --br-f1: #f2dcb4; --br-f2: #d6b47e; --br-ring: #b8945a; --br-a1: #c08a5a; --br-a2: #4c2612; --br-aop: .35;
+  --br-tag1: #6a3a1c; --br-tag2: #2a1206; --br-tagink: #f2dcb4; --br-tagb: #d6b47e; }
+.card.v-beer.brs-kozlak { --br-c1: #ec9a62; --br-c2: #c8602c; --br-c3: #9e3c1a; --br-c4: #782410; --br-c5: #561608; --br-ink: #fff0e2; --br-name: #4a1606;
+  --br-glow: #fbefdc; --br-panel: #2a0c0466; --br-f1: #fbefdc; --br-f2: #e6d0aa; --br-ring: #c8aa80; --br-a1: #e89060; --br-a2: #8a2c12; --br-aop: .32;
+  --br-tag1: #e8905a; --br-tag2: #8a2c12; --br-tagink: #fff3e6; --br-tagb: #561608; }
+.card.v-beer.brs-wisniowe { --br-c1: #ffa2b6; --br-c2: #ea4870; --br-c3: #c4224a; --br-c4: #9a1236; --br-c5: #6e0a26; --br-ink: #fff0f3; --br-name: #6e0a26;
+  --br-glow: #fff2f4; --br-panel: #3a061466; --br-f1: #fff2f4; --br-f2: #f6c8d2; --br-ring: #e0a0b0; --br-a1: #ff8aa8; --br-a2: #b01a44; --br-aop: .3;
+  --br-tag1: #ff9ab4; --br-tag2: #c21e48; --br-tagink: #ffffff; --br-tagb: #6e0a26; }
+.card.v-beer.brs-zero { --br-c1: #fff6c4; --br-c2: #ffe08a; --br-c3: #f6c856; --br-c4: #e6aa38; --br-c5: #c88a22;
+  --br-tag1: #6ee08a; --br-tag2: #1f9a3a; --br-tagink: #ffffff; --br-tagb: #0e5a20; }
 .pick.v-beer img { filter: sepia(.3) saturate(1.3); }
 .pick.v-beer { box-shadow: inset 0 0 0 2px #fffdf6, inset 0 0 0 4px #f7bf3a, inset 0 -26px 26px -18px var(--rc); }
 
@@ -2190,6 +2227,37 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .r-secret.v-usa .sc-border { background: repeating-linear-gradient(45deg, #f2f2f2 0 8px, #111 8px 16px); animation: none; }
 .pick.v-usa img { filter: grayscale(1) contrast(1.4); }
 .pick.v-usa { box-shadow: inset 0 0 0 2px #f2f2f2, inset 0 0 0 4px #111, inset 0 -26px 26px -18px var(--rc); }
+
+/* Komunistyczna - wyjątkowy wariant Skrzynki PRL (DEFAULT_CRATE_VARIANTS), z naklejkami od admina (/stickers): lekko
+   wyblakły plakat propagandowy - nieruchome czerwone promienie z prawego dolnego rogu, ciemniejsza czerwień przy dole,
+   kremowy margines papieru, zdjęcie w czerwieni i czerni z przesuniętą drugą warstwą farby, złota gwiazda.
+   VX_BG / VX_PHOTO / VX_DECO komuna. */
+.card.v-komuna .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-komuna :is(.card-sub, .card-attack, .card-stats, .card-foot) { background: #111111e6; border: none; border-radius: .15em; }
+.card.v-komuna .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-komuna .card-foot { padding: .1em .35em; }
+.var-tag.vt-komuna, .ph.vt-komuna { background: #c8102e; color: #f6e7c8; border: 1px solid #111; font-family: "Black Ops One", sans-serif; font-weight: 400; letter-spacing: .08em; text-shadow: none; }
+.vdot.vt-komuna { background: repeating-conic-gradient(from 0deg at 100% 100%, #ff3b30 0 8deg, #b30e16 8deg 16deg); box-shadow: 0 0 0 1px #111; }
+.odd.odd-v.vt-komuna { border-left-color: #d4161f; }
+.card.v-komuna { --frame: linear-gradient(135deg, #111, #2a2a2a 50%, #111); --spin: initial; box-shadow: 0 6px 18px #000a; }
+.card.v-komuna .card-inner { background: #d4161f; color: #f6e7c8; filter: saturate(.85) sepia(.08); }   /* lekko wyblakłe kolory */
+.card.v-komuna :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f6e7c8; }
+.card.v-komuna .card-head { background: #111; margin: -1% -2% 1%; padding: .15em .4em; clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%); }
+.card.v-komuna .card-name { font-family: "Black Ops One", Rubik, sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: .04em; color: #f6e7c8; }
+.card.v-komuna .card-sub { font-style: normal; font-weight: 900; letter-spacing: .08em; color: #f6d77a; }
+.card.v-komuna .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: -.3em .3em 0 #111; }
+.card.v-komuna .card-photo > img, .r-secret.v-komuna .sc-art img { filter: grayscale(1) contrast(1.6) brightness(1.05); }
+.kv-rays { inset: 0; background: repeating-conic-gradient(from 0deg at 108% 96%, #ff3b30 0 6deg, #b30e16 6deg 12deg); }
+.kv-dark { inset: 0; background: linear-gradient(180deg, transparent 45%, #5a040855 75%, #3a0206aa); }
+.kv-paper { inset: 0; background: var(--tx-grain) 0 0 / 110px; opacity: .22; mix-blend-mode: multiply; }
+.kv-ink { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .85; }
+.kv-offset { background: linear-gradient(200deg, #e3262e, #9a0a12); mix-blend-mode: multiply; opacity: .35; translate: -1.4% 1%; }
+.kv-margin { inset: 2.2%; border: .9cqw solid #f1e6cc; border-radius: 2.4%/1.7%; box-shadow: inset 0 0 0 .25cqw #111; }
+.kv-star { left: 2.5%; top: 41%; width: 16%; aspect-ratio: 1; color: #f6d77a; rotate: -12deg; filter: drop-shadow(-.4cqw .4cqw 0 #111); }
+.kv-star svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.r-secret.v-komuna .sc-border { background: repeating-conic-gradient(from 0deg at 100% 100%, #ff3b30 0 6deg, #b30e16 6deg 12deg); animation: none; }
+.pick.v-komuna img { filter: grayscale(1) contrast(1.5) sepia(1) hue-rotate(-30deg) saturate(3); }
+.pick.v-komuna { box-shadow: inset 0 0 0 2px #d4161f, inset 0 0 0 4px #111, inset 0 -26px 26px -18px var(--rc); }
 .us-flagbox, .us-ripple, .us-stripes { will-change: transform; }
 
 /* ============================================================ Apollo (retro kosmos, „Kontrola misji”)

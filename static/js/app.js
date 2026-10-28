@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", files: "🗂️ AKTA", copper: "🟠 Cu", reflective: "🦺 HI-VIS", usa: "★ U.S.A. ★", apollo: "◉ MISJA 69", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", files: "🗂️ AKTA", copper: "🟠 Cu", reflective: "🦺 HI-VIS", usa: "★ U.S.A. ★", komuna: "★ PRL ★", apollo: "◉ MISJA 69", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -86,6 +86,8 @@ function rarityIdx(r) { return S.cfg.rarityOrder.indexOf(r); }
 function varRank(v) { return S.cfg.variantOrder.indexOf(v || "normal"); }
 // warianty wyjątkowe (Królewski, Flagowy...) nie wypadają z kontraktu, ulepszacza ani kasyna
 function isExclusive(v) { return !!S.cfg.variants[v]?.exclusive; }
+// wariant, który może dać kuźnia i kasyno: nie wyjątkowy i nie zablokowany przez admina ("noHouse", strona /variants)
+function houseVariant(v) { return !isExclusive(v) && !variantParts(v).some(x => S.cfg.variantCfg?.[x]?.noHouse); }
 // warianty specjalne, które mogą wypaść z tej skrzynki: każdy wariant tylko wtedy, gdy jest przypięty do skrzynki
 // (pole skrzynki "variants", panel admina) - flagowy tylko dla kart z ustawionym krajem
 // (warianty z polem "cards", np. Rzulty, należą do konkretnych kart - nie do skrzynki)
@@ -171,9 +173,10 @@ function kindIcon(k) { return KIND_ICONS[k] || KIND_ICONS.off; }
 
 // Sortowanie kart w listach do wyboru (kuźnia, kasyno, rynek, wymiany, ikona gracza): elementy { person, variant, value, id? }
 const CARD_SORTS = [["value", "💰 Najdroższe"], ["valueAsc", "💰 Najtańsze"], ["rarity", "💎 Rzadkość"],
-                    ["variant", "✨ Wariant"], ["name", "🔤 Nazwa"], ["new", "🕒 Najnowsze"], ["dupes", "🔁 Duplikaty"]];
+                    ["variant", "✨ Wariant"], ["name", "🔤 Nazwa"], ["new", "🕒 Najnowsze"], ["dupes", "🔁 Duplikaty: najwięcej"],
+                    ["dupesValue", "🔁 Duplikaty: najdroższe"]];
 // listy bez sensu dla "Duplikaty" (karty do zdobycia, nie egzemplarze gracza): cele ulepszacza, szukane na rynku, ikona gracza
-const UNIQUE_SORTS = CARD_SORTS.filter(([k]) => k !== "new" && k !== "dupes");
+const UNIQUE_SORTS = CARD_SORTS.filter(([k]) => k !== "new" && !k.startsWith("dupes"));
 // ile egzemplarzy tej karty w tym wariancie ma gracz (osoba + wariant)
 function dupKey(x) { return x.person + "|" + (x.variant || "normal"); }
 function ownCounts() {
@@ -186,7 +189,7 @@ function sortCards(list, mode = "value") {
   const byName = (a, b) => name(a).localeCompare(name(b), "pl");
   const num = x => (typeof x.id === "number" ? x.id : 0);
   let dup = () => 0;
-  if (mode === "dupes") {   // moje karty: ile mam ich łącznie (też ⭐), cudze (wymiany): ile jest ich na tej liście
+  if (mode.startsWith("dupes")) {   // moje karty: ile mam ich łącznie (też ⭐), cudze (wymiany): ile jest ich na tej liście
     const own = ownCounts(), mine = new Set(S.items.map(i => i.id)), here = new Map();
     for (const x of list) here.set(dupKey(x), (here.get(dupKey(x)) || 0) + 1);
     dup = x => (mine.has(x.id) ? own : here).get(dupKey(x)) || 0;
@@ -194,6 +197,8 @@ function sortCards(list, mode = "value") {
   const cmp = {
     // duplikaty na górze (najwięcej egzemplarzy najpierw), takie same karty obok siebie
     dupes: (a, b) => (dup(b) > 1) - (dup(a) > 1) || dup(b) - dup(a) || byName(a, b) || varRank(b.variant) - varRank(a.variant) || b.value - a.value,
+    // duplikaty na górze, najdroższe najpierw (wartość jednej karty), takie same karty obok siebie
+    dupesValue: (a, b) => (dup(b) > 1) - (dup(a) > 1) || b.value - a.value || byName(a, b) || varRank(b.variant) - varRank(a.variant),
     value: (a, b) => b.value - a.value || byName(a, b),
     valueAsc: (a, b) => a.value - b.value || byName(a, b),
     rarity: (a, b) => rarityIdx(person(b.person).rarity) - rarityIdx(person(a.person).rarity) || varRank(b.variant) - varRank(a.variant) || byName(a, b),
@@ -238,6 +243,9 @@ function person(id) { return S.cfg.people[id]; }
 function isSpecialCard(p) { p = typeof p === "string" ? person(p) : p; return p?.rarity === "special"; }
 function crateOf(id) { return S.cfg.crates[id]; }
 function crateList() { return S.cfg.crateOrder.map(id => S.cfg.crates[id]); }
+// skrzynki, które są albo były już w sklepie (i skrzynka kart specjalnych) - klaser i filtr ekwipunku nie zdradzają
+// skrzynek, których jeszcze nie było (serwer: released_crates)
+function seenCrateList() { return crateList().filter(c => c.released !== false); }
 function isSpecial(v) { return !!v && v !== "normal"; }
 function variantName(v) { return S.cfg.variants[v || "normal"].name; }
 function cardValue(pid, v = "normal") {
@@ -270,7 +278,7 @@ function crateStyle(c) {
 // ================================================================ KARTA
 
 // efekty wariantu na karcie - połączony wariant (np. flag+gold) dostaje efekty obu warstw i dwie plakietki
-function variantLayers(v, p = null) {
+function variantLayers(v, p = null, sub = null) {
   const parts = variantParts(v).filter(isSpecial);
   let html = "";
   for (const x of parts) {
@@ -300,9 +308,21 @@ function variantLayers(v, p = null) {
     const cls = `var-tag vt-${x}${i ? " vt-second" : ""}`;
     html += x === "flag" && p?.country
       ? `<div class="${cls}"><img src="${flagUrl(p.country)}" alt="">${esc(p.country.toUpperCase())}</div>`
-      : `<div class="${cls}">${VARIANT_TAGS[x] ?? esc(cvOf(x)?.tag || variantName(x))}</div>`;
+      : `<div class="${cls}">${x === "beer" && sub ? esc(sub.tag) : VARIANT_TAGS[x] ?? esc(cvOf(x)?.tag || variantName(x))}</div>`;
   });
   return html;
+}
+// Piwna: podwariant (rodzaj piwa, VARIANTS.beer.subs w data.py) wynika z numeru egzemplarza karty - wariant wypada jako
+// jeden, a ten sam egzemplarz jest zawsze tym samym piwem (losowanie wg "weight" z mieszanki bitów numeru). Bez numeru
+// (klaser, podgląd z listy kart) - null: ogólna Piwna w kolorach jasnego piwa.
+function beerSub(variant, uid) {
+  const subs = S.cfg.variants.beer?.subs;
+  if (uid == null || uid === "" || !subs?.length || !variantParts(variant).includes("beer")) return null;
+  let h = Math.imul((+uid >>> 0) ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;   // >>> 0 - bez tego wynik bywa ujemny
+  let r = h % subs.reduce((a, s) => a + s.weight, 0);
+  return subs.find(s => (r -= s.weight) < 0) || subs[0];
 }
 
 // Galaktyczna: ruchome tło kosmosu w środku karty (pod napisami i zdjęciem) - trzy mgławice i dwie warstwy gwiazd
@@ -778,11 +798,11 @@ function brFoam(y, c1 = "#fffdf6", c2 = "#efe0b8", ring = "#d9c79a") {
   const g = vxId("brFoam");
   let d = `M-3 -3 H66 V${y}`;
   for (let x = 66; x > -3;) { const w = rand(1.6, 3.4); d += ` Q${(x - w / 2).toFixed(1)} ${(y + rand(.9, 2.4)).toFixed(1)} ${(x - w).toFixed(1)} ${(y + rand(-.4, .5)).toFixed(1)}`; x -= w; }
-  let s = `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".7" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>
+  let s = `<defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--br-f1, ${c1})"/><stop offset=".7" style="stop-color:var(--br-f1, ${c1})"/><stop offset="1" style="stop-color:var(--br-f2, ${c2})"/></linearGradient></defs>
     <path d="${d} Z" fill="url(#${g})"/>`;
   for (let k = 0; k < 80; k++) {
     const x = rand(-1, 64), yy = rand(-1, y + 1.5), r = rand(.2, .9) * (yy > y - 2.5 ? 1.5 : 1);
-    s += `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(2)}" fill="none" stroke="${ring}" stroke-width=".14" opacity=".75"/>`;
+    s += `<circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="${r.toFixed(2)}" fill="none" style="stroke:var(--br-ring, ${ring})" stroke-width=".14" opacity=".75"/>`;
     if (r > .5) s += `<circle cx="${(x - r * .35).toFixed(1)}" cy="${(yy - r * .35).toFixed(1)}" r="${(r * .22).toFixed(2)}" fill="#fff"/>`;
   }
   for (let k = 0; k < 9; k++) {
@@ -906,6 +926,8 @@ const apTick = () => '<span class="ap-tick"><i>0<br>1<br>2<br>3<br>4<br>5<br>6<b
 const apScratches = n => Array.from({ length: n }, () =>
   `<i class="ap-scratch" style="left:${vxN(2, 96)}%;animation-delay:-${vxN(0, 6, 1)}s;animation-duration:${vxN(1.2, 3, 1)}s"></i>`).join("");
 const VX_BG = {
+  // Komunistyczna: nieruchome promienie z prawego dolnego rogu, ciemniejsza czerwień przy dole, ziarno papieru
+  komuna: () => '<i class="kv-rays"></i><i class="kv-dark"></i><i class="kv-paper"></i>',
   apollo: () => '<video class="ap-film" src="/static/video/space/lm-orbit.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>' +
     '<span class="ap2-tm l">ALT 47 920 FT<br>VEL 1 604 FT/S</span><span class="ap2-tm r">ORZEŁ ▲<br>KOLUMBIA ▼</span><i class="ap-shade"></i>',
   copper: () => `<i class="cu-brush"></i><i class="cu-dark"></i>${cuSpots(16)}<i class="cu-full"></i>`,
@@ -940,6 +962,7 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  komuna: '<i class="vx-photo kv-ink"></i><i class="vx-photo kv-offset"></i>',
   copper: '<i class="vx-photo cu-ph"></i>',
   files: '<i class="vx-photo ak-old"></i><b class="ak-stamp">ŚCIŚLE<br>TAJNE</b>',
   usa: () => `<i class="vx-photo us-stripes"></i><i class="vx-photo us-canton">${usFlags().canton}</i>`,
@@ -962,6 +985,8 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  // Komunistyczna: kremowy margines plakatu i złota gwiazda na rogu zdjęcia
+  komuna: () => `<div class="vx-deco"><i class="kv-margin"></i><i class="kv-star">${vxSvg(usStar(10, 10.6, 9.6, "currentColor"), "0 0 20 20")}</i></div>`,
   copper: () => '<div class="vx-deco vx-clip"><i class="cu-shine"></i></div>',
   // Akta: zakładka teczki z sygnaturą nad kartą i spinacz na zdjęciu
   files: () => `<div class="vx-deco"><i class="ak-tab"><b>AKTA · K-2137</b></i><i class="ak-clip">${vxSvg(AK_CLIP, "0 0 12 30")}</i></div>`,
@@ -1108,6 +1133,7 @@ function variantSub(variant, pid) {
   if (parts.includes("noir")) return "— Ta sprawa śmierdziała od początku.";
   if (parts.includes("hollywood")) return "SEANS O ZMIERZCHU · 1969";
   if (parts.includes("usa")) return "TO PRAWDZIWA HISTORIA";
+  if (parts.includes("komuna")) return "NAPRZÓD KU JASNEJ PRZYSZŁOŚCI!";
   if (parts.includes("apollo")) return "▲ ORZEŁ ODŁĄCZA SIĘ · 20.07.1969";
   if (parts.includes("cobalt")) return "Co-60 · T½ 5,27 LAT";
   // Bananowa: etap dojrzewania zmienia się razem z kolorem karty (CSS bnStage)
@@ -1213,8 +1239,9 @@ function flagStyle(p, variant) { return variantParts(variant).includes("flag") &
 // własne napisy na karcie z panelu admina (pole "texts", karty specjalne): T(miejsce, zwykły tekst w HTML)
 function cardTexts(p) { return (k, html) => p.texts?.[k] != null ? esc(p.texts[k]) : html; }
 
-function cardHTML(pid, variant = "normal") {
+function cardHTML(pid, variant = "normal", uid = null) {
   const p = person(pid);
+  const bs = beerSub(variant, uid);
   if (p.masked) return mysteryCardHTML(p);
   if (p.rarity === "secret") return secretCardHTML(p, variant);
   const r = S.cfg.rarities[p.rarity];
@@ -1227,7 +1254,7 @@ function cardHTML(pid, variant = "normal") {
   // napis rzadkości: wariant może mieć własny (UFO - alfabet obcych zamiast "Specjalna")
   const rarityName = variantParts(variant).map(x => S.cfg.variants[x]?.rarityName).find(Boolean) || r.name;
   return `
-  <div class="card r-${p.rarity} ${vClass(variant)}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${flagStyle(p, variant)}>
+  <div class="card r-${p.rarity} ${vClass(variant)}${bs ? " brs-" + bs.id : ""}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${uid != null ? ` data-uid="${uid}"` : ""}${flagStyle(p, variant)}>
     <div class="card-inner">
       ${baseVariant(variant) === "reverse" ? '<div class="rev-foil"></div>' : ""}
       ${galaxyBG(variant)}${devilBG(variant)}${mlgBG(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
@@ -1239,7 +1266,7 @@ function cardHTML(pid, variant = "normal") {
       </div>
       <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(name)}" loading="lazy" draggable="false"${photoFx(variant)}>${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
       <div class="card-sub${p.subtitle || p.texts?.sub ? " has-subtitle" : ""}">${T("sub", p.subtitle ? esc(p.subtitle)
-        : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
+        : bs ? esc(bs.label) : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
       ${abils.map((a, i) => `<div class="card-attack${i ? " atk2" : ""}${a.kind !== "off" ? " " + a.kind : ""}">
         <span class="atk-cost">${T(`atk${i + 1}Cost`, a.kind === "off" ? cost + (i ? type.icon : "") : S.cfg.abilityKinds[a.kind]?.icon || "")}</span>
         <span class="atk-name">${T(`atk${i + 1}Name`, esc(a.name))}</span>
@@ -1256,7 +1283,7 @@ function cardHTML(pid, variant = "normal") {
         <span class="card-value">${T("value", fmt(cardValue(pid, variant)))}</span>
       </div>
     </div>
-    ${variantLayers(variant, p)}
+    ${variantLayers(variant, p, bs)}
     <div class="shine"></div>
   </div>`;
 }
@@ -2062,7 +2089,7 @@ function showResults(afterEpic = false) {
     return `<div class="result r-${p.rarity}${big ? " big" : ""}" data-id="${d.id}"
               style="--rc:${S.cfg.rarities[p.rarity].color}; animation-delay:${i * (o.fast ? 25 : 70)}ms">
       ${isNew ? '<span class="new-badge">NOWA!</span>' : ""}
-      ${cardHTML(d.person, d.variant)}
+      ${cardHTML(d.person, d.variant, d.id)}
       <div class="rbtns">${favBtnHTML(d.id, d.fav)}<button class="btn sell rsell" data-id="${d.id}" title="Sprzedaj" ${d.fav ? "disabled" : ""}>💰 ${fmt(d.value)}</button></div>
     </div>`;
   }).join("");
@@ -2105,7 +2132,7 @@ function showResults(afterEpic = false) {
       electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
       chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8", "#3a1a08"], candy: ["#ff5aa8", "#3ddc84", "#ffffff", "#ffd23f", "#4fb8ff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a", "#1a2048"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8", "#ffffff"], banana: ["#ffe14a", "#9ab82a", "#7a5414", "#fff6b0"],
-      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e", "#8fd8c0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"], usa: ["#f2f2f2", "#141414", "#8a8a8a"], apollo: ["#f2d27a", "#c8ccd4", "#f4f6f9"],
+      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e", "#8fd8c0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"], usa: ["#f2f2f2", "#141414", "#8a8a8a"], apollo: ["#f2d27a", "#c8ccd4", "#f4f6f9"], komuna: ["#d4161f", "#111111", "#f6d77a"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],
       lantern: ["#ffb347", "#ff7a00", "#fff1c1", "#3a1a06"], devil: ["#ff1a1a", "#b3001b", "#ffcf5a", "#120002"],
@@ -2284,7 +2311,9 @@ function binderHTML(crate, owned, spread, { mine = true } = {}) {
 }
 
 function renderBinder() {
-  $("#binderSeg").innerHTML = crateList().map(c =>
+  const crates = seenCrateList();
+  if (!crates.some(c => c.id === S.binderCrate)) { S.binderCrate = crates[0]?.id; S.spread = 0; }
+  $("#binderSeg").innerHTML = crates.map(c =>
     `<button data-crate="${c.id}" class="${S.binderCrate === c.id ? "active" : ""}">${esc(c.emoji)} ${esc(c.short)}</button>`).join("");
   const crate = crateOf(S.binderCrate);
   if (!crate) { $("#binder").innerHTML = ""; return; }
@@ -2330,7 +2359,7 @@ function openModal(pid) {
       ${list.length > 1 ? `<button class="btn sell" data-sell="${list.join(",")}">${nFav ? "Pozostałe" : "Wszystkie"} (${fmt(val * list.length)})</button>` : ""}</span>
     </div>`;
   }).join("");
-  const dupes = dupesOf(o);
+  const dupes = dupesOf(o), dupesVar = dupesOf(o, true);
   $("#modalBox").innerHTML = `
     ${cardHTML(pid, o.best)}
     <div class="modal-side">
@@ -2341,6 +2370,7 @@ function openModal(pid) {
       ${rows}
       <div class="modal-actions">
         ${dupes.length ? `<button class="btn sell" data-sell="${dupes.join(",")}">Sprzedaj duplikaty (zostaw najlepszą)</button>` : ""}
+        ${dupesVar.length && dupesVar.length !== dupes.length ? `<button class="btn sell" data-sell="${dupesVar.join(",")}">Sprzedaj duplikaty (zostaw po 1 z wariantu)</button>` : ""}
         <button class="btn" id="modalClose">Zamknij</button>
       </div>
     </div>`;
@@ -2348,12 +2378,14 @@ function openModal(pid) {
   $("#modal").dataset.pid = pid;
 }
 
-function dupesOf(o) {
-  // zostawiamy jedną kartę - w najlepszym wariancie (najlepiej ulubioną) - i wszystkie ulubione; karty specjalne zostają
+function dupesOf(o, perVariant = false) {
+  // zostawiamy jedną kartę - w najlepszym wariancie (najlepiej ulubioną) - albo (perVariant) po jednej w każdym wariancie,
+  // także zwykłym; ulubione zostają zawsze, karty specjalne też
   if (isSpecialCard(S.items.find(i => i.id === o.ids[0])?.person)) return [];
   const favs = new Set(S.items.filter(i => i.fav).map(i => i.id));
-  const keep = o.byVar[o.best].find(id => favs.has(id)) ?? o.byVar[o.best][0];
-  return o.ids.filter(id => id !== keep && !favs.has(id));
+  const keepOne = ids => ids.find(id => favs.has(id)) ?? ids[0];
+  const keep = new Set(perVariant ? Object.values(o.byVar).map(keepOne) : [keepOne(o.byVar[o.best])]);
+  return o.ids.filter(id => !keep.has(id) && !favs.has(id));
 }
 
 function closeModal() { $("#modal").hidden = true; }
@@ -2375,7 +2407,7 @@ function filteredItems() {
     rarity: (a, b) => rarityIdx(person(b.person).rarity) - rarityIdx(person(a.person).rarity) || varRank(b.variant) - varRank(a.variant) || byName(a, b),
     name: (a, b) => byName(a, b) || varRank(b.variant) - varRank(a.variant),
   }[f.sort];
-  if (f.sort === "dupes") return sortCards(list, "dupes");
+  if (f.sort.startsWith("dupes")) return sortCards(list, f.sort);
   return list.sort(by);
 }
 
@@ -2414,7 +2446,7 @@ function renderInventory() {
   renderChestShelf();
   const f = S.inv;
   const inCrate = id => S.items.filter(i => { const p = person(i.person); return (p.crates || [p.crate]).includes(id); }).length;
-  $("#invCrateSeg").innerHTML = [["all", "Wszystkie", S.items.length], ...crateList().map(c => [c.id, `${c.emoji} ${c.short}`, inCrate(c.id)])]
+  $("#invCrateSeg").innerHTML = [["all", "Wszystkie", S.items.length], ...seenCrateList().map(c => [c.id, `${c.emoji} ${c.short}`, inCrate(c.id)])]
     .map(([id, n, count]) => `<button data-crate="${id}" class="${f.crate === id ? "active" : ""}">${esc(n)} <small>${count}</small></button>`).join("");
   $("#invRarity").innerHTML = S.cfg.rarityOrder.map(r =>
     `<button class="rf rf-${r}${f.rarities.has(r) ? " active" : ""}" data-r="${r}" style="--rc:${S.cfg.rarities[r].color}"><i></i>${S.cfg.rarities[r].name}</button>`).join("");
@@ -2432,7 +2464,7 @@ function renderInventory() {
     grid.innerHTML = ufoItemHTML() + `<div class="empty" style="grid-column:1/-1">${S.items.length ? "Brak kart pasujących do filtrów." : "Ekwipunek jest pusty. Otwórz jakąś skrzynkę! 📦"}</div>`;
   } else {
     grid.innerHTML = ufoItemHTML() + list.slice(0, f.limit).map(i =>
-      `<div class="inv-item${f.selected.has(i.id) ? " sel" : ""}${i.fav ? " fav" : ""}" data-id="${i.id}"><span class="tick">✓</span><button class="zoom-btn" title="Powiększ">🔍</button>${favBtnHTML(i.id, i.fav)}${cardHTML(i.person, i.variant)}</div>`).join("");
+      `<div class="inv-item${f.selected.has(i.id) ? " sel" : ""}${i.fav ? " fav" : ""}" data-id="${i.id}"><span class="tick">✓</span><button class="zoom-btn" title="Powiększ">🔍</button>${favBtnHTML(i.id, i.fav)}${cardHTML(i.person, i.variant, i.id)}</div>`).join("");
   }
   $("#invMore").parentElement.hidden = list.length <= f.limit;
   $("#invMore").textContent = `Pokaż więcej (${list.length - f.limit})`;
@@ -2548,12 +2580,14 @@ async function sellSelected() {
   renderInventory();
 }
 
-async function sellAllDupes() {
+// perVariant: z każdej osoby zostaje po 1 karcie w każdym wariancie (także zwykłym), inaczej 1 karta w najlepszym wariancie
+async function sellAllDupes(perVariant = false) {
   const owned = ownedMap();
-  const ids = Object.values(owned).flatMap(dupesOf);
-  if (!ids.length) { toast("Nie masz duplikatów."); return; }
-  const value = S.items.filter(i => ids.includes(i.id)).reduce((a, i) => a + i.value, 0);
-  if (!confirm(`Sprzedać ${ids.length} ${plural(ids.length, "duplikat", "duplikaty", "duplikatów")} za ${fmt(value)}?\n(Z każdej osoby zostanie 1 karta — w najlepszym wariancie.)`)) return;
+  const ids = Object.values(owned).flatMap(o => dupesOf(o, perVariant));
+  if (!ids.length) { toast(perVariant ? "Nie masz duplikatów w tym samym wariancie." : "Nie masz duplikatów."); return; }
+  const sold = new Set(ids), value = S.items.filter(i => sold.has(i.id)).reduce((a, i) => a + i.value, 0);
+  if (!confirm(`Sprzedać ${ids.length} ${plural(ids.length, "duplikat", "duplikaty", "duplikatów")} za ${fmt(value)}?\n(Z każdej osoby zostanie ${
+    perVariant ? "po 1 karcie w każdym wariancie, także bez wariantu" : "1 karta — w najlepszym wariancie"}.)`)) return;
   try { await sellIds(ids); } catch (e) { Sound.error(); toast(e.message, true); }
   renderInventory();
 }
@@ -2791,12 +2825,13 @@ function bind() {
   $("#selAll").addEventListener("click", () => { filteredItems().forEach(i => S.inv.selected.add(i.id)); renderInventory(); });
   $("#selNone").addEventListener("click", () => { S.inv.selected.clear(); renderInventory(); });
   $("#sellSel").addEventListener("click", sellSelected);
-  $("#sellDupes").addEventListener("click", sellAllDupes);
+  $("#sellDupes").addEventListener("click", () => sellAllDupes(false));
+  $("#sellDupesVar").addEventListener("click", () => sellAllDupes(true));
 
   $("#invGrid").addEventListener("contextmenu", e => {
     if (e.target.closest(".ufo-item")) return e.preventDefault();
     const c = e.target.closest(".inv-item .card"); if (!c) return;
-    e.preventDefault(); openViewer(c.dataset.pid, c.dataset.variant);
+    e.preventDefault(); openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid);
   });
 
   // powiększanie kart
@@ -2804,7 +2839,7 @@ function bind() {
     const z = e.target.closest(".zoom-btn");
     const c = z ? z.parentElement.querySelector(".card")
                 : e.target.closest("#contentsGrid .card, #results .card, #modalBox .card, .fa-result .card");
-    if (c) { e.stopPropagation(); openViewer(c.dataset.pid, c.dataset.variant); }
+    if (c) { e.stopPropagation(); openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid); }
   }, true);
 
   bindForge();

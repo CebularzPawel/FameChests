@@ -13,7 +13,7 @@ const MAX_BULK_CONTRACTS = 50;  // tyle przyjmie serwer w jednym zapytaniu
 const PICK_LIMIT = 300;
 // ulubione karty (⭐) i karty specjalne nie trafiają do kuźni ani do ulepszacza
 const forgeItems = () => S.items.filter(i => !i.fav && !isSpecialCard(i.person));
-const PICK_TAGS = { bw: "B&W", reverse: "REV", bronze: "BRNZ", silver: "SILV", platinum: "PLAT", steel: "⚙️", sapphire: "💙", blackdiamond: "🖤", holo: "HOLO", pearl: "🦪", gold: "GOLD", vintage: "📷", marble: "🏛️", slime: "🟢", matte: "MAT", racing: "🏁", bismuth: "🌈", digital: "💻", cyber: "🌃", fade: "🎨", wanted: "🤠", artdeco: "DÉCO", cheese: "🧀", aero: "🫧", honey: "🍯", chinese: "🏮", moro: "🪖", beer: "🍺", neon: "💡", electric: "⚡", synthwave: "📼", motor: "🏎️", toxic: "☢️", pixel: "👾", popart: "💥", glass: "⛪", thermal: "🌡️", blueprint: "📐", glitch: "📺", mosaic: "🧱", noir: "🕵️", chocolate: "🍫", candy: "🍭", hollywood: "🎬", cobalt: "🔷", banana: "🍌", uranium: "☢️", mercury: "☿", californium: "⚛️", files: "🗂️", copper: "🟠", reflective: "🦺", usa: "★", apollo: "🚀", flag: "🏳️", halloween: "🎃", lantern: "🏮", devil: "😈", joker: "🃏", jeans: "👖", clear: "🫧", sketch: "✒️", emerald: "💚", amethyst: "💜", ruby: "❤️", mlg: "🎯", royal: "👑", diamond: "💎", galaxy: "🌌", negative: "◐", rzulty: "💛" };
+const PICK_TAGS = { bw: "B&W", reverse: "REV", bronze: "BRNZ", silver: "SILV", platinum: "PLAT", steel: "⚙️", sapphire: "💙", blackdiamond: "🖤", holo: "HOLO", pearl: "🦪", gold: "GOLD", vintage: "📷", marble: "🏛️", slime: "🟢", matte: "MAT", racing: "🏁", bismuth: "🌈", digital: "💻", cyber: "🌃", fade: "🎨", wanted: "🤠", artdeco: "DÉCO", cheese: "🧀", aero: "🫧", honey: "🍯", chinese: "🏮", moro: "🪖", beer: "🍺", neon: "💡", electric: "⚡", synthwave: "📼", motor: "🏎️", toxic: "☢️", pixel: "👾", popart: "💥", glass: "⛪", thermal: "🌡️", blueprint: "📐", glitch: "📺", mosaic: "🧱", noir: "🕵️", chocolate: "🍫", candy: "🍭", hollywood: "🎬", cobalt: "🔷", banana: "🍌", uranium: "☢️", mercury: "☿", californium: "⚛️", files: "🗂️", copper: "🟠", reflective: "🦺", usa: "★", komuna: "☭", apollo: "🚀", flag: "🏳️", halloween: "🎃", lantern: "🏮", devil: "😈", joker: "🃏", jeans: "👖", clear: "🫧", sketch: "✒️", emerald: "💚", amethyst: "💜", ruby: "❤️", mlg: "🎯", royal: "👑", diamond: "💎", galaxy: "🌌", negative: "◐", rzulty: "💛" };
 
 function pickHTML(item, { sel = false, extra = "" } = {}) {
   const p = person(item.person);
@@ -39,7 +39,7 @@ function renderForge() {
 
 function contractVariantChance(specials) {
   // kontrakt nie daje wariantów wyjątkowych (Królewski, Flagowy) - te wypadają tylko ze skrzynek - ani wyłączonych
-  const base = S.cfg.variantOrder.filter(v => isSpecial(v) && !isExclusive(v) && variantOn(v)).reduce((a, v) => a + S.cfg.variants[v].chance, 0);
+  const base = S.cfg.variantOrder.filter(v => isSpecial(v) && houseVariant(v) && variantOn(v)).reduce((a, v) => a + S.cfg.variants[v].chance, 0);
   return Math.min(0.9, base * (1 + S.cfg.contractVariantBonus * specials));
 }
 
@@ -202,7 +202,7 @@ function showBulkResults(got, stake) {
       <h3>📜 ${got.length} ${plural(got.length, "kontrakt", "kontrakty", "kontraktów")}</h3>
       <p class="muted">Oddane karty: ${fmt(stake)} → otrzymane: <b>${fmt(gain)}</b></p>
       <div class="bulk-grid">${sorted.map((it, k) => `<div class="bulk-card${isSpecial(it.variant) ? " special" : ""}" style="animation-delay:${Math.min(k, 30) * 70}ms">
-        ${cardHTML(it.person, it.variant)}</div>`).join("")}</div>
+        ${cardHTML(it.person, it.variant, it.id)}</div>`).join("")}</div>
       <div class="daily-actions">
         <button class="btn sell" data-bulk-sell>💰 Sprzedaj wszystkie (${fmt(gain)})</button>
         <button class="btn primary" data-close>✔ Odbierz</button></div>
@@ -262,7 +262,7 @@ async function runContract() {
     <canvas class="fa-canvas"></canvas>
     <div class="fa-title">📜 KONTRAKT</div>
     <div class="fa-orb"></div>
-    <div class="fa-ring">${items.map(i => `<div class="fa-card">${cardHTML(i.person, i.variant)}</div>`).join("")}</div>
+    <div class="fa-ring">${items.map(i => `<div class="fa-card">${cardHTML(i.person, i.variant, i.id)}</div>`).join("")}</div>
     <div class="fa-reel reel" hidden><div class="strip fa-strip"></div><div class="reel-marker"></div></div>
     <div class="fa-result" hidden></div>
     <div class="flash fa-flash"></div>`;

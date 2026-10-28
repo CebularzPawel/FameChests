@@ -423,7 +423,7 @@ function bindMarket() {
       MK.want = { ...MK.want, person: pick.dataset.id, variant: "normal", price: "" }; Sound.click(); return drawMarket();
     }
     const card = t.closest(".mk-card .card, .mk-want-card .card");
-    if (card) openViewer(card.dataset.pid, card.dataset.variant);
+    if (card) openViewer(card.dataset.pid, card.dataset.variant, card.dataset.uid);
   });
   // pola tekstowe: przerysowanie bez utraty kursora
   const keepFocus = (sel, fn) => {
