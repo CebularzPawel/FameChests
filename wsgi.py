@@ -1,6 +1,9 @@
 """Uruchamianie na serwerze (Azure App Service, Linux):
 
-    gunicorn --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:8000 wsgi:app
+    gunicorn --workers 1 --threads 8 --timeout 600 --bind 0.0.0.0:8000 wsgi:app
+
+Długi --timeout: przy starcie init_db() łączy się z bazą i uzupełnia dane (po aktualizacji może to chwilę trwać) -
+z krótkim limitem gunicorn ubija proces przed końcem i Azure zgłasza "site failed to start within 10 mins".
 
 Tylko JEDEN worker (procesów), za to kilka wątków: katalog kart jest w pamięci procesu,
 więc przy kilku workerach zmiany z panelu admina widziałby tylko jeden z nich.
