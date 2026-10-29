@@ -140,9 +140,10 @@ def init_db():
         init_sqlite(conn)
     catalog.init_tables(conn)
     drop_removed_variants(conn)
-    for i, d in enumerate(achievements.DEFAULTS):   # wbudowane osiągnięcia: raz (admin może je zmienić albo usunąć)
-        conn.execute("INSERT INTO achievements (id, data, pos) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING",
-                     (d["id"], json.dumps({k: v for k, v in d.items() if k != "id"}, ensure_ascii=False), i))
+    # wbudowane osiągnięcia: raz (admin może je zmienić albo usunąć)
+    insert_rows(conn, "INSERT INTO achievements (id, data, pos) VALUES",
+                ((d["id"], json.dumps({k: v for k, v in d.items() if k != "id"}, ensure_ascii=False), i)
+                 for i, d in enumerate(achievements.DEFAULTS)), "ON CONFLICT (id) DO NOTHING")
     # klaser pamięta karty, które gracz kiedykolwiek miał: uzupełniamy z obecnych kart i z aktywności
     # (wszystko, co ktoś wylosował / pokazał, kiedyś było jego) - bezpieczne przy każdym starcie
     conn.execute("INSERT INTO user_collected (user_id, person_id, variant) SELECT DISTINCT user_id, person_id, variant "
@@ -181,6 +182,17 @@ def init_db():
     conn.close()
 
 
+def insert_rows(conn, sql, rows, conflict="ON CONFLICT DO NOTHING", per=200):
+    """INSERT wielu wierszy paczkami ("INSERT INTO t (a, b) VALUES" + rows) - przy starcie z bazą w chmurze (Azure ->
+    PostgreSQL) każde zapytanie to osobna podróż przez sieć; tysiące pojedynczych INSERT-ów potrafiły trwać dłużej niż
+    limit startu gunicorna, proces był ubijany przed commitem i przy następnym starcie wszystko zaczynało się od nowa."""
+    rows = list(rows)
+    for i in range(0, len(rows), per):
+        part = rows[i:i + per]
+        marks = ", ".join("(" + ", ".join("?" * len(r)) + ")" for r in part)
+        conn.execute(f"{sql} {marks} {conflict}", [x for r in part for x in r])
+
+
 def backfill_achievements(conn):
     """Gracze bez liczników osiągnięć (stare konta) dostają je z tego, co mają: karty w ekwipunku i otwarte skrzynki."""
     have = {r[0] for r in conn.execute("SELECT DISTINCT user_id FROM user_counters")}
@@ -194,8 +206,7 @@ def backfill_achievements(conn):
     for uid_, n in conn.execute("SELECT user_id, value FROM user_state WHERE key = 'opened' AND value > 0").fetchall():
         if uid_ not in have:
             buf[(uid_, "open")] = n
-    for (uid_, k), n in buf.items():
-        conn.execute("INSERT INTO user_counters (user_id, key, value) VALUES (?, ?, ?) ON CONFLICT DO NOTHING", (uid_, k, n))
+    insert_rows(conn, "INSERT INTO user_counters (user_id, key, value) VALUES", ((uid_, k, n) for (uid_, k), n in buf.items()))
     conn.commit()
 
 
@@ -241,9 +252,8 @@ def backfill_hall_of_fame(conn):
         b[3] += 1
         if b[1] is None or r[3] < b[1]:
             b[0], b[1] = r[0], r[3]
-    for (pid, variant), (user_id, at, n_items, n_feed) in best.items():
-        conn.execute("INSERT INTO hall_of_fame (person_id, variant, first_user_id, first_at, source, drops) "
-                     "VALUES (?, ?, ?, ?, 'drop', ?) ON CONFLICT DO NOTHING", (pid, variant, user_id, at, max(n_items, n_feed)))
+    insert_rows(conn, "INSERT INTO hall_of_fame (person_id, variant, first_user_id, first_at, source, drops) VALUES",
+                ((pid, variant, user_id, at, "drop", max(n_items, n_feed)) for (pid, variant), (user_id, at, n_items, n_feed) in best.items()))
     conn.commit()
 
 
