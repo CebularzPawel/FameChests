@@ -701,8 +701,9 @@ mod tests {
         assert_eq!((r.crate_id.as_str(), r.count, r.use_owned), ("pl", 1, true));
         let r: FavoriteRequest = serde_json::from_str(r#"{"ids": [1, 2]}"#).unwrap();
         assert!(r.fav);
-        let r: UpgradeRequest = serde_json::from_str(r#"{"ids": [5], "target": "pl_walesa"}"#).unwrap();
-        assert_eq!(r.variant, "normal");
+        // ulepszacz "w ciemno": tylko karty i mnożnik (cel losuje serwer)
+        let r: UpgradeRequest = serde_json::from_str(r#"{"ids": [5], "mult": 2}"#).unwrap();
+        assert_eq!((r.ids.as_slice(), r.mult), (&[5][..], 2.0));
         assert!(serde_json::from_str::<IdsRequest>(r#"{"ids": ["x"]}"#).is_err());
     }
 }

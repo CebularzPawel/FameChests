@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use indexmap::IndexMap;
 use serde_json::{json, Map, Value};
-use sqlx::PgPool;
+use sqlx::{AssertSqlSafe, PgPool};
 
 use crate::config::Config;
 use crate::data::g;
@@ -150,15 +150,16 @@ const VARIANT_COLUMNS: &[(&str, &str)] = &[
 
 /// Warianty usunięte z gry (removedVariants w game.json): karty graczy, oferty, ikony itd. w nich stają się zwykłe
 /// (z połączenia zostaje warstwa: flag+greek -> flag), a wpisy w klaserze i Hall of Fame znikają. Bezpieczne przy każdym
-/// starcie. Zapytania bez makr (nazwy tabel z listy), więc bez `cargo sqlx prepare`.
+/// starcie. Zapytania bez makr (nazwy tabel ze stałej listy w kodzie - stąd `AssertSqlSafe`, sqlx 0.9 wymaga go przy
+/// zapytaniu składanym z `format!`), więc bez `cargo sqlx prepare`.
 async fn drop_removed_variants(pool: &PgPool) -> anyhow::Result<()> {
     let mut tx = pool.begin().await?;
     for v in &g().removed_variants {
         let combo = format!("+{v}");
         let like = format!("%+{v}");
         for (table, col) in VARIANT_COLUMNS {
-            sqlx::query(&format!("UPDATE {table} SET {col} = 'normal' WHERE {col} = $1")).bind(v).execute(&mut *tx).await?;
-            sqlx::query(&format!("UPDATE {table} SET {col} = REPLACE({col}, $1, '') WHERE {col} LIKE $2"))
+            sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = 'normal' WHERE {col} = $1"))).bind(v).execute(&mut *tx).await?;
+            sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = REPLACE({col}, $1, '') WHERE {col} LIKE $2")))
                 .bind(&combo)
                 .bind(&like)
                 .execute(&mut *tx)
@@ -172,7 +173,7 @@ async fn drop_removed_variants(pool: &PgPool) -> anyhow::Result<()> {
         .execute(&mut *tx)
         .await?;
         for table in ["user_collected", "hall_of_fame"] {
-            sqlx::query(&format!("DELETE FROM {table} WHERE variant = $1 OR variant LIKE $2"))
+            sqlx::query(AssertSqlSafe(format!("DELETE FROM {table} WHERE variant = $1 OR variant LIKE $2")))
                 .bind(v)
                 .bind(&like)
                 .execute(&mut *tx)
