@@ -1,15 +1,14 @@
 //! Strony HTML (szablony Jinja z templates/ - minijinja), wersjonowanie plików statycznych, nagłówki pamięci
 //! podręcznej, gzip, wysyłanie plików.
 
-use std::path::{Path, PathBuf};
-use std::time::UNIX_EPOCH;
+use std::path::Path;
 
 use axum::body::Body;
 use axum::extract::Request;
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
 use axum::middleware::Next;
 use axum::response::{Html, IntoResponse, Response};
-use minijinja::{path_loader, Environment, Value as JValue};
+use minijinja::{Environment, Value as JValue};
 use tower::ServiceExt;
 use tower_http::compression::predicate::{Predicate, SizeAbove};
 use tower_http::services::ServeFile;
@@ -17,44 +16,30 @@ use tower_http::services::ServeFile;
 use crate::error::{AppError, Res};
 
 pub struct Templates {
-    dir: PathBuf,
-    static_dir: PathBuf,
     dev: bool,
     env: Environment<'static>,
 }
 
-fn make_env(dir: &Path, static_dir: &Path) -> Environment<'static> {
+fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
-    env.set_loader(path_loader(dir));
-    let static_dir = static_dir.to_owned();
-    // {{ asset('css/style.css') }} -> /static/css/style.css?v=<czas modyfikacji>: po aktualizacji przeglądarka
-    // zawsze pobierze nowe pliki
-    env.add_function("asset", move |filename: String| -> JValue {
-        let version = std::fs::metadata(static_dir.join(&filename))
-            .and_then(|m| m.modified())
-            .ok()
-            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        // adres z własnych plików gry - bez escapowania "/" (jak url_for we Flasku)
-        JValue::from_safe_string(format!("/static/{filename}?v={version}"))
-    });
+    // szablony wbudowane w plik wykonywalny (assets.rs)
+    env.set_loader(|name| Ok(crate::assets::template(name)));
+    // {{ asset('css/style.css') }} -> /static/css/style.css?v=<wersja>: po aktualizacji przeglądarka
+    // zawsze pobierze nowe pliki; adres z własnych plików gry - bez escapowania "/" (jak url_for we Flasku)
+    env.add_function("asset", |filename: String| -> JValue { JValue::from_safe_string(crate::assets::asset(&filename)) });
     env
 }
 
 impl Templates {
-    pub fn new(base: &Path, dev: bool) -> Self {
-        let dir = base.join("templates");
-        let static_dir = base.join("static");
-        let env = make_env(&dir, &static_dir);
-        Templates { dir, static_dir, dev, env }
+    pub fn new(dev: bool) -> Self {
+        Templates { dev, env: make_env() }
     }
 
     pub fn render(&self, name: &str, ctx: JValue) -> Res {
         // --dev: szablony czytane od nowa przy każdym zapytaniu
         let fresh;
         let env = if self.dev {
-            fresh = make_env(&self.dir, &self.static_dir);
+            fresh = make_env();
             &fresh
         } else {
             &self.env

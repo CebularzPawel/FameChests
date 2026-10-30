@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 use super::{ok, JsonBody};
 use crate::auth::Me;
 use crate::catalog::{Catalog, Person};
-use crate::data::{g, GameData};
+use crate::data::g;
 use crate::db::{lock_me, Conn};
 use crate::error::{bad, fail, AppError, Res};
 use crate::game::roll::{random, roll, roll_money, roll_variant};
@@ -31,10 +31,6 @@ fn one() -> i64 {
 
 fn yes() -> bool {
     true
-}
-
-fn normal() -> String {
-    "normal".into()
 }
 
 // ---------------------------------------------------------------- konfiguracja i stan gracza
@@ -72,13 +68,13 @@ async fn released_crates(c: &mut Conn, cat: &Catalog) -> sqlx::Result<HashSet<St
 /// Wszystko, czego przeglądarka potrzebuje na start: zasady gry, karty, skrzynki
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ConfigResponse {
-    rarities: &'static Value,
-    rarity_order: &'static [String],
-    variants: &'static Value,
-    variant_order: &'static [String],
-    types: &'static Value,
-    ability_kinds: &'static Value,
+pub struct ConfigResponse<'a> {
+    rarities: &'a Value,
+    rarity_order: &'a [String],
+    variants: &'a Value,
+    variant_order: &'a [String],
+    types: &'a Value,
+    ability_kinds: &'a Value,
     /// Arena (wersja testowa) - tylko admini; bez tego przeglądarka chowa zakładkę i wyzwania
     arena: Option<Value>,
     people: IndexMap<String, PublicPerson>,
@@ -86,32 +82,37 @@ pub struct ConfigResponse {
     crate_order: Vec<String>,
     max_open: i64,
     starting_balance: i64,
-    contract_size: &'static Value,
+    contract_size: &'a Value,
     /// rzadkość wyniku kontraktu (pusta rzadkość jest pomijana)
     contract_next: IndexMap<String, Option<String>>,
     contract_variant_bonus: f64,
     upgrade_edge: f64,
     upgrade_max: f64,
     upgrade_max_items: usize,
-    upgrade_mults: &'static [f64],
+    upgrade_mults: &'a [f64],
     max_deposit: i64,
-    money_chests: &'static Value,
+    money_chests: &'a Value,
     daily_streak: i64,
     secret_odds: i64,
     showcase_size: usize,
-    market: &'static Value,
-    roulette: &'static Value,
-    jackpot: &'static Value,
-    blackjack: &'static Value,
-    slots: &'static Value,
-    special_variants: &'static [String],
-    special_sources: &'static Value,
-    casino_special: &'static Value,
+    market: &'a Value,
+    roulette: &'a Value,
+    jackpot: &'a Value,
+    blackjack: &'a Value,
+    slots: &'a Value,
+    /// wyścigi konne: zasady, konie (z nazwami / mnożnikami od admina), przedmioty
+    horses: Value,
+    special_variants: &'a [String],
+    special_sources: &'a Value,
+    casino_special: &'a Value,
+    /// warianty: ustawienia i wydarzenia, kreator, naklejki, easter egg (routes/variants.rs)
+    #[serde(flatten)]
+    variant_extras: serde_json::Map<String, Value>,
 }
 
 pub async fn config(State(st): State<AppState>, Me(me): Me) -> Res {
     let cx = Ctx::new(st, me);
-    let g: &'static GameData = g();
+    let g = g();
     let mut c = cx.st.db.acquire().await?;
     let found = discovered(&mut c, cx.uid()).await?;
     let released = released_crates(&mut c, &cx.cat).await?;
@@ -166,9 +167,11 @@ pub async fn config(State(st): State<AppState>, Me(me): Me) -> Res {
         jackpot: &g.jackpot_json,
         blackjack: &g.blackjack_json,
         slots: &g.slots_json,
+        horses: super::horses::config_json(&mut c).await?,
         special_variants: &g.special_variants,
         special_sources: &g.special_sources_json,
         casino_special: &g.casino_special_json,
+        variant_extras: super::variants::config_extras(&cx.st, &cx.cat, cx.me.admin()),
     })
 }
 
@@ -258,6 +261,8 @@ pub async fn open_crates(State(st): State<AppState>, Me(me): Me, JsonBody(req): 
         drops.push(insert_item(&mut tx, &cx, &person.id, &variant, "drop").await?);
     }
     let discovered = note_drops(&mut tx, &cx, &drops_of(&drops), "drop").await?;
+    let persons: Vec<String> = drops.iter().map(|d| d.person.clone()).collect();
+    crate::achievements::count_open(&mut tx, cx.uid(), &cr.id, req.count, &persons).await?;
     let state = get_state(&mut tx, cx.uid()).await?;
     let chests = get_chests(&mut tx, &cx.cat, cx.uid()).await?;
     tx.commit().await?;
@@ -458,7 +463,8 @@ async fn contract_exec(c: &mut Conn, cx: &Ctx, plan: &Plan) -> Res<ContractResul
         (crate_id, person.id.clone(), person.crate_.clone())
     };
     delete_items(c, cx.uid(), &plan.ids).await?;
-    let variant = roll_variant(1.0 + g().contract_variant_bonus * plan.specials as f64, &[]);
+    let factor = 1.0 + g().contract_variant_bonus * plan.specials as f64;
+    let variant = roll_variant(&cx.cat.base_variants(), &Default::default(), factor);
     let item = insert_item(c, cx, &person_id, &variant, "contract").await?;
     add_state(c, cx.uid(), "contracts", 1).await?;
     metrics::counter!("scambox_forge_total", "kind" => "contract").increment(1);
@@ -531,21 +537,13 @@ struct UpgradeResponse {
 }
 
 /// Możliwe cele ulepszacza: karty ze skrzynek w sklepie (bez tajnych i specjalnych) w zwykłym wariancie albo
-/// w nie wyjątkowych i nie wyłączonych wariantach - (wartość, karta, wariant)
-fn upgrade_pool(cat: &Catalog) -> Vec<(i64, &Arc<Person>, &'static String)> {
-    let g = g();
-    let variants: Vec<&'static String> = g
-        .variant_order
-        .iter()
-        .filter(|v| {
-            let x = &g.variants[*v];
-            *v == "normal" || !(x.combo || x.special || x.exclusive || x.off || !x.cards.is_empty())
-        })
-        .collect();
+/// w wariantach z catalog.base_variants (włączone, nie wyjątkowe, nie zablokowane przez admina) - (wartość, karta, wariant)
+fn upgrade_pool(cat: &Catalog) -> Vec<(i64, &Arc<Person>, String)> {
+    let variants: Vec<String> = std::iter::once("normal".to_owned()).chain(cat.base_variants()).collect();
     cat.people
         .values()
         .filter(|p| p.forge && !p.is_secret() && !p.is_special())
-        .flat_map(|p| variants.iter().map(move |v| (p.value(v), p, *v)))
+        .flat_map(|p| variants.iter().map(move |v| (p.value(v), p, v.clone())))
         .collect()
 }
 

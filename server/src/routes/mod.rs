@@ -5,10 +5,12 @@ pub mod account;
 pub mod admin;
 pub mod arena;
 pub mod casino;
+pub mod horses;
 pub mod market;
 pub mod pages;
 pub mod shop;
 pub mod social;
+pub mod variants;
 
 use axum::body::Bytes;
 use axum::extract::{FromRequest, Request};
@@ -138,6 +140,13 @@ pub fn router(st: AppState) -> Router {
         .route("/api/casino/jackpot/{jid}/cards", post(casino_jackpot_cards))
         .route("/api/casino/jackpot/{jid}/ready", post(casino_jackpot_ready))
         .route("/api/casino/jackpot/{jid}/seen", post(casino_jackpot_seen))
+        .route("/api/casino/horses", get(horses::casino_horses))
+        .route("/api/casino/horses/bet", post(horses::casino_horses_bet))
+        .route("/api/casino/horses/bet/{bid}/cancel", post(horses::casino_horses_cancel))
+        .route("/api/casino/horses/seen", post(horses::casino_horses_seen))
+        .route("/api/casino/horses/solo", post(horses::casino_horses_solo))
+        .route("/api/casino/horses/debug", post(horses::casino_horses_debug))
+        .route("/api/admin/horses", get(horses::admin_horses).post(horses::admin_horses_save))
         // arena (tylko admini)
         .route("/api/arena/inbox", get(arena_inbox))
         .route("/api/arena/start", post(arena_start))
@@ -170,7 +179,30 @@ pub fn router(st: AppState) -> Router {
         .route("/api/admin/users/{user_id}/chests", post(admin_give_chests))
         .route("/api/admin/users/{user_id}/money", post(admin_money))
         .route("/api/admin/users/{user_id}/admin", post(admin_toggle))
-        .route("/api/admin/users/{user_id}/password", post(admin_password));
+        .route("/api/admin/users/{user_id}/password", post(admin_password))
+        // osiągnięcia
+        .route("/api/users/{name}/achievements", get(crate::achievements::user_achievements))
+        .route("/api/achievements/pop", post(crate::achievements::achievements_pop))
+        .route(
+            "/api/admin/achievements",
+            get(crate::achievements::admin_achievements).post(crate::achievements::admin_achievement_save),
+        )
+        .route("/api/admin/achievements/{aid}/delete", post(crate::achievements::admin_achievement_delete))
+        // warianty: ustawienia, wydarzenia, kreator, naklejki; easter eggi
+        .route("/sticker/{variant}/{sid}", get(variants::sticker_image))
+        .route("/egg", get(variants::egg_image))
+        .route("/api/ufo/seen", post(variants::ufo_seen))
+        .route("/api/admin/egg", post(variants::admin_egg_save))
+        .route("/api/admin/ufo/test", post(variants::admin_ufo_test))
+        .route("/api/admin/variants/{variant}", post(variants::admin_variant_save))
+        .route("/api/admin/variants/{variant}/crates", post(variants::admin_variant_crate))
+        .route("/api/admin/variants/{variant}/events", post(variants::admin_variant_event_add))
+        .route("/api/admin/variants/{variant}/events/{eid}/delete", post(variants::admin_variant_event_delete))
+        .route("/api/admin/variant-designs", post(variants::admin_variant_design_save))
+        .route("/api/admin/variant-designs/{key}/delete", post(variants::admin_variant_design_delete))
+        .route("/api/admin/stickers/{variant}", get(variants::admin_stickers_get).post(variants::admin_stickers_save))
+        .route("/api/admin/stickers/{variant}/upload", post(variants::admin_sticker_upload))
+        .route("/api/admin/stickers/{variant}/card/{pid}", post(variants::admin_card_stickers_save));
     for view in pages::VIEWS {
         r = r.route(&format!("/{view}"), get(index));
     }

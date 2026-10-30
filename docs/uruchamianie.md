@@ -49,14 +49,14 @@ nix shell nixpkgs#cargo nixpkgs#rustc nixpkgs#gcc nixpkgs#pkg-config -c cargo ru
 ### Windows
 
 Potrzebne: [Rust (rustup)](https://rustup.rs) i Visual Studio Build Tools (kompilator C dla biblioteki WebP).
-Potem dwuklik `start_rust.bat` w głównym folderze gry.
+Potem dwuklik `start.bat` w głównym folderze gry.
 
 Pierwsze budowanie trwa kilka minut. Gra działa na **http://127.0.0.1:5000**. Pierwsze zarejestrowane konto jest
 adminem.
 
 ## Opcje
 
-Dopisywane po `--` (np. `cargo run --release -- --lan`) albo po `start_rust.bat`:
+Dopisywane po `--` (np. `cargo run --release -- --lan`) albo po `start.bat`:
 
 | Opcja | Co |
 |---|---|

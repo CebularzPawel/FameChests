@@ -3705,5 +3705,1056 @@
     "📰 Po każdej aktualizacji zobaczysz tu, co się zmieniło. Listę zmian znajdziesz też na swoim profilu."
    ]
   }
+ ],
+ "variantMultMax": 1000,
+ "variantEventMax": 40,
+ "variantBoostMax": 50,
+ "variantChanceMax": 0.2,
+ "stickerLibrary": {
+  "glasses": "Okulary „deal with it”",
+  "illuminati": "Oko Illuminati",
+  "hitmarker": "Hitmarker",
+  "scope": "Celownik",
+  "chip": "Chips nacho",
+  "soda": "Zielona puszka",
+  "airhorn": "Trąbka",
+  "wow": "Napis WOW",
+  "noscope": "360 NO SCOPE"
+ },
+ "stickerAnims": {
+  "none": "Bez ruchu",
+  "pulse": "Pulsowanie",
+  "spin": "Obrót",
+  "shake": "Trzęsienie",
+  "float": "Unoszenie",
+  "drop": "Spada z góry (okulary)",
+  "blink": "Miganie"
+ },
+ "stickerMax": 30,
+ "customPrefix": "cv_",
+ "customVariantMax": 60,
+ "ufoVisit": {
+  "chance": 8.333333333333333e-05
+ },
+ "easterEgg": {
+  "chance": 0.001
+ },
+ "cardTextSlots": {
+  "name": "Nazwa",
+  "hpLabel": "Napis HP",
+  "hp": "HP",
+  "type": "Ikona typu",
+  "sub": "Linia pod zdjęciem",
+  "atk1Cost": "Zdolność 1: koszt",
+  "atk1Name": "Zdolność 1: nazwa",
+  "atk1Value": "Zdolność 1: wartość",
+  "atk2Cost": "Zdolność 2: koszt",
+  "atk2Name": "Zdolność 2: nazwa",
+  "atk2Value": "Zdolność 2: wartość",
+  "atk3Cost": "Zdolność 3: koszt",
+  "atk3Name": "Zdolność 3: nazwa",
+  "atk3Value": "Zdolność 3: wartość",
+  "atk4Cost": "Zdolność 4: koszt",
+  "atk4Name": "Zdolność 4: nazwa",
+  "atk4Value": "Zdolność 4: wartość",
+  "weakLabel": "Napis „słabość”",
+  "weak": "Słabość",
+  "resistLabel": "Napis „odporność”",
+  "resist": "Odporność",
+  "retreatLabel": "Napis „wycofanie”",
+  "retreat": "Wycofanie",
+  "rarity": "Rzadkość",
+  "number": "Numer karty",
+  "value": "Cena",
+  "deco1": "Napis ozdobny 1",
+  "deco2": "Napis ozdobny 2"
+ },
+ "cardTextMax": 60,
+ "horseRace": {
+  "period": 300,
+  "minPlayers": 1,
+  "betOpen": 300,
+  "betClose": 8,
+  "maxCards": 20,
+  "maxBets": 3,
+  "laps": 4,
+  "dt": 0.25,
+  "duration": [
+   70,
+   170
+  ],
+  "tail": 6,
+  "formSpread": 0.45,
+  "strength": 0.022,
+  "noise": 0.06,
+  "noiseTau": 8,
+  "turboMult": 5,
+  "turboLaps": 0.25,
+  "turnChance": 0.2,
+  "dieChance": 0.12,
+  "carChance": 0.06,
+  "tripChance": 0.002,
+  "tripGap": 0.006,
+  "tripDeath": 0.1,
+  "carSpeed": 12,
+  "carEntry": 2.5,
+  "boxRows": [
+   0.3,
+   0.75
+  ],
+  "boxRespawn": 0.3,
+  "itemDelay": [
+   1.0,
+   4.0
+  ]
+ },
+ "horseItems": {
+  "banana": {
+   "icon": "🍌",
+   "name": "Skórka od banana",
+   "w": [
+    40,
+    24,
+    8
+   ]
+  },
+  "rocket": {
+   "icon": "🚀",
+   "name": "Rakieta",
+   "w": [
+    4,
+    20,
+    32
+   ]
+  },
+  "turbo": {
+   "icon": "🌈",
+   "name": "Tęczowe turbo",
+   "w": [
+    0,
+    4,
+    10
+   ]
+  },
+  "mushroom": {
+   "icon": "🍄",
+   "name": "Grzyb",
+   "w": [
+    18,
+    24,
+    24
+   ]
+  },
+  "snail": {
+   "icon": "🐌",
+   "name": "Ślimak",
+   "w": [
+    14,
+    14,
+    4
+   ]
+  },
+  "lightning": {
+   "icon": "⚡",
+   "name": "Piorun",
+   "w": [
+    0,
+    5,
+    14
+   ]
+  },
+  "star": {
+   "icon": "⭐",
+   "name": "Gwiazda",
+   "w": [
+    0,
+    6,
+    14
+   ]
+  }
+ },
+ "horses": [
+  {
+   "id": 0,
+   "name": "Rączy Bolek",
+   "color": "#e53935",
+   "speed": 1.4,
+   "pitch": 1.0,
+   "pays": 3.5
+  },
+  {
+   "id": 1,
+   "name": "Kasztanka z Allegro",
+   "color": "#fb8c00",
+   "speed": 1.0,
+   "pitch": 1.25,
+   "pays": 5.0
+  },
+  {
+   "id": 2,
+   "name": "Pan Kuleczka",
+   "color": "#fdd835",
+   "speed": 0.7,
+   "pitch": 0.85,
+   "pays": 5.5
+  },
+  {
+   "id": 3,
+   "name": "Dżordż Klonik",
+   "color": "#43a047",
+   "speed": 0.4,
+   "pitch": 1.1,
+   "pays": 7.5
+  },
+  {
+   "id": 4,
+   "name": "Siwy Dym",
+   "color": "#00acc1",
+   "speed": 0.2,
+   "pitch": 0.95,
+   "pays": 7.5
+  },
+  {
+   "id": 5,
+   "name": "Koń Trojański",
+   "color": "#1e88e5",
+   "speed": 0.0,
+   "pitch": 0.75,
+   "pays": 10.5
+  },
+  {
+   "id": 6,
+   "name": "Galopujący Ziemniak",
+   "color": "#5e35b1",
+   "speed": -0.3,
+   "pitch": 1.4,
+   "pays": 11.0
+  },
+  {
+   "id": 7,
+   "name": "Wojtek Kopyto",
+   "color": "#d81b60",
+   "speed": -0.6,
+   "pitch": 0.9,
+   "pays": 14.5
+  },
+  {
+   "id": 8,
+   "name": "Madame Kłusak",
+   "color": "#6d4c41",
+   "speed": -1.0,
+   "pitch": 1.3,
+   "pays": 19.5
+  },
+  {
+   "id": 9,
+   "name": "Lord Siano",
+   "color": "#b0bec5",
+   "speed": -1.5,
+   "pitch": 0.8,
+   "pays": 25.0
+  }
+ ],
+ "achievements": [
+  {
+   "id": "dwoch_papiezy",
+   "name": "Dwóch papieży",
+   "desc": "Zdobądź dwie karty Jan Paweł II.",
+   "icon": "✝️",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "person": "pl_secret",
+     "count": 2
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 50000
+    }
+   ]
+  },
+  {
+   "id": "bestia_z_wadowic",
+   "name": "Bestia z Wadowic",
+   "desc": "Wygraj walkę w Arenie, zadając ostatni cios kartą Jana Pawła II.",
+   "icon": "🥊",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "arena",
+     "mode": "finisher",
+     "person": "pl_secret",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 50000
+    }
+   ]
+  },
+  {
+   "id": "o_dwoch_takich",
+   "name": "O dwóch takich co ukradli księżyc",
+   "desc": "Przy otwieraniu kilku skrzynek naraz wylosuj Lecha i Jarosława Kaczyńskich.",
+   "icon": "🌙",
+   "hidden": true,
+   "enabled": false,
+   "criteria": [
+    {
+     "type": "drop_together",
+     "persons": [
+      "",
+      "pl_kaczynski"
+     ],
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "card",
+     "person": "pl_tusk",
+     "variant": "normal",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "3000_lat_temu",
+   "name": "3000 lat temu",
+   "desc": "Wylosuj Diamentowego Netanjahu.",
+   "icon": "💎",
+   "hidden": true,
+   "enabled": false,
+   "criteria": [
+    {
+     "type": "cards",
+     "person": "",
+     "variant": "diamond",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 100000
+    }
+   ]
+  },
+  {
+   "id": "pierwsza_karta",
+   "name": "Pierwsza karta",
+   "desc": "Zdobądź swoją pierwszą kartę.",
+   "icon": "🃏",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 500
+    }
+   ]
+  },
+  {
+   "id": "zbieracz_100",
+   "name": "Zbieracz",
+   "desc": "Zdobądź 100 kart.",
+   "icon": "🧺",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 100
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "chomik_500",
+   "name": "Chomik",
+   "desc": "Zdobądź 500 kart.",
+   "icon": "🐹",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 500
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 20000
+    }
+   ]
+  },
+  {
+   "id": "kolekcjoner_2000",
+   "name": "Kolekcjoner absolutny",
+   "desc": "Zdobądź 2000 kart.",
+   "icon": "🏛️",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 2000
+    }
+   ],
+   "rewards": [
+    {
+     "type": "chest",
+     "kind": "money_mega",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "id": "album_25",
+   "name": "Album się zapełnia",
+   "desc": "Miej w klaserze 25 różnych osób.",
+   "icon": "📖",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 25,
+     "unique": true
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "album_75",
+   "name": "Prawie komplet",
+   "desc": "Miej w klaserze 75 różnych osób.",
+   "icon": "📚",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "count": 75,
+     "unique": true
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 25000
+    }
+   ]
+  },
+  {
+   "id": "epicka",
+   "name": "Epicko!",
+   "desc": "Wylosuj kartę Epicką.",
+   "icon": "💜",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "rarity": "purple",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 1000
+    }
+   ]
+  },
+  {
+   "id": "mityczna",
+   "name": "Mit czy prawda?",
+   "desc": "Wylosuj kartę Mityczną.",
+   "icon": "❤️‍🔥",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "rarity": "red",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 3000
+    }
+   ]
+  },
+  {
+   "id": "legendarna",
+   "name": "Legenda",
+   "desc": "Wylosuj kartę Legendarną.",
+   "icon": "🌟",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "rarity": "gold",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 10000
+    }
+   ]
+  },
+  {
+   "id": "ultra",
+   "name": "ULTRA!",
+   "desc": "Wylosuj kartę ULTRA.",
+   "icon": "🌈",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "rarity": "ultra",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 25000
+    }
+   ]
+  },
+  {
+   "id": "tajna",
+   "name": "Tajemnica",
+   "desc": "Zdobądź tajną kartę.",
+   "icon": "🕵️",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "rarity": "secret",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 50000
+    }
+   ]
+  },
+  {
+   "id": "holo",
+   "name": "Błyszczy się",
+   "desc": "Zdobądź kartę Holo.",
+   "icon": "✨",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "holo",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 1000
+    }
+   ]
+  },
+  {
+   "id": "zlota",
+   "name": "Złota rączka",
+   "desc": "Zdobądź Złotą kartę.",
+   "icon": "🥇",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "gold",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 2000
+    }
+   ]
+  },
+  {
+   "id": "diament",
+   "name": "Diamenty są wieczne",
+   "desc": "Zdobądź Diamentową kartę.",
+   "icon": "💎",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "diamond",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 15000
+    }
+   ]
+  },
+  {
+   "id": "galaktyka",
+   "name": "Gwiezdny pył",
+   "desc": "Zdobądź Galaktyczną kartę.",
+   "icon": "🌌",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "galaxy",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 20000
+    }
+   ]
+  },
+  {
+   "id": "negatyw",
+   "name": "Ciemna strona",
+   "desc": "Zdobądź kartę Negatyw.",
+   "icon": "◐",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "negative",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 30000
+    }
+   ]
+  },
+  {
+   "id": "pierwsza_skrzynka",
+   "name": "Pierwsza skrzynka",
+   "desc": "Otwórz swoją pierwszą skrzynkę.",
+   "icon": "📦",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "open",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 300
+    }
+   ]
+  },
+  {
+   "id": "hazardzista_100",
+   "name": "Hazardzista",
+   "desc": "Otwórz 100 skrzynek.",
+   "icon": "🎁",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "open",
+     "count": 100
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "uzalezniony_1000",
+   "name": "Uzależniony",
+   "desc": "Otwórz 1000 skrzynek.",
+   "icon": "🫠",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "open",
+     "count": 1000
+    }
+   ],
+   "rewards": [
+    {
+     "type": "chest",
+     "kind": "money_mega",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "id": "za_komuny",
+   "name": "Za komuny było lepiej",
+   "desc": "Otwórz 50 Skrzynek PRL.",
+   "icon": "☭",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "open",
+     "crate": "prl",
+     "count": 50
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 3000
+    }
+   ]
+  },
+  {
+   "id": "witamy_w_kasynie",
+   "name": "Witamy w kasynie",
+   "desc": "Zagraj w dowolną grę w kasynie.",
+   "icon": "🎰",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_plays",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 500
+    }
+   ]
+  },
+  {
+   "id": "staly_bywalec",
+   "name": "Stały bywalec",
+   "desc": "Zagraj w kasynie 100 razy.",
+   "icon": "🍸",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_plays",
+     "count": 100
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 10000
+    }
+   ]
+  },
+  {
+   "id": "pierwsza_wygrana",
+   "name": "Dom nie zawsze wygrywa",
+   "desc": "Wygraj grę w kasynie.",
+   "icon": "💸",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_win",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 1000
+    }
+   ]
+  },
+  {
+   "id": "szczesciarz_50",
+   "name": "Szczęściarz",
+   "desc": "Wygraj w kasynie 50 razy.",
+   "icon": "🍀",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_win",
+     "count": 50
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 15000
+    }
+   ]
+  },
+  {
+   "id": "czerwone_czarne",
+   "name": "Czerwone czy czarne",
+   "desc": "Zagraj w ruletkę 25 razy.",
+   "icon": "🎡",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_plays",
+     "game": "roulette",
+     "count": 25
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 3000
+    }
+   ]
+  },
+  {
+   "id": "oczko",
+   "name": "Oczko",
+   "desc": "Wygraj 10 rozdań w blackjacku.",
+   "icon": "🂡",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_win",
+     "game": "blackjack",
+     "count": 10
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "na_koniku",
+   "name": "Na koniku",
+   "desc": "Wygraj zakład na wyścigach konnych.",
+   "icon": "🐎",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_win",
+     "game": "horses",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 3000
+    }
+   ]
+  },
+  {
+   "id": "zwyciezca_bierze_wszystko",
+   "name": "Zwycięzca bierze wszystko",
+   "desc": "Wygraj grę w jackpot.",
+   "icon": "💰",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_win",
+     "game": "jackpot",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "gladiator",
+   "name": "Gladiator",
+   "desc": "Wygraj walkę w Arenie.",
+   "icon": "⚔️",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "arena",
+     "mode": "win",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 2000
+    }
+   ]
+  },
+  {
+   "id": "karta_mi_zre",
+   "name": "Karta mi dzisiaj żre",
+   "desc": "Wygraj 3 gry w kasynie z rzędu.",
+   "icon": "🔥",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_streak",
+     "count": 3
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 10000
+    }
+   ]
+  },
+  {
+   "id": "wtorek_automaty",
+   "name": "Wtorek automaty",
+   "desc": "Zagraj w jednorękiego bandytę we wtorek.",
+   "icon": "📅",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "casino_plays",
+     "game": "slots",
+     "weekday": 1,
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 2000
+    }
+   ]
+  },
+  {
+   "id": "maga",
+   "name": "Make America Great Again",
+   "desc": "Wylosuj Flagową kartę Donalda Trumpa (w dowolnym połączeniu).",
+   "icon": "🇺🇸",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "person": "w_trump",
+     "variant": "flag",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 20000
+    }
+   ]
+  },
+  {
+   "id": "patriota",
+   "name": "Patriota",
+   "desc": "Wylosuj dowolną kartę Flagową.",
+   "icon": "🏳️",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "cards",
+     "variant": "flag",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 5000
+    }
+   ]
+  },
+  {
+   "id": "caly_litr",
+   "name": "Cały litr",
+   "desc": "Wylosuj dwie karty Aleksandra Kwaśniewskiego przy jednym otwieraniu skrzynek.",
+   "icon": "🍾",
+   "hidden": true,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "drop_together",
+     "persons": [
+      "pl_aleksander_kwasniewski",
+      "pl_aleksander_kwasniewski"
+     ],
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 10000
+    }
+   ]
+  }
  ]
 }

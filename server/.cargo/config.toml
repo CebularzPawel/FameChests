@@ -1,0 +1,4 @@
+# scambox.exe bez zależności od bibliotek Visual C++ (vcruntime140.dll) - działa na każdym Windowsie, także na Azure
+# App Service, bez instalowania niczego
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

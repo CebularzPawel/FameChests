@@ -1,5 +1,0 @@
-flask>=3.0
-certifi
-Pillow
-psycopg[binary,pool]>=3.2
-gunicorn>=22; sys_platform != "win32"

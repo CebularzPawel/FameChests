@@ -3,24 +3,43 @@
 //! Zmiany ustawień gry (ceny, szanse, lista zmian PATCH_NOTES...) - w `data/game.json`.
 
 use std::collections::{HashMap, HashSet};
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
+use arc_swap::ArcSwap;
 use indexmap::IndexMap;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 
-pub static GAME: LazyLock<GameData> =
+/// Dane z data/game.json (warianty bez zmian z panelu admina)
+static BASE: LazyLock<GameData> =
     LazyLock::new(|| GameData::from_json(include_str!("../data/game.json")).expect("data/game.json: nieprawidłowe dane gry"));
+/// Dane gry z nałożonymi zmianami wariantów z panelu admina (catalog::load podmienia je razem z katalogiem)
+static CURRENT: LazyLock<ArcSwap<GameData>> = LazyLock::new(|| ArcSwap::from_pointee(BASE.clone()));
 
-/// Skrót: `G.variants`, `G.rarities`...
-pub fn g() -> &'static GameData {
-    &GAME
+/// Skrót: `g.variants`, `g.rarities`... (migawka - zmiany z panelu admina widać w następnym wywołaniu)
+pub fn g() -> Arc<GameData> {
+    CURRENT.load_full()
+}
+
+/// Dane z data/game.json, bez zmian z panelu admina
+pub fn base_game() -> &'static GameData {
+    &BASE
+}
+
+/// Nowe dane gry (po zmianie wariantów w panelu admina)
+pub fn set_game(gd: GameData) {
+    CURRENT.store(Arc::new(gd));
 }
 
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(rename_all = "camelCase", default)]
 pub struct VariantDef {
     pub name: String,
+    pub desc: String,
+    /// naklejki od admina (strona /stickers): true albo "under" (pod zdjęciem)
+    pub stickers: Value,
+    /// wariant z kreatora (/designer)
+    pub custom: bool,
     pub chance: f64,
     pub mult: f64,
     pub exclusive: bool,
@@ -141,11 +160,33 @@ pub struct ArenaEffect {
     pub unique: bool,
 }
 
+#[derive(Clone)]
 pub struct TypeDef {
     pub weak: Option<String>,
     pub resist: Option<String>,
 }
 
+/// Wartości wariantu z kodu, do których wraca "Przywróć domyślne" na stronie /variants
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct VariantDefault {
+    pub chance: f64,
+    pub weight: Option<f64>,
+    pub desc: String,
+    pub mult: f64,
+}
+
+/// Koń w wyścigach (ustawienia z kodu; nazwę i mnożnik zmienia admin - tabela horse_settings)
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+pub struct HorseDef {
+    pub id: i64,
+    pub name: String,
+    pub color: String,
+    pub speed: f64,
+    pub pitch: f64,
+    pub pays: f64,
+}
+
+#[derive(Clone)]
 pub struct GameData {
     pub starting_balance: i64,
     pub crate_price: i64,
@@ -156,6 +197,30 @@ pub struct GameData {
     pub crate_variants: Vec<String>,
     pub special_variants: Vec<String>,
     pub casino_variants: Vec<String>,
+    /// warianty z naklejkami od admina (strona /stickers)
+    pub sticker_variants: Vec<String>,
+    /// wartości wariantów z kodu (bez połączeń; także warianty z kreatora)
+    pub variant_defaults: IndexMap<String, VariantDefault>,
+    /// warianty z data/game.json (bez połączeń) - podstawa dla with_catalog_variants
+    base_variants_raw: IndexMap<String, Map<String, Value>>,
+    pub variant_mult_max: f64,
+    pub variant_event_max: usize,
+    pub variant_boost_max: f64,
+    pub variant_chance_max: f64,
+    pub sticker_library: IndexMap<String, String>,
+    pub sticker_anims: IndexMap<String, String>,
+    pub sticker_max: usize,
+    pub custom_prefix: String,
+    pub custom_variant_max: usize,
+    pub ufo_visit_chance: f64,
+    pub easter_egg_chance: f64,
+    pub card_text_slots: IndexMap<String, String>,
+    pub card_text_max: usize,
+    pub horse_race: Value,
+    pub horse_items: Value,
+    pub horses: Vec<HorseDef>,
+    /// osiągnięcia wbudowane (wpisywane raz do tabeli achievements)
+    pub achievements: Vec<Value>,
     pub default_crate_variants: HashMap<String, Vec<String>>,
     pub crates_added_later: HashSet<String>,
     pub contract_size: IndexMap<String, usize>,
@@ -211,6 +276,7 @@ pub struct GameData {
     pub patch_notes: Vec<Value>,
 }
 
+#[derive(Clone)]
 pub struct BuiltinCrate {
     pub fields: Map<String, Value>,
     pub people: Vec<Map<String, Value>>,
@@ -235,53 +301,9 @@ impl GameData {
     pub fn from_json(text: &str) -> anyhow::Result<Self> {
         let raw: Value = serde_json::from_str(text)?;
 
-        // ---- warianty + połączenia warstw ("flag+gold"), jak pętla w data.py
-        let mut variants_raw: IndexMap<String, Map<String, Value>> = get(&raw, "variants")?;
-        let layers: Vec<String> = variants_raw
-            .iter()
-            .filter(|(_, x)| x.get("layer").and_then(Value::as_bool).unwrap_or(false))
-            .map(|(k, _)| k.clone())
-            .collect();
-        for layer in &layers {
-            let snapshot: Vec<(String, Map<String, Value>)> = variants_raw.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
-            for (base, x) in snapshot {
-                let flag = |k: &str| x.get(k).and_then(Value::as_bool).unwrap_or(false);
-                if base == "normal" || flag("layer") || flag("combo") || flag("special") {
-                    continue;
-                }
-                let lx = &variants_raw[layer];
-                let name = format!("{} + {}", lx["name"].as_str().unwrap_or(""), x["name"].as_str().unwrap_or(""));
-                let mult = py_round(lx["mult"].as_f64().unwrap_or(1.0) * x["mult"].as_f64().unwrap_or(1.0), 2);
-                let mut m = Map::new();
-                m.insert("name".into(), json!(name));
-                m.insert("chance".into(), json!(0.0));
-                m.insert("mult".into(), json!(mult));
-                m.insert("exclusive".into(), json!(true));
-                m.insert("combo".into(), json!(true));
-                m.insert("layers".into(), json!([layer, base]));
-                variants_raw.insert(format!("{layer}+{base}"), m);
-            }
-        }
-        let variants: IndexMap<String, VariantDef> = variants_raw
-            .iter()
-            .map(|(k, v)| Ok((k.clone(), serde_json::from_value(Value::Object(v.clone()))?)))
-            .collect::<anyhow::Result<_>>()?;
-        let variants_json = Value::Object(variants_raw.iter().map(|(k, v)| (k.clone(), Value::Object(v.clone()))).collect());
-        let mut variant_order: Vec<String> = variants.keys().cloned().collect();
-        variant_order.sort_by(|a, b| variants[a].mult.total_cmp(&variants[b].mult)); // stabilne, jak sorted()
-        // warianty przypinane do skrzynek: każdy wariant wypada tylko ze skrzynek, do których jest przypięty - wszystkie
-        // poza zwykłą, połączeniami, wariantami kart specjalnych i konkretnych kart (jak CRATE_VARIANTS w data.py)
-        let crate_variants = variants
-            .iter()
-            .filter(|(k, x)| *k != "normal" && x.cards.is_empty() && !x.combo && !x.special)
-            .map(|(k, _)| k.clone())
-            .collect();
-        let special_variants = variants.iter().filter(|(_, x)| x.special).map(|(k, _)| k.clone()).collect();
-        let casino_variants = variant_order
-            .iter()
-            .filter(|v| *v == "normal" || (variants[*v].chance > 0.0 && !variants[*v].exclusive))
-            .cloned()
-            .collect();
+        // ---- warianty + połączenia warstw ("flag+gold") - VariantTables::build
+        let variants_raw: IndexMap<String, Map<String, Value>> = get(&raw, "variants")?;
+        let vt = VariantTables::build(&variants_raw, &IndexMap::new())?;
 
         // ---- rzadkości: tajna = 1 na SECRET_ODDS skrzynek
         let secret_odds: i64 = get(&raw, "secretOdds")?;
@@ -346,12 +368,32 @@ impl GameData {
             starting_balance: get(&raw, "startingBalance")?,
             crate_price: get(&raw, "cratePrice")?,
             max_open: get(&raw, "maxOpen")?,
-            variants,
-            variants_json,
-            variant_order,
-            crate_variants,
-            special_variants,
-            casino_variants,
+            variants: vt.variants,
+            variants_json: vt.variants_json,
+            variant_order: vt.variant_order,
+            crate_variants: vt.crate_variants,
+            special_variants: vt.special_variants,
+            casino_variants: vt.casino_variants,
+            sticker_variants: vt.sticker_variants,
+            variant_defaults: vt.variant_defaults,
+            base_variants_raw: variants_raw,
+            variant_mult_max: get(&raw, "variantMultMax")?,
+            variant_event_max: get(&raw, "variantEventMax")?,
+            variant_boost_max: get(&raw, "variantBoostMax")?,
+            variant_chance_max: get(&raw, "variantChanceMax")?,
+            sticker_library: get(&raw, "stickerLibrary")?,
+            sticker_anims: get(&raw, "stickerAnims")?,
+            sticker_max: get(&raw, "stickerMax")?,
+            custom_prefix: get(&raw, "customPrefix")?,
+            custom_variant_max: get(&raw, "customVariantMax")?,
+            ufo_visit_chance: raw["ufoVisit"]["chance"].as_f64().unwrap_or(0.0),
+            easter_egg_chance: raw["easterEgg"]["chance"].as_f64().unwrap_or(0.0),
+            card_text_slots: get(&raw, "cardTextSlots")?,
+            card_text_max: get(&raw, "cardTextMax")?,
+            horse_race: v("horseRace"),
+            horse_items: v("horseItems"),
+            horses: get(&raw, "horses")?,
+            achievements: get(&raw, "achievements")?,
             default_crate_variants: get(&raw, "defaultCrateVariants")?,
             crates_added_later: crates_added_later.into_iter().collect(),
             contract_size,
@@ -412,6 +454,63 @@ impl GameData {
         })
     }
 
+    /// Warianty z nałożonymi zmianami z panelu admina: projekty z kreatora (custom: klucz -> projekt) i ustawienia
+    /// ze strony /variants (szansa / waga / opis / mnożnik; połączenia warstw przeliczane jako iloczyn) - jak
+    /// register_custom_variants + rebuild w wersji Python
+    pub fn with_catalog_variants(
+        &self,
+        custom: &IndexMap<String, Value>,
+        cfg: &HashMap<String, crate::variants::VariantSettings>,
+    ) -> GameData {
+        let mut raw = self.base_variants_raw.clone();
+        let mut custom_raw: IndexMap<String, Map<String, Value>> = IndexMap::new();
+        for (k, d) in custom {
+            let m = json!({"name": d["name"], "chance": d["chance"], "mult": d["mult"], "off": true, "custom": true,
+                           "stickers": true, "desc": d["desc"]});
+            custom_raw.insert(k.clone(), m.as_object().cloned().unwrap_or_default());
+        }
+        let mut gd = self.clone();
+        // wartości z kodu: wbudowane z data/game.json, z kreatora - z projektu
+        let defaults = match VariantTables::build(&raw, &custom_raw) {
+            Ok(vt) => vt.variant_defaults,
+            Err(_) => self.variant_defaults.clone(),
+        };
+        for (k, x) in raw.iter_mut().chain(custom_raw.iter_mut()) {
+            // opis zawsze jest (także pusty), ustawienia z panelu nadpisują wartości z kodu
+            if !x.contains_key("desc") {
+                x.insert("desc".into(), json!(""));
+            }
+            if let Some(s) = cfg.get(k) {
+                if let Some(c) = s.chance {
+                    x.insert("chance".into(), json!(c));
+                }
+                if let Some(w) = s.weight {
+                    x.insert("weight".into(), json!(w));
+                }
+                if let Some(d) = &s.desc {
+                    x.insert("desc".into(), json!(d));
+                }
+                if let Some(m) = s.mult {
+                    x.insert("mult".into(), json!(m));
+                }
+            }
+        }
+        match VariantTables::build(&raw, &custom_raw) {
+            Ok(vt) => {
+                gd.variants = vt.variants;
+                gd.variants_json = vt.variants_json;
+                gd.variant_order = vt.variant_order;
+                gd.crate_variants = vt.crate_variants;
+                gd.special_variants = vt.special_variants;
+                gd.casino_variants = vt.casino_variants;
+                gd.sticker_variants = vt.sticker_variants;
+                gd.variant_defaults = defaults;
+            }
+            Err(e) => tracing::error!("warianty z panelu admina: {e:#}"),
+        }
+        gd
+    }
+
     pub fn variant(&self, v: &str) -> &VariantDef {
         self.variants.get(v).unwrap_or(&self.variants["normal"])
     }
@@ -443,6 +542,101 @@ impl GameData {
     }
 }
 
+/// Warianty z połączeniami warstw i listy wyliczane z nich (jak pętla w data.py i register_custom_variants)
+struct VariantTables {
+    variants: IndexMap<String, VariantDef>,
+    variants_json: Value,
+    variant_order: Vec<String>,
+    crate_variants: Vec<String>,
+    special_variants: Vec<String>,
+    casino_variants: Vec<String>,
+    sticker_variants: Vec<String>,
+    variant_defaults: IndexMap<String, VariantDefault>,
+}
+
+impl VariantTables {
+    /// builtin: warianty z data/game.json, custom: z kreatora (dopisywane po połączeniach wbudowanych, jak w Pythonie)
+    fn build(
+        builtin: &IndexMap<String, Map<String, Value>>,
+        custom: &IndexMap<String, Map<String, Value>>,
+    ) -> anyhow::Result<VariantTables> {
+        let flag = |x: &Map<String, Value>, k: &str| x.get(k).and_then(Value::as_bool).unwrap_or(false);
+        let mut all = builtin.clone();
+        let layers: Vec<String> = all.iter().filter(|(_, x)| flag(x, "layer")).map(|(k, _)| k.clone()).collect();
+        let add_combos = |all: &mut IndexMap<String, Map<String, Value>>, bases: Vec<(String, Map<String, Value>)>| {
+            for layer in &layers {
+                for (base, x) in &bases {
+                    if base == "normal" || flag(x, "layer") || flag(x, "combo") || flag(x, "special") {
+                        continue;
+                    }
+                    let lx = &all[layer];
+                    let name = format!("{} + {}", lx["name"].as_str().unwrap_or(""), x["name"].as_str().unwrap_or(""));
+                    let mult = py_round(lx["mult"].as_f64().unwrap_or(1.0) * x["mult"].as_f64().unwrap_or(1.0), 2);
+                    let m = json!({"name": name, "chance": 0.0, "mult": mult, "exclusive": true, "combo": true,
+                                   "layers": [layer, base]});
+                    all.insert(format!("{layer}+{base}"), m.as_object().cloned().unwrap_or_default());
+                }
+            }
+        };
+        let builtin_bases: Vec<(String, Map<String, Value>)> = all.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+        add_combos(&mut all, builtin_bases);
+        all.extend(custom.iter().map(|(k, v)| (k.clone(), v.clone())));
+        add_combos(&mut all, custom.iter().map(|(k, v)| (k.clone(), v.clone())).collect());
+
+        let variants: IndexMap<String, VariantDef> = all
+            .iter()
+            .map(|(k, v)| Ok((k.clone(), serde_json::from_value(Value::Object(v.clone()))?)))
+            .collect::<anyhow::Result<_>>()?;
+        let variants_json = Value::Object(all.iter().map(|(k, v)| (k.clone(), Value::Object(v.clone()))).collect());
+        let mut variant_order: Vec<String> = variants.keys().cloned().collect();
+        variant_order.sort_by(|a, b| variants[a].mult.total_cmp(&variants[b].mult)); // stabilne, jak sorted()
+        // warianty przypinane do skrzynek: wszystkie poza zwykłą, połączeniami, wariantami kart specjalnych
+        // i konkretnych kart (jak CRATE_VARIANTS w data.py)
+        let crate_variants = variants
+            .iter()
+            .filter(|(k, x)| *k != "normal" && x.cards.is_empty() && !x.combo && !x.special)
+            .map(|(k, _)| k.clone())
+            .collect();
+        let special_variants = variants.iter().filter(|(_, x)| x.special).map(|(k, _)| k.clone()).collect();
+        let casino_variants = variant_order
+            .iter()
+            .filter(|v| *v == "normal" || (variants[*v].chance > 0.0 && !variants[*v].exclusive))
+            .cloned()
+            .collect();
+        let sticker_variants = variants
+            .iter()
+            .filter(|(_, x)| !x.stickers.is_null() && x.stickers != json!(false))
+            .map(|(k, _)| k.clone())
+            .collect();
+        let variant_defaults = builtin
+            .iter()
+            .chain(custom.iter())
+            .filter(|(_, x)| !flag(x, "combo"))
+            .map(|(k, x)| {
+                (
+                    k.clone(),
+                    VariantDefault {
+                        chance: x.get("chance").and_then(Value::as_f64).unwrap_or(0.0),
+                        weight: x.get("weight").and_then(Value::as_f64),
+                        desc: x.get("desc").and_then(Value::as_str).unwrap_or_default().to_owned(),
+                        mult: x.get("mult").and_then(Value::as_f64).unwrap_or(1.0),
+                    },
+                )
+            })
+            .collect();
+        Ok(VariantTables {
+            variants,
+            variants_json,
+            variant_order,
+            crate_variants,
+            special_variants,
+            casino_variants,
+            sticker_variants,
+            variant_defaults,
+        })
+    }
+}
+
 /// Wariant-warstwa (flaga) + zwykły wariant: "flag" + "gold" -> "flag+gold" (+ zwykła = sama flaga)
 pub fn combine_variant(layer: &str, base: &str) -> String {
     if base == "normal" {
@@ -471,7 +665,8 @@ mod tests {
     #[test]
     fn derived_values_match_python() {
         let f = fixture();
-        let g = g();
+        // inne testy podmieniają dane gry (set_game, z "desc" itd. z catalog_variants) - porównujemy wbudowane
+        let g = base_game();
         assert_eq!(g.variants_json, f["variants"], "VARIANTS");
         assert_eq!(json!(g.variant_order), f["variantOrder"]);
         assert_eq!(json!(g.crate_variants), f["crateVariants"]);

@@ -26,6 +26,7 @@ minijinja = { version = "2", features = ["loader"] }
 parking_lot = "0.12"
 pbkdf2 = "0.12"
 rand = "0.8"
+rand_chacha = "0.3"
 regex = "1"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 scrypt = { version = "0.11", default-features = false }
@@ -44,6 +45,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 unicode-normalization = "0.1"
 webp = "0.3"
+rust-embed = { version = "8", features = ["mime-guess"] }
 
 [dev-dependencies]
 http-body-util = "0.1"

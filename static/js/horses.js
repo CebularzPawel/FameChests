@@ -1,7 +1,7 @@
 "use strict";
 // Wyścigi konne (zakładka w Kasynie): 10 koni na okrągłym torze. Co kilka minut jedzie wspólny wyścig dla wszystkich graczy
 // (zakłady przyjmujemy z wyprzedzeniem, karty czekają u serwera aż do wyniku), a w każdej chwili można zagrać też solo.
-// Przebieg liczy serwer (horses.py): pozycje koni co "dt" sekund + lista zdarzeń (turbo, zawrócenie, upadek, śmierć, samochód).
+// Przebieg liczy serwer (server/src/horses.rs): pozycje koni co "dt" sekund + lista zdarzeń (turbo, zawrócenie, upadek, śmierć, samochód).
 // Przeglądarka tylko odtwarza go na <canvas> zgodnie z zegarem serwera i gra odgłosy koni.
 // Wygrana jak w ruletce: karty zostają + karty o wartości stawka × mnożnik konia; przegrana - karty przepadają;
 // nikt nie wygrał (samochód na torze) - stawki wracają.

@@ -36,36 +36,23 @@ Wszystkie zapytania przez makra `sqlx::query!` / `query_as!` / `query_scalar!` -
 ## Nowa kolumna / tabela
 
 Dopisać w `server/schema.sql` (z `IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` - wykonywany przy każdym starcie).
-Dopóki działa wersja Python - także w `database.PG_SCHEMA` (i migracji SQLite w `app.py`).
+Przeniesienie danych między kolumnami / tabelami: jednorazowa migracja w `server/src/startup.rs`.
 
 ## Ustawienia gry (ceny, szanse, warianty, karty, lista zmian)
 
-Serwer czyta `server/data/game.json`. Dopóki źródłem jest `data.py`, po każdej jego zmianie:
-
-```sh
-python server/tools/dump_data.py      # data.py -> server/data/game.json
-python server/tools/dump_derived.py   # wartości wyliczane -> test zgodności (server/tests/fixtures)
-```
+Jedyne źródło: `server/data/game.json` (wbudowany w exe przy budowaniu) - edytować bezpośrednio, potem restart
+serwera. Lista zmian dla graczy: nowy wpis NA GÓRZE `patchNotes` z większym `v`.
 
 Wartości wyliczane (połączenia wariantów `flag+gold`, kolejność wariantów, szansa tajnej karty) liczy
-`server/src/data.rs` tak samo jak `data.py` - pilnuje tego `cargo test`.
+`server/src/data.rs`. Test `derived_values_match_python` porównuje je z `server/tests/fixtures/derived.json`
+(zapis z dawnej wersji Python) - po celowej zmianie wariantów / rzadkości w `game.json` test pokaże nowe wartości;
+sprawdzić je i wpisać do `derived.json`.
 
 ## Testy
 
 ```sh
 cd server
-cargo test                    # dane gry = data.py, hasła werkzeug, losowanie, katalog, Arena
+cargo test                    # dane gry, hasła werkzeug, losowanie, katalog, Arena, osiągnięcia, wyścigi
 cargo clippy --all-targets -- -D warnings
 cargo fmt
 ```
-
-Porównanie z wersją Python (obie na **pustych** bazach, ten sam scenariusz 2 graczy, porównanie kształtu
-odpowiedzi):
-
-```sh
-# Python: DATABASE_URL=.../scambox_py  python -c "import app; app.app.run(port=5057)"
-# Rust:   PORT=5056 DATABASE_URL=.../scambox_rs  cargo run
-python server/tools/parity.py http://127.0.0.1:5057 http://127.0.0.1:5056
-```
-
-Pojedyncze różnice przy losowych wynikach (np. blackjack wygrany po jednej stronie) są normalne.

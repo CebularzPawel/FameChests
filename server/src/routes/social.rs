@@ -864,6 +864,8 @@ struct AdminMessage {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MeResponse {
+    /// karta, którą przy wejściu do ekwipunku zabierze UFO (easter egg, bez powiadomień)
+    ufo: Option<String>,
     user: UserView,
     daily_claimable: bool,
     incoming: i64,
@@ -882,12 +884,17 @@ struct MeResponse {
     patch_notes: Vec<&'static Value>,
     /// wiadomości od adminów, których gracz jeszcze nie widział
     messages: Vec<AdminMessage>,
+    /// osiągnięcia zdobyte, a jeszcze niepokazane (np. przyznane przy zapytaniu bez nagłówka X-Ach) - achPoll
+    ach_unseen: i64,
+    /// rozliczone zakłady na wyścigi konne, których gracz jeszcze nie widział
+    horse_news: Vec<Value>,
 }
 
 /// Odpytywane co 30 s (w lobby co 5 s) przez każdy otwarty ekran gry. Odnawia też ciasteczko logowania.
 pub async fn me(State(st): State<AppState>, Me(me): Me, jar: SignedCookieJar) -> Res {
     let cx = Ctx::new(st.clone(), me);
     settle_market(&st.db, &cx.cat).await?; // licytacje kończą się na czas
+    super::horses::settle_my_horses(&cx).await?;
     let mut c = st.db.acquire().await?;
     let uid = cx.uid();
     let state = get_state(&mut c, uid).await?;
@@ -922,6 +929,7 @@ pub async fn me(State(st): State<AppState>, Me(me): Me, jar: SignedCookieJar) ->
     .await?;
     let seen = state["patch_seen"];
     let body = MeResponse {
+        ufo: super::variants::ufo_visit(&mut c, &cx.cat, uid, state["ufo_visit"]).await?,
         user: cx.me.view(&cx.cat),
         daily_claimable: super::shop::daily_info(&mut c, uid).await?.claimable,
         incoming,
@@ -933,8 +941,10 @@ pub async fn me(State(st): State<AppState>, Me(me): Me, jar: SignedCookieJar) ->
         jackpot: super::casino::jackpot_news(&mut c, &cx, state["jackpot_seen"]).await?,
         jackpot_lobby: super::casino::my_lobby(&mut c, uid).await?.map(|l| l.id),
         jackpot_invites,
-        patch_notes: g().patch_notes.iter().filter(|n| n["v"].as_i64().unwrap_or(0) > seen).take(3).collect(),
+        patch_notes: crate::data::base_game().patch_notes.iter().filter(|n| n["v"].as_i64().unwrap_or(0) > seen).take(3).collect(),
         messages: active_messages(&mut c, uid).await?,
+        ach_unseen: crate::achievements::unseen(&mut c, uid).await?,
+        horse_news: super::horses::horse_news(&mut c, uid).await?,
     };
     let jar = jar.add(session_cookie(uid, st.cfg.cookie_secure));
     Ok((jar, Json(body)).into_response())

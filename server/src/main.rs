@@ -7,6 +7,9 @@
 //!   cargo run --release -- fetch-images [--force]
 
 mod arena;
+mod achievements;
+mod assets;
+mod horses;
 mod auth;
 mod catalog;
 mod config;
@@ -23,6 +26,7 @@ mod routes;
 mod startup;
 mod state;
 mod text;
+mod variants;
 mod web;
 
 use std::net::SocketAddr;
@@ -36,7 +40,6 @@ use axum::response::Response;
 use clap::Parser;
 use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::limit::RequestBodyLimitLayer;
-use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 
 use crate::config::{Cli, Command, Config};
@@ -117,7 +120,7 @@ async fn serve(cfg: Config) -> anyhow::Result<()> {
         db: pool,
         cfg: Arc::new(cfg.clone()),
         catalog: Arc::new(ArcSwap::from_pointee(cat)),
-        templates: Arc::new(web::Templates::new(&cfg.base_dir, cfg.dev)),
+        templates: Arc::new(web::Templates::new(cfg.dev)),
         images: images.clone(),
         arena: Arc::default(),
         login: Arc::default(),
@@ -137,9 +140,10 @@ async fn serve(cfg: Config) -> anyhow::Result<()> {
         }
     });
 
-    let static_dir = cfg.base_dir.join("static");
-    let app = routes::router(st)
-        .nest_service("/static", ServeDir::new(static_dir))
+    let app = routes::router(st.clone())
+        .route("/static/{*path}", axum::routing::get(assets::serve_static))
+        // osiągnięcia (X-Ach) i X-Bibi po udanym zapytaniu
+        .layer(middleware::from_fn_with_state(st, achievements::layer))
         .layer(middleware::from_fn(web::cache_headers))
         .layer(CompressionLayer::new().quality(CompressionLevel::Precise(5)).compress_when(web::gzip_predicate()))
         .layer(RequestBodyLimitLayer::new(20 * 1024 * 1024))

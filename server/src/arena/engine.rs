@@ -360,7 +360,7 @@ pub fn abilities(p: &Person) -> Vec<Ab> {
 }
 
 fn type_mult(cat: &Catalog, attacker: &Unit, target: &Unit, dmg: i64) -> (i64, Option<&'static str>) {
-    let tt = g().types.get(&cat.people[&target.pid].type_);
+    let tt = crate::data::base_game().types.get(&cat.people[&target.pid].type_);
     let at = &cat.people[&attacker.pid].type_;
     match tt {
         Some(t) if t.weak.as_ref() == Some(at) => (dmg * 2, Some("słabość ×2")),
@@ -431,6 +431,8 @@ pub struct Battle {
     /// nagroda strony (wpisuje arena_record po zakończeniu)
     pub rewards: [Option<Reward>; 2],
     pub recorded: bool,
+    /// strona i karta ostatniego użytego ataku - do osiągnięć (kto zadał ostatni cios)
+    pub last_use: Option<(Side, String)>,
     pub seen: [f64; 2],
     pub turn_started: f64,
     pub created: f64,
@@ -463,6 +465,7 @@ impl Battle {
             no_reward: false,
             rewards: [None, None],
             recorded: false,
+            last_use: None,
             seen: [now, now],
             turn_started: now,
             created: now,
@@ -730,7 +733,7 @@ impl Battle {
                 }
             }
             id => {
-                let (icon, name) = g().arena_effects.get(id).map_or(("❔", id), |i| (i.icon.as_str(), i.name.as_str()));
+                let (icon, name) = crate::data::base_game().arena_effects.get(id).map_or(("❔", id), |i| (i.icon.as_str(), i.name.as_str()));
                 let text = format!("{icon} {name}");
                 for t in targets {
                     if let Some(x) = self.unit_mut(t) {
@@ -907,6 +910,7 @@ impl Battle {
         let ev = self.resolve(cat, k, uid, ab, &primary);
         let kos = self.collect_ko();
         self.push(Some(k), Action::Use { uid, ab: ab_index, primary, ev, kos });
+        self.last_use = Some((k, u.pid.clone()));
         self.check_win();
         Ok(())
     }

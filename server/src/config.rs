@@ -11,6 +11,10 @@
 //!   COOKIE_SECURE  1 = ciasteczko tylko po HTTPS (hosting)
 //!   TRUST_PROXY    1 = adres gracza z X-Forwarded-For (hosting za proxy)
 //!   METRICS_ADDR   127.0.0.1:9100             metryki Prometheus (pusty = wyłączone)
+//!
+//! Azure App Service (Windows, scambox.exe za IIS - web.config z HttpPlatformHandler): port z HTTP_PLATFORM_PORT,
+//! DATA_DIR domyślnie %HOME%\data (folder, który przetrwa restart i wdrożenie), COOKIE_SECURE i TRUST_PROXY domyślnie
+//! włączone, metryki domyślnie wyłączone.
 
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
@@ -70,6 +74,20 @@ fn env_flag(key: &str) -> bool {
     matches!(env(key).as_deref(), Some("1" | "true" | "yes" | "on"))
 }
 
+/// Flaga z domyślną wartością, gdy zmiennej nie ma
+fn env_flag_or(key: &str, default: bool) -> bool {
+    if env(key).is_some() {
+        env_flag(key)
+    } else {
+        default
+    }
+}
+
+/// Serwer działa na Azure App Service (zmienne ustawiane przez platformę)
+fn on_azure() -> bool {
+    env("WEBSITE_SITE_NAME").is_some() || env("HTTP_PLATFORM_PORT").is_some()
+}
+
 /// Folder gry (static/, templates/, catalog_export.json, custom_images/)
 fn detect_base_dir() -> PathBuf {
     if let Some(dir) = env("GAME_DIR") {
@@ -97,7 +115,13 @@ fn test_url(url: &str) -> String {
 impl Config {
     pub fn load(cli: &Cli) -> anyhow::Result<Config> {
         let base_dir = detect_base_dir();
-        let data_dir = env("DATA_DIR").map(PathBuf::from).unwrap_or_else(|| base_dir.clone());
+        let azure = on_azure();
+        let data_dir = match (env("DATA_DIR"), env("HOME")) {
+            (Some(dir), _) => PathBuf::from(dir),
+            // Azure: %HOME% (D:\home) jest trwały - site\wwwroot podmienia każde wdrożenie
+            (None, Some(home)) if azure => Path::new(&home).join("data"),
+            _ => base_dir.clone(),
+        };
         std::fs::create_dir_all(&data_dir)?;
         let main_url = env("DATABASE_URL").ok_or_else(|| {
             anyhow::anyhow!("Brak DATABASE_URL (np. postgresql://postgres:postgres@localhost:5432/scambox) - ustaw w .env")
@@ -120,11 +144,17 @@ impl Config {
                 std::fs::read_to_string(&path)?.trim().to_owned()
             }
         };
-        let port: u16 = env("PORT").map(|p| p.parse()).transpose()?.unwrap_or(if cli.test { 5001 } else { 5000 });
+        // HttpPlatformHandler (IIS na Azure) podaje port, na którym ma słuchać serwer - tylko lokalnie, IIS przekazuje ruch
+        let port: u16 = env("HTTP_PLATFORM_PORT")
+            .or_else(|| env("PORT"))
+            .map(|p| p.parse())
+            .transpose()?
+            .unwrap_or(if cli.test { 5001 } else { 5000 });
         let host = env("BIND").unwrap_or_else(|| if cli.lan { "0.0.0.0".into() } else { "127.0.0.1".into() });
         let metrics_addr = match std::env::var("METRICS_ADDR") {
             Ok(v) if v.trim().is_empty() => None,
             Ok(v) => Some(v.trim().parse()?),
+            Err(_) if azure => None,
             Err(_) => Some(([127, 0, 0, 1], 9100).into()),
         };
         Ok(Config {
@@ -135,8 +165,8 @@ impl Config {
             base_dir,
             data_dir,
             addr: format!("{host}:{port}").parse()?,
-            cookie_secure: env_flag("COOKIE_SECURE"),
-            trust_proxy: env_flag("TRUST_PROXY"),
+            cookie_secure: env_flag_or("COOKIE_SECURE", azure),
+            trust_proxy: env_flag_or("TRUST_PROXY", azure),
             metrics_addr,
             dev: cli.dev,
             lan: cli.lan,

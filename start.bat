@@ -1,8 +1,8 @@
 @echo off
-cd /d "%~dp0"
-if not exist .venv (
-  python -m venv .venv
-  .venv\Scripts\python -m pip install -r requirements.txt
-)
+rem Gra na tym komputerze (http://127.0.0.1:5000). Wymaga: Rust (rustup), baza PostgreSQL (server\docker-compose.yml)
+rem i server\.env z DATABASE_URL (wzor: server\.env.example).
+rem Dodatkowe opcje: --lan (siec lokalna), --test (osobna baza, port 5001), --dev
+cd /d "%~dp0server"
 start "" http://127.0.0.1:5000
-.venv\Scripts\python app.py
+cargo run --release -- %*
+pause

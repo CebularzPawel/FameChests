@@ -1,91 +1,63 @@
 # ScamBox
 
-A Flask app for opening crates with cards of famous people (Polish crate and World crate).
+A web game about opening crates with cards of famous people (Polish crate, World crate, PRL crate and more).
+The server is written in Rust (`server/`: axum + tokio + sqlx, PostgreSQL); the browser part (`static/`,
+`templates/`) is plain HTML/CSS/JS and is embedded into the server executable.
 
 ## Running it
-Double-click `start.bat`, or:
+You need [Rust (rustup)](https://rustup.rs) and a PostgreSQL database (easiest: `docker compose up -d` in `server/`).
 
-    .venv\Scripts\python app.py
+1. `copy server\.env.example server\.env` and set `DATABASE_URL`.
+2. Double-click `start.bat` (or `cd server && cargo run --release`).
+3. Open http://127.0.0.1:5000
 
-then open http://127.0.0.1:5000
+Details (Linux, NixOS, Docker, options `--lan` / `--test` / `--dev`): [docs/uruchamianie.md](docs/uruchamianie.md).
 
 ### Playing with friends (same network / Wi-Fi)
-
-    .venv\Scripts\python app.py --lan
-
-The console will show an address like `http://192.168.1.23:5000`; your friends open it in their browser.
-(Windows may ask to allow access through the firewall; choose "Allow".)
-
-### Playing with friends on a local network (e.g. a dorm)
-1. Once, in **PowerShell as administrator** (lets in only devices from your subnet, port 5000):
-
-       New-NetFirewallRule -DisplayName "Skrzynki Slaw" -Direction Inbound -Protocol TCP -LocalPort 5000 -RemoteAddress LocalSubnet -Program "C:\Program Files\Python312\python.exe" -Action Allow -Profile Any
-
-2. Double-click `start_lan.bat`; the console shows the address for your friends (`http://<your-IP>:5000`).
-If a friend still can't connect, the network probably blocks traffic between devices (common in dorms) — use Tailscale.
+Double-click `start_lan.bat`. The console shows an address like `http://192.168.1.23:5000`; your friends open it in
+their browser. (Windows may ask to allow access through the firewall; choose "Allow".)
+If a friend can't connect, the network probably blocks traffic between devices (common in dorms) — use Tailscale.
 
 ### Playing with friends over Tailscale (recommended)
 Double-click `start_tailscale.bat`. It runs `tailscale serve`, which makes the game available **only within your
 Tailscale network**, over HTTPS, at `https://<computer-name>.<tailnet>.ts.net`.
-Friends must be in your Tailscale network (invite) or have this computer shared with them.
 To stop sharing: `tailscale serve --https=443 off`.
 
-`python app.py --dev` = developer mode (auto-reload, debugger) — only for yourself, never for other players.
+### Hosting (Azure App Service, Windows)
+`build_azure.bat` builds `dist\scambox-azure.zip` = `scambox.exe` (everything is inside it) + `web.config`.
+Deploy the zip and set `DATABASE_URL` / `SECRET_KEY` in the app settings: [docs/hosting.md](docs/hosting.md).
 
 ## Accounts
 - Each player has their own account (username + password), balance, cards, binder and discovered secret cards.
-- **The first account registered takes over the previous save and becomes admin.**
-- Admin: ⚙️ admin panel — crates (shop, access, custom odds), cards (several crates per card), players (ban, browse/delete cards, crate access, money, chests, passwords, admin rights) and the 💸 bank.
-- Odds, money chest ranges and the secret card odds (`SECRET_ODDS`) are at the top of `data.py`.
+- **The first account registered becomes admin.**
+- Admin: ⚙️ admin panel — crates (shop, access, custom odds), cards (several crates per card), players (ban, browse/delete cards, crate access, money, chests, passwords, admin rights), variants, achievements, horse races and the 💸 bank.
+- Odds, prices, variants and built-in cards are in `server/data/game.json`.
 
 ## What's in it
-- 3 crates: Polska, Świat (50 people + 1 SECRET card each) and PRL (28 cards, 500 $, Gierek as ULTRA, the secret Jan Paweł II); cards can belong to several crates
-- 🛒 Shop with a purchase panel; crates can be off sale or available only to selected players, rarities: green → blue → purple → red → gold (1%) → ULTRA (0.2%) → ★ SECRET (1 in 2137)
-- 📦 Chests in your inventory: buy them for later ("🛒 Kup do ekwipunku"); opening uses owned chests first
-- Secret cards stay hidden ("???") until you obtain them; they have their own card design and their own reveal
-- Variants: Black & white, Reverse Holo, Silver, Holo, Golden, Diamond, each with its own odds and value multiplier
-- ⚙️ Admin panel at /admin: add, edit and hide crates and cards (photos from Wikipedia, a URL or an uploaded file)
-- Epic full-screen reveal for Legendary and ULTRA drops
-- 🔍 Card viewer: click a card (in the Inventory use 🔍 or right-click) to enlarge, tilt and flip it
-- 🎁 Daily chest with money: 5 000–20 000 gr; claim it 7 days in a row and the 7th is a 💎 MEGA chest: 10 000–67 000 gr (lands in your inventory)
-- 👥 Friends: invitations, activity feed (shown cards + legendary drops), "📣 Pokaż znajomym" button on a card
-- 👤 Profiles: showcase of 6 cards and the binder of every player; 🏆 ranking (collection value, cards, crates)
-- 🎭 Player icon: an emoji or the photo of any card you own — in any variant you own (gold, diamond…), no uploads
-- 🔄 Trading with friends: cards for cards (no money), accept/decline/cancel, history
-- ⚔️ Legendary, ULTRA and secret cards have two abilities
-- 💸 Bank: admin only
-- ⚒️ Forge: **Kontrakt** (N cards of one rarity → 1 card of the next) and **Ulepszacz** (upgrade wheel, CS-site style); secret cards cannot be crafted
+- Crates with rarities: green → blue → purple → red → gold (1%) → ULTRA (0.2%) → ★ SECRET (1 in 2137); cards can belong to several crates
+- 🛒 Shop carousel; crates can be off sale or available only to selected players; 📦 chests in your inventory
+- Secret cards stay hidden ("???") until you obtain them, with their own design and reveal
+- Variants (Holo, Golden, Diamond, Flag, Halloween, MLG...) with their own odds and value multipliers; admins manage them on /variants, design new ones on /designer and place stickers on /stickers
+- 🔍 Card viewer, epic full-screen reveal, 🏆 Hall of Fame, 🏅 achievements
+- 🎁 Daily chest; 👥 friends, activity feed, profiles with a showcase, ranking; 🔄 trading
+- ⚒️ Forge (contract), 🏪 market (buy, offers, auctions, "wanted"), 🎰 casino (roulette, blackjack, slots, jackpot, upgrader, horse races)
+- ⚔️ Arena (admins only, test version)
 
 ## Saving admin-panel changes to GitHub
-Cards and crates added in the admin panel live in `game.db` (which is not on GitHub, because it also holds player accounts).
-Before pushing, run:
+Cards and crates added in the admin panel live in the database (which also holds player accounts). Before pushing:
 
-    .venv\Scripts\python export_catalog.py
+    cd server
+    cargo run --release -- export-catalog
 
-It writes `catalog_export.json` + `custom_images/` (cards and crates only, no player data).
-A new installation (empty database) loads them automatically on first start.
+It writes `catalog_export.json` + `custom_images/` (cards and crates only, no player data). A new installation
+(empty database) loads them automatically on first start (they are also embedded in the executable).
 
 ## Files
-- `data.py` – DEFAULT cards and crates, rarities, odds, variants, prices. The easiest way to change cards is the admin panel (/admin).
-- `catalog.py` – combines `data.py` with changes from the admin panel (stored in the database).
-- `images.py` – downloads photos from Wikipedia into `image_cache/` (alt photos come from other language versions of Wikipedia and from Wikidata).
-  To fetch a card's photos again, use the "🔄 Pobierz zdjęcia ponownie" button in the admin panel.
-- `game.db` – all accounts, their cards and friends, plus changes from the admin panel. Back it up!
-- `database.py` – database connection. Without settings the game uses the SQLite file `game.db`;
-  with the `DATABASE_URL` environment variable it uses PostgreSQL (for hosting, e.g. Azure).
-- `migrate_to_postgres.py` – one-time copy of `game.db` into an empty PostgreSQL database
-  (set `DATABASE_URL` first; `game.db` is only read).
-- `wsgi.py` – entry point for a real server (Azure App Service, Linux):
-  `gunicorn --workers 1 --threads 8 --timeout 120 --bind 0.0.0.0:8000 wsgi:app`.
-  App settings: `DATABASE_URL` (PostgreSQL), `SECRET_KEY` (session key), `DATA_DIR` (e.g. `/home/data`, keeps photos across restarts),
-  optional `DB_SCHEMA` (e.g. `famechests` – own schema in a shared database such as Supabase) and `DB_POOL_SIZE` (default 10).
-- `secret_key.txt` – login session key (generated automatically, do not share it).
-- `static/js/social.js` – daily reward, friends, activity feed, ranking, profiles.
-- `static/js/sound.js` – sounds (generated in the browser, no audio files).
-- `static/js/fx.js` – epic reveal, particles, card viewer, bank.
-- `static/js/forge.js` – forge (contract and upgrader).
-- Contract and upgrader settings (card counts, odds) are at the top of `data.py`.
-- `python app.py --test` – runs a test copy on port 5001 with a separate save (`test.db`).
+- `server/` – the game server (see [server/README.md](server/README.md)); `server/data/game.json` – game settings and built-in cards.
+- `static/`, `templates/` – the browser part (embedded into the executable at build time).
+- `catalog_export.json`, `custom_images/` – admin-panel changes for new installations.
+- `deploy/azure/web.config`, `build_azure.bat` – Azure App Service package.
+- `docs/` – running, hosting and development notes (Polish).
 
 ## Keyboard shortcuts
 - Space / Enter – open crates; during spinning: skip; on the results screen: open again

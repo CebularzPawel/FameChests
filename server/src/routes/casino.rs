@@ -33,12 +33,40 @@ fn yes() -> bool {
 #[serde(default)]
 pub struct StakeRequest {
     ids: Vec<i64>,
+    /// va bank: stawką są WSZYSTKIE karty, które da się postawić - bez limitu kart
+    vabank: bool,
 }
 
 // ---------------------------------------------------------------- wygrane
 
 /// Wygrana w grze kasyna, która daje nowe karty: z szansą wygrana / CASINO_SPECIAL["per"] (najwyżej "max") gracz dostaje
 /// dodatkowo kartę specjalną z kasyna - zawsze w jej jedynym wariancie (np. Jokerowa). Zwraca nową kartę albo None.
+/// Va bank: wszystkie moje karty, które można postawić w kasynie (bez ulubionych ⭐ i specjalnych 🃏)
+async fn vabank_ids(c: &mut Conn, cx: &Ctx) -> sqlx::Result<std::collections::HashSet<i64>> {
+    let rows: Vec<(i64, String)> =
+        sqlx::query_as("SELECT id, person_id FROM items WHERE user_id = $1 AND favorite = 0").bind(cx.uid()).fetch_all(c).await?;
+    Ok(rows.into_iter().filter(|(_, pid)| cx.person(pid).is_some_and(|p| !p.is_special())).map(|(id, _)| id).collect())
+}
+
+/// Błąd, gdy liczba postawionych kart jest zła. Va bank znosi limit kart, ale tylko wtedy, gdy stawką są WSZYSTKIE karty
+/// gracza, które da się postawić - nie da się tak ominąć limitu częścią kart.
+pub(crate) async fn stake_error(c: &mut Conn, cx: &Ctx, ids: &[i64], max: usize, vabank: bool, min: usize) -> Res<()> {
+    if (min..=max).contains(&ids.len()) {
+        return Ok(());
+    }
+    if ids.len() > max && vabank {
+        if ids.iter().copied().collect::<std::collections::HashSet<i64>>() == vabank_ids(c, cx).await? {
+            return Ok(());
+        }
+        return bad("Va bank to WSZYSTKIE twoje karty (bez ulubionych ⭐ i specjalnych 🃏) - zaznacz je przyciskiem");
+    }
+    if min > 0 {
+        bad(format!("Postaw od {min} do {max} kart"))
+    } else {
+        bad(format!("Najwyżej {max} kart"))
+    }
+}
+
 pub(crate) async fn casino_special_drop(c: &mut Conn, cx: &Ctx, payout: i64) -> sqlx::Result<Option<NewItem>> {
     let cs = &g().casino_special;
     let pool: Vec<_> = cx.cat.people.values().filter(|p| p.is_special() && p.source.as_deref() == Some("casino")).collect();
@@ -53,14 +81,14 @@ pub(crate) async fn casino_special_drop(c: &mut Conn, cx: &Ctx, payout: i64) -> 
 
 /// Wygrana: karty o łącznej wartości `payout` + reszta w pieniądzach + może karta specjalna
 #[derive(Serialize)]
-struct Payout {
-    items: Vec<NewItem>,
-    money: i64,
-    payout: i64,
-    special: Option<NewItem>,
+pub(crate) struct Payout {
+    pub items: Vec<NewItem>,
+    pub money: i64,
+    pub payout: i64,
+    pub special: Option<NewItem>,
 }
 
-async fn pay_out(c: &mut Conn, cx: &Ctx, payout: i64, feed_kind: &str) -> sqlx::Result<Payout> {
+pub(crate) async fn pay_out(c: &mut Conn, cx: &Ctx, payout: i64, feed_kind: &str) -> sqlx::Result<Payout> {
     let (cards, money) = house_cards(&cx.cat, payout);
     let mut items = vec![];
     for (p, v) in cards {
@@ -79,6 +107,7 @@ async fn pay_out(c: &mut Conn, cx: &Ctx, payout: i64, feed_kind: &str) -> sqlx::
 #[serde(default)]
 pub struct RouletteRequest {
     ids: Vec<i64>,
+    vabank: bool,
     bet: String,
 }
 
@@ -101,13 +130,13 @@ pub async fn casino_roulette(State(st): State<AppState>, Me(me): Me, JsonBody(re
     let mut tx = cx.st.db.begin().await?;
     lock_me(&mut tx, cx.uid()).await?;
     let Some(bet) = g.roulette_bets.get(&req.bet) else { return bad("Wybierz zakład na stole") };
-    if !(1..=g.roulette.max_cards).contains(&req.ids.len()) {
-        return bad(format!("Postaw od 1 do {} kart", g.roulette.max_cards));
-    }
+    stake_error(&mut tx, &cx, &req.ids, g.roulette.max_cards, req.vabank, 1).await?;
     let rows = take_my_items(&mut tx, &cx.cat, cx.uid(), &req.ids, Use::Stake).await?;
     let stake: i64 = rows.iter().map(|r| row_value(&cx.cat, r)).sum();
+    let staked: Vec<(String, String)> = rows.iter().map(|r| (r.person_id.clone(), r.variant.clone())).collect();
     let number = rand::thread_rng().gen_range(0..37);
     let win = bet.numbers.contains(&number);
+    crate::achievements::count_casino(&mut tx, cx.uid(), "roulette", Some(win), &staked).await?;
     let (payout, consumed) = if win {
         // karty zostają u gracza + wygrana w kartach
         (Some(pay_out(&mut tx, &cx, stake * bet.pays, "casino").await?), None)
@@ -130,6 +159,7 @@ pub async fn casino_roulette(State(st): State<AppState>, Me(me): Me, JsonBody(re
 #[serde(default)]
 pub struct SlotsRequest {
     ids: Vec<i64>,
+    vabank: bool,
 }
 
 #[derive(Serialize)]
@@ -167,13 +197,13 @@ pub async fn casino_slots(State(st): State<AppState>, Me(me): Me, JsonBody(req):
     let g = g();
     let mut tx = cx.st.db.begin().await?;
     lock_me(&mut tx, cx.uid()).await?;
-    if !(1..=g.slots.max_cards).contains(&req.ids.len()) {
-        return bad(format!("Postaw od 1 do {} kart", g.slots.max_cards));
-    }
+    stake_error(&mut tx, &cx, &req.ids, g.slots.max_cards, req.vabank, 1).await?;
     let rows = take_my_items(&mut tx, &cx.cat, cx.uid(), &req.ids, Use::Stake).await?;
     let stake: i64 = rows.iter().map(|r| row_value(&cx.cat, r)).sum();
+    let staked: Vec<(String, String)> = rows.iter().map(|r| (r.person_id.clone(), r.variant.clone())).collect();
     let (reels, pays) = slots_spin();
     let win = pays > 0;
+    crate::achievements::count_casino(&mut tx, cx.uid(), "slots", Some(win), &staked).await?;
     let (payout, consumed) = if win {
         // karty zostają u gracza + wygrana w kartach
         (Some(pay_out(&mut tx, &cx, stake * pays, "casino").await?), None)
@@ -398,6 +428,7 @@ struct BjEnd {
 /// Koniec rozdania: krupier dobiera (jeśli trzeba), rozliczenie kart i wygranej, rozdanie znika
 async fn bj_end(mut tx: Tx, cx: &Ctx, mut gm: BjGame) -> Res {
     let ids = gm.all_ids();
+    let staked = crate::achievements::cards_of(&mut tx, &ids).await?;
     let stake = gm.stake + gm.double_stake;
     let player_total = total(&gm.player);
     if player_total <= 21 && !is_blackjack(&gm.player) && !is_blackjack(&gm.dealer) {
@@ -449,6 +480,11 @@ async fn bj_end(mut tx: Tx, cx: &Ctx, mut gm: BjGame) -> Res {
         let won = pay_out(&mut tx, cx, payout, "blackjack").await?;
         (end.items, end.money, end.payout, end.special) = (won.items, won.money, Some(won.payout), won.special);
     }
+    let won = match result {
+        BjResult::Push => None,
+        r => Some(matches!(r, BjResult::Win | BjResult::Blackjack)),
+    };
+    crate::achievements::count_casino(&mut tx, cx.uid(), "blackjack", won, &staked).await?;
     sqlx::query!("DELETE FROM blackjack_games WHERE user_id = $1", cx.uid()).execute(&mut *tx).await?;
     let state = get_state(&mut tx, cx.uid()).await?;
     tx.commit().await?;
@@ -492,9 +528,7 @@ pub async fn casino_blackjack_deal(State(st): State<AppState>, Me(me): Me, JsonB
     if my_blackjack(&mut tx, cx.uid()).await?.is_some() {
         return bad("Najpierw dokończ rozdanie");
     }
-    if !(1..=max).contains(&req.ids.len()) {
-        return bad(format!("Postaw od 1 do {max} kart"));
-    }
+    stake_error(&mut tx, &cx, &req.ids, max, req.vabank, 1).await?;
     let rows = take_my_items(&mut tx, &cx.cat, cx.uid(), &req.ids, Use::Stake).await?;
     // postawione karty do ESCROW na czas rozdania
     sqlx::query!("UPDATE items SET user_id = $1 WHERE user_id = $2 AND id = ANY($3)", ESCROW, cx.uid(), &req.ids)
@@ -1067,9 +1101,7 @@ pub async fn casino_jackpot_cards(
     let j = lock_lobby(&mut tx, cx.uid(), jid).await?;
     let seat = j.seat(cx.uid()).unwrap_or(Seat::B);
     let max = g().jackpot.max_cards;
-    if req.ids.len() > max {
-        return bad(format!("Najwyżej {max} kart"));
-    }
+    stake_error(&mut tx, &cx, &req.ids, max, req.vabank, 0).await?;
     let rows = if req.ids.is_empty() { vec![] } else { take_my_items(&mut tx, &cx.cat, cx.uid(), &req.ids, Use::Stake).await? };
     sqlx::query!("DELETE FROM jackpot_items WHERE jackpot_id = $1 AND side = $2", jid, seat.as_str()).execute(&mut *tx).await?;
     for r in &rows {
@@ -1098,6 +1130,7 @@ async fn jackpot_play(c: &mut Conn, cx: &Ctx, j: &Jackpot) -> sqlx::Result<Optio
     let now = now();
     let rows = jackpot_cards(c, j.id).await?;
     let (mut gone, mut value_a, mut value_b) = (vec![], 0i64, 0i64);
+    let (mut staked_a, mut staked_b) = (vec![], vec![]);
     for r in &rows {
         let owner = match r.side {
             Seat::A => Some(j.creator_id),
@@ -1117,10 +1150,11 @@ async fn jackpot_play(c: &mut Conn, cx: &Ctx, j: &Jackpot) -> sqlx::Result<Optio
             continue;
         };
         let v = row_value(&cx.cat, &item);
+        let card = (item.person_id.clone(), item.variant.clone());
         match r.side {
-            Seat::A => value_a += v,
-            Seat::B => value_b += v,
-        }
+            Seat::A => (value_a += v, staked_a.push(card)),
+            Seat::B => (value_b += v, staked_b.push(card)),
+        };
         sqlx::query!("UPDATE jackpot_items SET value = $1 WHERE jackpot_id = $2 AND item_id = $3", v, j.id, item.id)
             .execute(&mut *c)
             .await?;
@@ -1160,6 +1194,11 @@ async fn jackpot_play(c: &mut Conn, cx: &Ctx, j: &Jackpot) -> sqlx::Result<Optio
     }
     let ids: Vec<i64> = rows.iter().map(|r| r.item_id).collect();
     give_items(c, &cx.cat, &ids, winner, "transfer").await?; // zwycięzca: swoje karty z powrotem + karty rywala
+    for (owner, staked) in [(Some(j.creator_id), &staked_a), (j.joiner_id, &staked_b)] {
+        if let Some(owner) = owner {
+            crate::achievements::count_casino(c, owner, "jackpot", Some(owner == winner), staked).await?;
+        }
+    }
     metrics::counter!("scambox_casino_games_total", "game" => "jackpot", "result" => "done").increment(1);
     Ok(None)
 }

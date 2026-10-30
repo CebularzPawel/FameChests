@@ -1,6 +1,10 @@
-//! Eksport zmian z panelu admina (karty i skrzynki) do repozytorium i ich wczytanie w nowej instalacji:
-//!   - catalog_export.json - skrzynki i karty dodane/zmienione/ukryte w panelu admina (BEZ danych graczy),
-//!   - custom_images/      - zdjęcia wgrane w panelu admina (karty bez artykułu w Wikipedii albo z własnym plikiem).
+//! Eksport zmian z panelu admina (karty, skrzynki, warianty) do repozytorium i ich wczytanie w nowej instalacji:
+//!   - catalog_export.json - skrzynki i karty dodane/zmienione/ukryte w panelu admina oraz zmiany wariantów
+//!     (ustawienia, naklejki, kreator) - BEZ danych graczy,
+//!   - custom_images/      - zdjęcia wgrane w panelu admina (karty bez artykułu w Wikipedii albo z własnym plikiem),
+//!     wgrane naklejki wariantów i obrazek easter egga.
+//!
+//! Oba są też wbudowane w plik wykonywalny (assets.rs) - nowa instalacja na serwerze nie potrzebuje folderu gry.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -30,27 +34,43 @@ pub struct ExportRow {
 pub struct ExportFile {
     pub crates: Vec<ExportRow>,
     pub cards: Vec<ExportRow>,
+    pub variants: Vec<ExportRow>,
 }
 
 fn parse(data: &str) -> Map<String, Value> {
     serde_json::from_str(data).unwrap_or_default()
 }
 
-/// Wczytuje eksport do pustej bazy (nowa instalacja). Istniejących zmian nigdy nie nadpisuje.
+/// Wczytuje eksport do pustej bazy (nowa instalacja). Istniejących zmian nigdy nie nadpisuje. Zmiany wariantów
+/// wczytujemy osobno - także do starszego zapisu, który ma już karty, ale nie ma jeszcze wariantów.
+/// Plik z folderu gry (gdy jest), inaczej wbudowany w plik wykonywalny.
 pub async fn import_if_empty(pool: &PgPool, base: &Path) -> anyhow::Result<bool> {
     let file = base.join(EXPORT_FILE);
-    if !file.exists() {
-        return Ok(false);
-    }
+    let text = match std::fs::read_to_string(&file) {
+        Ok(t) => t,
+        Err(_) => crate::assets::CATALOG_EXPORT.to_owned(),
+    };
+    let export: ExportFile = serde_json::from_str(&text)?;
     let mut tx = pool.begin().await?;
+    let variants_empty: bool = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM catalog_variants").fetch_one(&mut *tx).await? == 0;
+    if variants_empty {
+        for row in &export.variants {
+            sqlx::query("INSERT INTO catalog_variants (id, data, deleted) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING")
+                .bind(&row.id)
+                .bind(Value::Object(row.data.clone()).to_string())
+                .bind(i32::from(row.deleted))
+                .execute(&mut *tx)
+                .await?;
+        }
+    }
     let existing =
         sqlx::query_scalar!(r#"SELECT (SELECT COUNT(*) FROM catalog_crates) + (SELECT COUNT(*) FROM catalog_cards) AS "n!""#)
             .fetch_one(&mut *tx)
             .await?;
     if existing > 0 {
+        tx.commit().await?;
         return Ok(false);
     }
-    let export: ExportFile = serde_json::from_str(&std::fs::read_to_string(&file)?)?;
     for (table, rows) in [(Table::Crates, &export.crates), (Table::Cards, &export.cards)] {
         for row in rows {
             let data = Value::Object(row.data.clone()).to_string();
@@ -79,13 +99,22 @@ pub async fn import_if_empty(pool: &PgPool, base: &Path) -> anyhow::Result<bool>
 
 /// Własne zdjęcia z repozytorium -> image_cache (tylko brakujące). Przy każdym starcie, bo na nowym serwerze baza bywa
 /// przeniesiona ze starego zapisu (nie jest pusta), a folder ze zdjęciami jest pusty.
+/// Folder gry bez custom_images/ (serwer z samym plikiem wykonywalnym) - kopie wbudowane w plik.
 pub fn copy_custom_images(base: &Path, data_dir: &Path) -> std::io::Result<()> {
     let src = base.join(IMAGES_DIR);
-    if !src.is_dir() {
-        return Ok(());
-    }
     let cache = data_dir.join("image_cache");
     std::fs::create_dir_all(&cache)?;
+    if !src.is_dir() {
+        for name in crate::assets::CustomImages::iter() {
+            let target = cache.join(name.as_ref());
+            if !target.exists() {
+                if let Some(f) = crate::assets::CustomImages::get(&name) {
+                    std::fs::write(target, f.data)?;
+                }
+            }
+        }
+        return Ok(());
+    }
     for entry in std::fs::read_dir(&src)? {
         let entry = entry?;
         let target = cache.join(entry.file_name());
@@ -110,7 +139,13 @@ pub async fn export_catalog(pool: &PgPool, cfg: &Config) -> anyhow::Result<(usiz
         .into_iter()
         .map(|r| ExportRow { data: parse(&r.data), id: r.id, deleted: r.deleted != 0 })
         .collect();
-    let export = ExportFile { crates, cards };
+    let variants = sqlx::query_as::<_, (String, String, i32)>("SELECT id, data, deleted FROM catalog_variants ORDER BY id")
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .map(|(id, data, deleted)| ExportRow { data: parse(&data), id, deleted: deleted != 0 })
+        .collect();
+    let export = ExportFile { crates, cards, variants };
     // wcięcie 1 spacja - jak json.dump(..., indent=1) w wersji Python (mniejsze różnice w git)
     let mut buf = Vec::new();
     let mut ser = serde_json::Serializer::with_formatter(&mut buf, serde_json::ser::PrettyFormatter::with_indent(b" "));
@@ -153,6 +188,16 @@ pub async fn export_catalog(pool: &PgPool, cfg: &Config) -> anyhow::Result<(usiz
         };
         files.extend(pids.into_iter().filter_map(|pid| images.find(pid, &Kind::Variant(variant.clone()))));
     }
+    // naklejki wariantów wgrane przez admina - standardowe i na pojedynczych kartach (wbudowane grafiki są w static/img)
+    for row in &export.variants {
+        let rows = vec![(row.id.clone(), row.data.clone())];
+        let vs = crate::variants::VariantState::read(&rows, Default::default());
+        for sid in vs.sticker_uploads(&row.id) {
+            files.extend(images.find(&crate::variants::sticker_file_id(&row.id), &Kind::Variant(sid)));
+        }
+    }
+    // easter egg w bębnie skrzynki (panel admina, sekcja 🥚)
+    files.extend(images.find(crate::variants::EGG_ID, &Kind::Main));
     for path in &files {
         std::fs::copy(path, dir.join(path.file_name().unwrap_or_default()))?;
     }

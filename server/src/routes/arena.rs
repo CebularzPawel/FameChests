@@ -89,6 +89,12 @@ async fn arena_record(st: &AppState, b: &mut Battle) -> sqlx::Result<()> {
             )
             .execute(&mut *tx)
             .await?;
+            // osiągnięcia: wygrana walka, ostatni cios kartą
+            let finisher = match &b.last_use {
+                Some((side, pid)) if *side == k && b.reason == Some(crate::arena::engine::EndReason::Ko) => Some(pid.as_str()),
+                _ => None,
+            };
+            crate::achievements::count_arena(&mut tx, uid, finisher).await?;
             if rules.reward_wins.contains(&arena_wins_today(&mut tx, uid).await?) {
                 chest = Some(rules.reward_chest.clone());
                 add_chests(&mut tx, uid, &format!("money_{}", rules.reward_chest), 1).await?;

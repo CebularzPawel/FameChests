@@ -10,7 +10,7 @@
 //! (jej kod i numer są nadrukowane na karcie). Katalog jest w pamięci procesu (ArcSwap) - po zmianie w panelu
 //! admina budowany od nowa, dlatego serwer działa jako jeden proces.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock};
 
 use indexmap::{IndexMap, IndexSet};
@@ -19,10 +19,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use serde_with::{serde_as, DefaultOnError, VecSkipError};
 
-use crate::data::{card_value, combine_variant, g, CRATE_FIELDS};
+use crate::data::{base_game, card_value, combine_variant, g, set_game, CRATE_FIELDS};
 use crate::db::Conn;
 use crate::lenient::Num;
 use crate::text::{clean, Truncate};
+use crate::variants::{VariantEvent, VariantRow, VariantState};
 
 pub const SUBTITLE_MAX: usize = 40; // podtytuł (krótki tekst na karcie)
 pub const DESC_MAX: usize = 1000; // opis (obok karty w podglądzie)
@@ -87,6 +88,12 @@ pub struct Person {
     pub style: Option<i64>,
     pub subtitle: String,
     pub desc: String,
+    /// własne napisy na karcie (CARD_TEXT_SLOTS) - niezależne od statystyk
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub texts: IndexMap<String, String>,
+    /// easter egg: wypadnięcie tej karty pokazuje obrazek (nagłówek X-Bibi)
+    #[serde(skip)]
+    pub bibi: bool,
     #[serde(skip)]
     pub builtin: bool,
     #[serde(skip)]
@@ -155,6 +162,8 @@ pub struct Catalog {
     /// wbudowane, ukryte przez admina (do przywrócenia w panelu)
     pub hidden_crates: IndexMap<String, RawCrate>,
     pub hidden_cards: IndexMap<String, RawCard>,
+    /// zmiany wariantów z panelu admina: ustawienia i wydarzenia, naklejki, projekty z kreatora
+    pub vs: VariantState,
 }
 
 // ---------------------------------------------------------------- dane z panelu admina (przed sprawdzeniem)
@@ -251,6 +260,10 @@ pub struct RawCard {
     pub fixed_variant: Option<String>,
     #[serde_as(as = "DefaultOnError<Option<Num>>")]
     pub style: Option<i64>,
+    #[serde_as(as = "DefaultOnError")]
+    pub texts: Value,
+    #[serde_as(as = "DefaultOnError")]
+    pub bibi: Value,
     pub builtin: bool,
     pub modified: bool,
 }
@@ -312,6 +325,24 @@ pub fn clean_abilities(raw: &[RawAbility]) -> Vec<Ability> {
         .collect()
 }
 
+/// Własne napisy na karcie (CARD_TEXT_SLOTS): {miejsce: tekst}; puste pomijamy
+pub fn clean_texts(raw: &Value) -> IndexMap<String, String> {
+    let g = g();
+    raw.as_object()
+        .into_iter()
+        .flatten()
+        .filter(|(k, _)| g.card_text_slots.contains_key(*k))
+        .filter_map(|(k, v)| {
+            let text = match v {
+                Value::String(s) => clean(s, g.card_text_max),
+                Value::Null | Value::Bool(false) => String::new(),
+                other => clean(&other.to_string(), g.card_text_max),
+            };
+            (!text.is_empty()).then(|| (k.clone(), text))
+        })
+        .collect()
+}
+
 /// Kod kraju karty (do wariantu flagowego): "PL" -> "pl"; nieprawidłowy -> ""
 pub fn clean_country(raw: &str) -> String {
     let code = raw.trim().to_lowercase().replace('_', "-");
@@ -352,7 +383,7 @@ pub fn clean_arena(raw: &[RawArenaCfg]) -> Vec<ArenaCfg> {
 
 /// Pola wbudowanej skrzynki (CRATE_FIELDS) albo None
 pub fn builtin_crate(cid: &str) -> Option<Map<String, Value>> {
-    let c = g().crates.get(cid)?;
+    let c = crate::data::base_game().crates.get(cid)?;
     Some(c.fields.iter().filter(|(k, _)| CRATE_FIELDS.contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect())
 }
 
@@ -387,11 +418,25 @@ pub async fn load(c: &mut Conn) -> anyhow::Result<Catalog> {
     let parse = |data: &str| -> Map<String, Value> { serde_json::from_str(data).unwrap_or_default() };
     let crates: Vec<OverrideRow> = crate_rows.into_iter().map(|r| (r.id, parse(&r.data), r.deleted != 0)).collect();
     let cards: Vec<OverrideRow> = card_rows.into_iter().map(|r| (r.id, parse(&r.data), r.deleted != 0)).collect();
-    Ok(build(&crates, &cards))
+    let variant_rows: Vec<(String, String)> =
+        sqlx::query_as("SELECT id, data FROM catalog_variants WHERE deleted = 0").fetch_all(&mut *c).await?;
+    let variants: Vec<VariantRow> = variant_rows.into_iter().map(|(id, d)| (id, parse(&d))).collect();
+    Ok(build_with_variants(&crates, &cards, &variants))
 }
 
-/// Dane wbudowane + zmiany admina -> katalog
+/// Dane wbudowane + zmiany admina -> katalog (bez zmian wariantów)
+#[cfg(test)]
 pub fn build(crate_rows: &[OverrideRow], card_rows: &[OverrideRow]) -> Catalog {
+    build_with_variants(crate_rows, card_rows, &[])
+}
+
+/// Dane wbudowane + zmiany admina -> katalog. Najpierw warianty: projekty z kreatora i ustawienia z /variants
+/// trafiają do danych gry (data::set_game - jak rebuild w catalog.py), potem skrzynki i karty.
+pub fn build_with_variants(crate_rows: &[OverrideRow], card_rows: &[OverrideRow], variant_rows: &[VariantRow]) -> Catalog {
+    let custom = VariantState::custom_designs(variant_rows);
+    set_game(base_game().with_catalog_variants(&custom, &Default::default()));
+    let vs = VariantState::read(variant_rows, custom);
+    set_game(base_game().with_catalog_variants(&vs.custom, &vs.cfg));
     let g = g();
     let (crates, hidden_crates) = merge_crates(crate_rows);
     let (people, hidden_cards) = merge_cards(card_rows);
@@ -409,7 +454,7 @@ pub fn build(crate_rows: &[OverrideRow], card_rows: &[OverrideRow]) -> Catalog {
         let present: HashSet<String> = members.iter().map(|p| p.rarity.clone()).collect();
         let member_ids: Vec<String> = members.iter().map(|p| p.id.clone()).collect();
         final_ids.extend(member_ids.iter().cloned());
-        let cr = check_crate(&cid, c, &present, member_ids);
+        let cr = check_crate(&cid, c, &present, member_ids, &vs);
         // numer karty na skrzynce głównej
         for (n, id) in cr.people.iter().enumerate() {
             if let Some(p) = persons.get_mut(id).filter(|p| p.crate_.as_deref() == Some(cid.as_str())) {
@@ -432,7 +477,7 @@ pub fn build(crate_rows: &[OverrideRow], card_rows: &[OverrideRow]) -> Catalog {
         })
         .collect();
 
-    Catalog { crates: out_crates, people, hidden_crates, hidden_cards }
+    Catalog { crates: out_crates, people, hidden_crates, hidden_cards, vs }
 }
 
 /// Skrzynki: wbudowane + zmiany admina (szanse łączone z domyślnymi), ukryte osobno
@@ -610,12 +655,14 @@ fn check_card(id: String, p: RawCard, crates: &IndexMap<String, RawCrate>) -> Pe
         style,
         subtitle: clean(p.subtitle.as_deref().unwrap_or_default(), SUBTITLE_MAX),
         desc: clean(p.desc.as_deref().unwrap_or_default(), DESC_MAX),
+        texts: clean_texts(&p.texts),
+        bibi: crate::variants::truthy(&p.bibi),
         builtin: p.builtin,
         modified: p.modified,
     }
 }
 
-fn check_crate(cid: &str, c: RawCrate, present: &HashSet<String>, people: Vec<String>) -> Crate {
+fn check_crate(cid: &str, c: RawCrate, present: &HashSet<String>, people: Vec<String>, vs: &VariantState) -> Crate {
     let g = g();
     // skrzynka kart specjalnych: nigdy w sklepie, nie da się jej kupić ani otworzyć
     let special = g.crates.get(cid).is_some_and(|b| b.special);
@@ -625,7 +672,7 @@ fn check_crate(cid: &str, c: RawCrate, present: &HashSet<String>, people: Vec<St
     if special {
         chosen.clear(); // skrzynki kart specjalnych nie da się otworzyć - bez wariantów
     } else if !c.variants_all {
-        chosen.extend(g.crate_variants.iter().filter(|v| !g.variants[*v].exclusive && !g.variants[*v].off).cloned());
+        chosen.extend(g.crate_variants.iter().filter(|v| !g.variants[*v].exclusive && vs.enabled(v)).cloned());
     }
     let mut weights: IndexMap<String, f64> = c.weights.into_iter().filter(|(r, _)| g.rarities.contains_key(r)).collect();
     // tajna karta: zawsze 1 na SECRET_ODDS otwartych skrzynek (chyba że admin ustawi inaczej)
@@ -749,13 +796,135 @@ impl Catalog {
         c.people.iter().filter_map(|id| self.people.get(id))
     }
 
-    /// Warianty wyjątkowe, które mogą wypaść z tej skrzynki (dla tej karty: flagowy tylko z ustawionym krajem,
-    /// plus warianty przypisane do samej karty, np. Rzulty)
+    /// Warianty przypięte do tej skrzynki, które są (albo były) w grze (dla tej karty: flagowy tylko z ustawionym
+    /// krajem, plus warianty przypisane do samej karty, np. Rzulty)
     pub fn crate_variants(&self, c: &Crate, person: Option<&Person>) -> Vec<String> {
-        let mut out: Vec<String> =
-            c.variants.iter().filter(|v| *v != "flag" || person.is_none_or(|p| !p.country.is_empty())).cloned().collect();
+        let mut out: Vec<String> = c
+            .variants
+            .iter()
+            .filter(|v| (*v != "flag" || person.is_none_or(|p| !p.country.is_empty())) && self.variant_released(v))
+            .cloned()
+            .collect();
         if let Some(p) = person {
             out.extend(g().card_variants(&p.id));
+        }
+        out
+    }
+
+    // ---- ustawienia wariantów (strona /variants): włączony, wydarzenia, ekskluzywny
+
+    pub fn variant_enabled(&self, v: &str) -> bool {
+        self.vs.enabled(v)
+    }
+
+    /// Trwające teraz wydarzenie wariantu w tej skrzynce (albo None)
+    pub fn variant_event(&self, v: &str, crate_id: &str, now: f64) -> Option<&VariantEvent> {
+        self.vs.events(v).iter().find(|e| {
+            e.start as f64 <= now && now < e.end as f64 && (e.crates.is_empty() || e.crates.iter().any(|c| c == crate_id))
+        })
+    }
+
+    /// Wariant był już w grze (karty mogą istnieć): bez "off", był kiedyś włączony albo jego wydarzenie już się zaczęło
+    pub fn variant_released(&self, v: &str) -> bool {
+        let now = crate::db::now();
+        !g().variant(v).off
+            || self.vs.cfg.get(v).is_some_and(|s| s.released)
+            || self.vs.enabled(v)
+            || self.vs.events(v).iter().any(|e| e.start as f64 <= now)
+    }
+
+    /// Wariant może być na tej karcie: warianty z "cards" tylko na swoich kartach, flagowy tylko z krajem,
+    /// warianty kart specjalnych i połączenia nigdy (połączenia powstają z warstw)
+    fn variant_fits(&self, v: &str, person: Option<&Person>) -> bool {
+        let g = g();
+        let x = g.variant(v);
+        if v == "normal" || x.combo || x.special {
+            return false;
+        }
+        if !x.cards.is_empty() && person.is_none_or(|p| !x.cards.contains(&p.id)) {
+            return false;
+        }
+        v != "flag" || person.is_none_or(|p| !p.country.is_empty())
+    }
+
+    /// Warianty, które mogą TERAZ wypaść z tej skrzynki (dla tej karty) i mnożniki szansy z trwających wydarzeń.
+    /// Wariant przypięty do skrzynki i włączony (warianty konkretnych kart - gdy włączone); wariant z trwającym
+    /// wydarzeniem w tej skrzynce - zawsze.
+    pub fn drop_variants(&self, c: &Crate, person: Option<&Person>) -> (Vec<String>, HashMap<String, f64>) {
+        let g = g();
+        let now = crate::db::now();
+        let (mut avail, mut boost) = (Vec::new(), HashMap::new());
+        for v in &g.variant_order {
+            if !self.variant_fits(v, person) {
+                continue;
+            }
+            if let Some(ev) = self.variant_event(v, &c.id, now) {
+                if ev.boost != 1.0 {
+                    boost.insert(v.clone(), ev.boost);
+                }
+            } else if !self.vs.enabled(v) || (g.variants[v].cards.is_empty() && !c.variants.contains(v)) {
+                continue;
+            }
+            avail.push(v.clone());
+        }
+        (avail, boost)
+    }
+
+    /// Czy wariant może dać kuźnia (kontrakt, ulepszacz) i kasyno - w połączeniu warstw blokuje każda zablokowana warstwa
+    pub fn variant_house_ok(&self, v: &str) -> bool {
+        !v.split('+').any(|x| self.vs.no_house(x))
+    }
+
+    /// Warianty z kontraktu, cele ulepszacza i wygrane w kasynie: włączone, nie wyjątkowe, nie zablokowane przez admina
+    pub fn base_variants(&self) -> Vec<String> {
+        let g = g();
+        g.variant_order
+            .iter()
+            .filter(|v| {
+                self.variant_fits(v, None) && !g.variants[*v].exclusive && self.vs.enabled(v) && self.variant_house_ok(v)
+            })
+            .cloned()
+            .collect()
+    }
+
+    /// Warianty, które trafiły na tę kartę dzięki wydarzeniom (już rozpoczętym) w jej skrzynkach
+    pub fn event_variants(&self, p: &Person) -> HashSet<String> {
+        let now = crate::db::now();
+        self.vs
+            .cfg
+            .keys()
+            .filter(|v| self.variant_fits(v, Some(p)))
+            .filter(|v| {
+                self.vs.events(v).iter().any(|e| {
+                    e.start as f64 <= now && (e.crates.is_empty() || e.crates.iter().any(|c| p.crates.contains(c)))
+                })
+            })
+            .cloned()
+            .collect()
+    }
+
+    /// Ustawienia wariantu dla przeglądarki: włączony i wydarzenia (gracze: trwające i rozpoczęte, admini: wszystkie,
+    /// z zapisanymi ustawieniami i wartościami z kodu)
+    pub fn variant_cfg_json(&self, v: &str, admin: bool) -> Value {
+        let now = crate::db::now();
+        let mut events: Vec<&VariantEvent> = self.vs.events(v).iter().collect();
+        if !admin {
+            events.retain(|e| e.start as f64 <= now);
+            let running: Vec<&VariantEvent> = events.iter().copied().filter(|e| e.end as f64 > now).collect();
+            events = if running.is_empty() { events.last().copied().into_iter().collect() } else { running };
+        }
+        let mut out = json!({"enabled": self.vs.enabled(v), "released": self.variant_released(v), "events": events,
+                             "noHouse": !self.variant_house_ok(v)});
+        if admin {
+            let g = g();
+            let saved = match self.vs.cfg.get(v) {
+                Some(s) => json!({"enabled": s.enabled, "chance": s.chance, "weight": s.weight, "desc": s.desc,
+                                  "mult": s.mult, "noHouse": s.no_house}),
+                None => json!({"enabled": null, "chance": null, "weight": null, "desc": null, "mult": null, "noHouse": null}),
+            };
+            out["saved"] = saved;
+            out["defaults"] = json!(g.variant_defaults.get(v));
+            out["off"] = json!(g.variant(v).off);
         }
         out
     }
@@ -780,13 +949,19 @@ impl Catalog {
             return vec![p.fixed().to_owned()];
         }
         let mut extra: HashSet<String> = g.card_variants(&p.id).into_iter().collect();
+        extra.extend(self.event_variants(p));
         for cr in p.crates.iter().filter_map(|c| self.crates.get(c)) {
             extra.extend(self.crate_variants(cr, Some(p)));
         }
+        // zwykłe warianty - jeśli są (albo były) w grze: wyłączony od początku nie pojawia się w klaserze
         let base: Vec<&String> = g
             .variant_order
             .iter()
-            .filter(|v| !g.variants[*v].combo && (!g.variants[*v].exclusive || extra.contains(*v)))
+            .filter(|v| {
+                let x = &g.variants[*v];
+                !x.combo
+                    && (*v == "normal" || extra.contains(*v) || (!x.exclusive && self.variant_released(v)))
+            })
             .collect();
         let combos: HashSet<String> = base
             .iter()

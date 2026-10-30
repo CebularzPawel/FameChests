@@ -20,7 +20,7 @@ use crate::state::AppState;
 use crate::web::{send_file, svg_response};
 
 /// Widoki gry pod własnym adresem (ta sama strona index.html, widok wybiera JS)
-pub const VIEWS: &[&str] = &["crates", "binder", "inventory", "forge", "market", "casino", "friends", "ranking", "arena"];
+pub const VIEWS: &[&str] = &["crates", "binder", "inventory", "forge", "market", "casino", "friends", "ranking", "arena", "stickers", "variants", "designer"];
 
 const MYSTERY_SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <defs><radialGradient id="g"><stop offset="0" stop-color="#5a4a1a"/><stop offset="1" stop-color="#0b0906"/></radialGradient></defs>
@@ -39,7 +39,7 @@ pub async fn login_page(State(st): State<AppState>, MaybeUser(u): MaybeUser) -> 
 
 pub async fn index(State(st): State<AppState>, Me(me): Me, uri: Uri) -> Res {
     // Arena i makiety kart specjalnych: tylko admini
-    if (uri.path() == "/arena" || uri.path() == "/mockups") && !me.admin() {
+    if matches!(uri.path(), "/arena" | "/mockups" | "/stickers" | "/variants" | "/designer") && !me.admin() {
         return Ok(Redirect::to("/").into_response());
     }
     st.templates.render("index.html", context! {})
@@ -69,8 +69,9 @@ pub async fn manifest() -> Response {
 }
 
 /// Z głównego adresu, żeby obejmował całą grę; bez zapisywania plików gry (zawsze najnowsza wersja)
-pub async fn service_worker(State(st): State<AppState>, headers: HeaderMap) -> Res {
-    send_file(&st.cfg.base_dir.join("static").join("sw.js"), "application/javascript", &headers, "no-cache").await
+pub async fn service_worker() -> Res {
+    let js = crate::assets::static_file("sw.js").ok_or(AppError::Status(StatusCode::NOT_FOUND))?;
+    Ok(([(header::CONTENT_TYPE, "application/javascript"), (header::CACHE_CONTROL, "no-cache")], js.into_owned()).into_response())
 }
 
 // ---------------------------------------------------------------- flagi i zdjęcia

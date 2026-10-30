@@ -72,7 +72,7 @@ async function renderStickers() {
   const vs = stkVariants();
   if (!vs.length) {
     $("#stickersBody").innerHTML = `<div class="mock-head"><h2>🎨 Naklejki wariantów</h2>
-      <p class="muted">Żaden wariant nie ma naklejek (pole "stickers" w data.py).</p></div>`;
+      <p class="muted">Żaden wariant nie ma naklejek (pole "stickers" w server/data/game.json).</p></div>`;
     return;
   }
   const cards = Object.values(S.cfg.people).filter(p => !p.masked && !isSpecialCard(p)).sort((a, b) => a.name.localeCompare(b.name, "pl"));

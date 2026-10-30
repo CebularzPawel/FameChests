@@ -129,7 +129,7 @@ function vrSubsHTML(v) {
     <p class="muted small">Wariant wypada jako jeden („${esc(vrV(v).name)}”, ta sama szansa i wartość), a rodzaj piwa wynika z numeru
       egzemplarza karty — ten sam egzemplarz jest zawsze tym samym piwem. Gracz widzi rodzaj na plakietce, w podpisie pod zdjęciem
       i w podglądzie karty. W klaserze i na rynku (bez konkretnego egzemplarza) karta ma ogólny wygląd. Rodzaje i ich częstość
-      zmienia się w kodzie (<code>VARIANTS["beer"]["subs"]</code> w data.py).</p>
+      zmienia się w kodzie (<code>variants.beer.subs</code> w server/data/game.json).</p>
     <table class="vr-subs">
       <tr><th>Rodzaj</th><th>Plakietka</th><th>Podpis na karcie</th><th>Szansa</th><th></th></tr>
       ${subs.map(s => `<tr class="${s.id === VR.sub ? "active" : ""}">
@@ -177,7 +177,7 @@ function vrFormHTML(v) {
     <label>Opis<textarea name="desc" rows="3" maxlength="300" placeholder="${esc(def.desc || "")}">${esc(saved.desc ?? "")}</textarea></label>
     <div class="vr-actions">
       <button class="btn primary" type="submit">💾 Zapisz</button>
-      ${changed ? `<button class="btn" type="button" data-vr="defaults" title="Szansa, mnożnik, opis i włączenie jak w kodzie (data.py)">↩️ Domyślne</button>` : ""}
+      ${changed ? `<button class="btn" type="button" data-vr="defaults" title="Szansa, mnożnik, opis i włączenie jak w kodzie (game.json)">↩️ Domyślne</button>` : ""}
     </div>
     <p class="muted small">Puste pole = wartość z kodu. Gracze zobaczą zmiany po odświeżeniu gry; losowanie zmienia się od razu.</p>
   </form>`;

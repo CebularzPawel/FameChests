@@ -194,6 +194,20 @@ impl Images {
         }
     }
 
+    /// Usuwa pliki <pid>__<nazwa>.* poza nazwami z keep (np. wgrane naklejki wariantu, których admin nie zapisał)
+    pub fn delete_other(&self, pid: &str, keep: &std::collections::HashSet<String>) {
+        let prefix = format!("{pid}__");
+        let Ok(dir) = std::fs::read_dir(&self.cache_dir) else { return };
+        for entry in dir.flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            let Some(rest) = name.strip_prefix(&prefix) else { continue };
+            let stem = rest.rsplit_once('.').map_or(rest, |(s, _)| s);
+            if !keep.contains(stem) {
+                let _ = std::fs::remove_file(entry.path());
+            }
+        }
+    }
+
     // ------------------------------------------------------------ pobieranie
 
     /// GET z ponawianiem przy 429 (Wikimedia ogranicza tempo pobierania)

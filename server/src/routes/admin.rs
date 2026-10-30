@@ -214,6 +214,8 @@ enum AdminCard {
     Live {
         #[serde(flatten)]
         person: Arc<Person>,
+        texts: IndexMap<String, String>,
+        bibi: bool,
         wiki: Option<(String, String)>,
         builtin: bool,
         modified: bool,
@@ -237,20 +239,24 @@ enum AdminCard {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct AdminCatalog {
+struct AdminCatalog<'a> {
     crates: Vec<AdminCrate>,
     cards: Vec<AdminCard>,
-    rarities: &'static Value,
-    rarity_order: &'static [String],
-    types: &'static Value,
-    ability_kinds: &'static Value,
+    rarities: &'a Value,
+    rarity_order: &'a [String],
+    types: &'a Value,
+    ability_kinds: &'a Value,
     max_extra_abilities: usize,
     arena: Value,
-    variants: &'static Value,
-    exclusive_variants: &'static [String],
-    special_variants: &'static [String],
-    special_sources: &'static Value,
-    special_crate: &'static str,
+    variants: &'a Value,
+    exclusive_variants: &'a [String],
+    variant_enabled: IndexMap<&'a str, bool>,
+    special_variants: &'a [String],
+    special_sources: &'a Value,
+    special_crate: &'a str,
+    card_text_slots: &'a IndexMap<String, String>,
+    easter_egg: Value,
+    egg_chance: f64,
     default_price: i64,
     users: Vec<UserView>,
 }
@@ -301,6 +307,8 @@ pub async fn admin_catalog(State(st): State<AppState>, Admin(_): Admin) -> Res {
         .values()
         .map(|p| AdminCard::Live {
             person: p.clone(),
+            texts: p.texts.clone(),
+            bibi: p.bibi,
             wiki: p.wiki.clone(),
             builtin: p.builtin,
             modified: p.modified,
@@ -332,9 +340,13 @@ pub async fn admin_catalog(State(st): State<AppState>, Admin(_): Admin) -> Res {
                       "effectTargets": g.arena_effect_targets, "maxEffects": g.max_ability_effects}),
         variants: &g.variants_json,
         exclusive_variants: &g.crate_variants,
+        variant_enabled: g.crate_variants.iter().map(|v| (v.as_str(), cat.variant_enabled(v))).collect(),
         special_variants: &g.special_variants,
         special_sources: &g.special_sources_json,
         special_crate: &g.special_crate,
+        card_text_slots: &g.card_text_slots,
+        easter_egg: super::variants::easter_egg_json(&st),
+        egg_chance: g.easter_egg_chance,
         default_price: g.crate_price,
         users: users.iter().map(|u| u.view(&cat)).collect(),
     })
@@ -615,6 +627,12 @@ pub async fn admin_save_card(State(st): State<AppState>, Admin(me): Admin, mp: M
     fields.insert("subtitle".into(), json!(clean(form.text("subtitle"), catalog::SUBTITLE_MAX)));
     fields.insert("desc".into(), json!(clean(&form.text("desc").replace("\r\n", "\n"), catalog::DESC_MAX)));
     // karta specjalna: skąd (kasyno / link), jedyny wariant i wygląd (katalog sprawdza)
+    // easter egg: wypadnięcie tej karty pokazuje obrazek (bibiShow)
+    fields.insert("bibi".into(), json!(form.get("bibi").is_some_and(|b| !b.is_empty())));
+    // własne napisy na karcie (karty specjalne) - niezależne od statystyk
+    let texts: Map<String, Value> =
+        g.card_text_slots.keys().filter_map(|k| form.get(&format!("t_{k}")).map(|t| (k.clone(), json!(t)))).collect();
+    fields.insert("texts".into(), json!(catalog::clean_texts(&Value::Object(texts))));
     fields.insert("source".into(), json!(form.get("source")));
     fields.insert("fixedVariant".into(), json!(form.get("fixed_variant")));
     fields.insert("style".into(), json!(form.get("style")));
@@ -1053,7 +1071,7 @@ pub async fn admin_delete_user_cards(
             "wszystkie karty".to_owned()
         } else {
             let person = cat.person(&req.person).map_or_else(|| req.person.clone(), |p| p.name.clone());
-            let variant = g().variants.get(&req.variant).map_or("?", |v| v.name.as_str());
+            let variant = g().variants.get(&req.variant).map_or_else(|| "?".to_owned(), |v| v.name.clone());
             format!("{person} · {variant}")
         };
         log_admin(&mut tx, &me, "cards_delete", Some(uid), &format!("{} szt. ({what})", ids.len())).await?;
@@ -1202,6 +1220,9 @@ pub async fn admin_delete_user(State(st): State<AppState>, Admin(me): Admin, Pat
     log_admin(&mut tx, &me, "user_delete", Some(uid), "").await?; // przed usunięciem - żeby zapisać nazwę gracza
     super::market::market_forget_user(&mut tx, uid).await?; // jego oferty na rynku i lobby jackpota
     super::casino::blackjack_forget_user(&mut tx, uid).await?; // rozdanie w trakcie i postawione w nim karty
+    super::horses::horse_forget_user(&mut tx, uid).await?; // zakłady na wyścigi konne i postawione w nich karty
+    sqlx::query("DELETE FROM user_counters WHERE user_id = $1").bind(uid).execute(&mut *tx).await?;
+    sqlx::query("DELETE FROM user_achievements WHERE user_id = $1").bind(uid).execute(&mut *tx).await?;
     sqlx::query!("DELETE FROM items WHERE user_id = $1", uid).execute(&mut *tx).await?;
     sqlx::query!("DELETE FROM user_state WHERE user_id = $1", uid).execute(&mut *tx).await?;
     sqlx::query!("DELETE FROM user_discovered WHERE user_id = $1", uid).execute(&mut *tx).await?;

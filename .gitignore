@@ -21,3 +21,6 @@ secret_key.txt
 server/target/
 server/.env
 .direnv/
+
+# paczka na Azure (build_azure.bat)
+dist/

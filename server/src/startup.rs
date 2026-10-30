@@ -105,6 +105,10 @@ pub async fn init_db(pool: &PgPool, cfg: &Config) -> anyhow::Result<catalog::Cat
         cat = catalog::load(&mut *pool.acquire().await?).await?;
     }
     backfill_hall_of_fame(pool).await?;
+    // wbudowane osiągnięcia (raz) i liczniki dla starych kont
+    let mut tx = pool.begin().await?;
+    crate::achievements::init(&mut tx, &cat).await?;
+    tx.commit().await?;
     Ok(cat)
 }
 
@@ -155,32 +159,40 @@ const VARIANT_COLUMNS: &[(&str, &str)] = &[
 async fn drop_removed_variants(pool: &PgPool) -> anyhow::Result<()> {
     let mut tx = pool.begin().await?;
     for v in &g().removed_variants {
-        let combo = format!("+{v}");
-        let like = format!("%+{v}");
-        for (table, col) in VARIANT_COLUMNS {
-            sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = 'normal' WHERE {col} = $1"))).bind(v).execute(&mut *tx).await?;
-            sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = REPLACE({col}, $1, '') WHERE {col} LIKE $2")))
-                .bind(&combo)
-                .bind(&like)
-                .execute(&mut *tx)
-                .await?;
-        }
-        sqlx::query(
-            "INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal'
-             FROM user_collected WHERE variant = $1 ON CONFLICT DO NOTHING",
-        )
-        .bind(v)
-        .execute(&mut *tx)
-        .await?;
-        for table in ["user_collected", "hall_of_fame"] {
-            sqlx::query(AssertSqlSafe(format!("DELETE FROM {table} WHERE variant = $1 OR variant LIKE $2")))
-                .bind(v)
-                .bind(&like)
-                .execute(&mut *tx)
-                .await?;
-        }
+        drop_variant_everywhere(&mut tx, v).await?;
     }
     tx.commit().await?;
+    Ok(())
+}
+
+/// Karty graczy, oferty, ikony itd. w wariancie v stają się zwykłe (z połączenia zostaje warstwa: flag+greek -> flag),
+/// a wpisy w klaserze, Hall of Fame i ustawienia wariantu znikają (usunięty wariant, wariant z kreatora)
+pub async fn drop_variant_everywhere(tx: &mut crate::db::Conn, v: &str) -> sqlx::Result<()> {
+    let combo = format!("+{v}");
+    let like = format!("%+{v}");
+    for (table, col) in VARIANT_COLUMNS {
+        sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = 'normal' WHERE {col} = $1"))).bind(v).execute(&mut *tx).await?;
+        sqlx::query(AssertSqlSafe(format!("UPDATE {table} SET {col} = REPLACE({col}, $1, '') WHERE {col} LIKE $2")))
+            .bind(&combo)
+            .bind(&like)
+            .execute(&mut *tx)
+            .await?;
+    }
+    sqlx::query(
+        "INSERT INTO user_collected (user_id, person_id, variant) SELECT user_id, person_id, 'normal'
+         FROM user_collected WHERE variant = $1 ON CONFLICT DO NOTHING",
+    )
+    .bind(v)
+    .execute(&mut *tx)
+    .await?;
+    for table in ["user_collected", "hall_of_fame"] {
+        sqlx::query(AssertSqlSafe(format!("DELETE FROM {table} WHERE variant = $1 OR variant LIKE $2")))
+            .bind(v)
+            .bind(&like)
+            .execute(&mut *tx)
+            .await?;
+    }
+    sqlx::query("DELETE FROM catalog_variants WHERE id = $1").bind(v).execute(&mut *tx).await?;
     Ok(())
 }
 

@@ -1,4 +1,4 @@
--- Schemat bazy PostgreSQL (ten sam co database.PG_SCHEMA w wersji Python) - wykonywany przy każdym starcie,
+-- Schemat bazy PostgreSQL (ten sam co w dawnej wersji Python) - wykonywany przy każdym starcie,
 -- wszystko IF NOT EXISTS, więc istniejąca baza gry działa bez migracji. Nowa kolumna/tabela: dopisać tutaj.
 CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value BIGINT NOT NULL);
 CREATE TABLE IF NOT EXISTS items (
@@ -180,3 +180,4 @@ CREATE TABLE IF NOT EXISTS user_achievements (
 -- zmiany katalogu z panelu admina (catalog.rs)
 CREATE TABLE IF NOT EXISTS catalog_crates (id TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}', deleted INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS catalog_cards  (id TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}', deleted INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS catalog_variants (id TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}', deleted INTEGER NOT NULL DEFAULT 0);

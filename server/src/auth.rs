@@ -349,6 +349,17 @@ impl LoginLimiter {
     }
 }
 
+/// "1.2.3.4:5678" -> "1.2.3.4", "[::1]:5678" -> "::1" (Azure App Service dopisuje port do X-Forwarded-For)
+fn strip_port(ip: &str) -> &str {
+    if let Some(rest) = ip.strip_prefix('[') {
+        return rest.split(']').next().unwrap_or(rest);
+    }
+    match ip.split_once(':') {
+        Some((host, port)) if !port.contains(':') && port.bytes().all(|b| b.is_ascii_digit()) => host,
+        _ => ip,
+    }
+}
+
 /// Adres gracza (za proxy - ostatni z X-Forwarded-For, jak ProxyFix(x_for=1))
 pub fn client_ip(st: &AppState, headers: &HeaderMap, addr: Option<&ConnectInfo<SocketAddr>>) -> String {
     if st.cfg.trust_proxy {
@@ -356,7 +367,7 @@ pub fn client_ip(st: &AppState, headers: &HeaderMap, addr: Option<&ConnectInfo<S
             .get("x-forwarded-for")
             .and_then(|v| v.to_str().ok())
             .and_then(|v| v.rsplit(',').next())
-            .map(|v| v.trim().to_owned())
+            .map(|v| strip_port(v.trim()).to_owned())
             .filter(|v| !v.is_empty())
         {
             return ip;

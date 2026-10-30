@@ -51,7 +51,7 @@ impl Ctx {
 
 /// patch_seen: ostatnia obejrzana lista zmian; market_seen: kiedy gracz ostatnio oglądał rynek;
 /// jackpot_seen: koniec (ms) ostatniej gry w jackpot, której wynik gracz już widział
-pub fn state_keys() -> [(&'static str, i64); 13] {
+pub fn state_keys() -> [(&'static str, i64); 14] {
     [
         ("balance", g().starting_balance),
         ("opened", 0),
@@ -66,6 +66,8 @@ pub fn state_keys() -> [(&'static str, i64); 13] {
         ("patch_seen", 0),
         ("market_seen", 0),
         ("jackpot_seen", 0),
+        // 1 = przy następnym wejściu do ekwipunku czeka karta, którą zabierze UFO
+        ("ufo_visit", 0),
     ]
 }
 
@@ -290,6 +292,7 @@ pub async fn collected_list(c: &mut Conn, cat: &Catalog, uid: i64) -> sqlx::Resu
 pub async fn insert_item(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, source: &str) -> sqlx::Result<NewItem> {
     let now = now();
     let new_for_me = note_collected(c, cx.uid(), pid, variant, source).await?;
+    crate::achievements::count_card(c, cx.uid(), &cx.cat.people[pid], variant).await?;
     let id = sqlx::query_scalar!(
         "INSERT INTO items (person_id, holo, variant, created_at, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
         pid,
