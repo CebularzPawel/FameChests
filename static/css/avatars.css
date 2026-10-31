@@ -43,6 +43,14 @@
 .avv-glitch img { filter: contrast(1.2) saturate(1.6) hue-rotate(20deg); box-shadow: -2px 0 #ff2b5a, 2px 0 #00e5ff !important; }
 .avv-mosaic img { filter: saturate(1.5) contrast(1.1); box-shadow: 0 0 0 2px #f2cd37, 0 0 0 4px #c91a09 !important; }
 .avv-chocolate img { filter: sepia(.45) saturate(1.2); box-shadow: 0 0 0 2px #d4a12a, 0 0 0 4px #4a240e !important; }
+.avv-claude img { box-shadow: 0 0 0 2px #e88a55, 0 0 0 4px #1a1614 !important; }
+.avv-scratch img { box-shadow: 0 0 0 2px #ffd21a, 0 0 0 4px #7a2ae0 !important; }
+.avv-teletext img { filter: contrast(1.25) saturate(1.3); box-shadow: 0 0 0 2px #00ffff, 0 0 0 4px #ff00ff !important; }
+.avv-retroos img { box-shadow: 0 0 0 2px #c0c0c0, 0 0 0 4px #008080 !important; }
+.avv-receipt img { filter: grayscale(1) contrast(1.5) brightness(1.1); box-shadow: 0 0 0 2px #f7f5ef, 0 0 0 3px #1a1a1a !important; }
+.avv-tarot img { filter: sepia(.3) saturate(1.25) contrast(1.05); box-shadow: 0 0 0 2px #e8c8ff, 0 0 0 4px #6a2aa8 !important; }
+.avv-muertos img { filter: sepia(.32) saturate(1.5); box-shadow: 0 0 0 2px #ffb81a, 0 0 0 4px #ff2f92 !important; }
+.avv-blank img { box-shadow: 0 0 0 2px #fbf9f4, 0 0 0 4px #b8b4aa !important; }
 .avv-copper img { filter: sepia(1) saturate(1.6) hue-rotate(-25deg) brightness(.95); box-shadow: 0 0 0 2px #e8945a, 0 0 0 4px #5ab89e !important; }
 .avv-files img { filter: grayscale(.75) sepia(.35); box-shadow: 0 0 0 2px #e2c88a, 0 0 0 4px #b8201a !important; }
 .avv-banana img { filter: sepia(.2) saturate(1.3); box-shadow: 0 0 0 2px #ffd93a, 0 0 0 4px #7a5414 !important; }
@@ -86,7 +94,7 @@
 .av-vname.vt-electric { color: #9fdcff; } .av-vname.vt-synthwave { color: #00e5ff; } .av-vname.vt-motor { color: #ff5a64; }
 .av-vname.vt-pixel { color: #9fb6ff; } .av-vname.vt-popart { color: #ffe100; } .av-vname.vt-glass { color: #8ac0c0; } .av-vname.vt-thermal { color: #ffb347; }
 .av-vname.vt-blueprint { color: #9ac8ff; } .av-vname.vt-glitch { color: #00e5ff; } .av-vname.vt-mosaic { color: #f2cd37; } .av-vname.vt-noir { color: #e8e8e8; }
-.av-vname.vt-chocolate { color: #e8b27a; } .av-vname.vt-candy { color: #ff8ac4; } .av-vname.vt-hollywood { color: #ffb35a; } .av-vname.vt-cobalt { color: #7ac8ff; } .av-vname.vt-banana { color: #ffd93a; } .av-vname.vt-files { color: #e2c88a; } .av-vname.vt-copper { color: #f0a46a; } .av-vname.vt-uranium { color: #8aff4a; }
+.av-vname.vt-claude { color: #e88a55; } .av-vname.vt-scratch { color: #ffd21a; } .av-vname.vt-teletext { color: #ffff00; } .av-vname.vt-retroos { color: #5ac8c8; } .av-vname.vt-receipt { color: #f7f5ef; } .av-vname.vt-tarot { color: #e8c8ff; } .av-vname.vt-chocolate { color: #e8b27a; } .av-vname.vt-candy { color: #ff8ac4; } .av-vname.vt-hollywood { color: #ffb35a; } .av-vname.vt-cobalt { color: #7ac8ff; } .av-vname.vt-banana { color: #ffd93a; } .av-vname.vt-files { color: #e2c88a; } .av-vname.vt-copper { color: #f0a46a; } .av-vname.vt-blank { color: #fbf9f4; } .av-vname.vt-muertos { color: #ff8ac4; } .av-vname.vt-uranium { color: #8aff4a; }
 .av-vname.vt-mercury { color: #dfe4ea; } .av-vname.vt-californium { color: #f4f6fa; } .av-vname.vt-reflective { color: #e6ff2a; } .av-vname.vt-usa { color: #f2f2f2; } .av-vname.vt-komuna { color: #ff4a4a; } .av-vname.vt-apollo { color: #f2d27a; }
 .av-vname.vt-clear { color: #e0f7ff; } .av-vname.vt-negative { color: #000; background: #fff; }
 .av-vname.vt-holo { color: #ff9ff3; } .av-vname.vt-reverse { color: #c9d6ff; } .av-vname.vt-bw { color: #fff; }

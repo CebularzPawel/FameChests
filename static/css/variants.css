@@ -108,3 +108,10 @@
   .vr-list { position: static; max-height: 320px; }
   .vr-zoom { flex-direction: column; gap: 16px; overflow: auto; justify-content: flex-start; }
 }
+
+/* ekskluzywny dla karty */
+.vr-lock { display: flex; flex-direction: column; gap: 8px; }
+.vr-lock-box { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--line, #ffffff22); border-radius: 10px; }
+.vr-lock-box[hidden] { display: none; }
+.vr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vr-chips:empty::before { content: "Nie wybrano jeszcze żadnej karty."; font-size: 13px; color: var(--muted); }

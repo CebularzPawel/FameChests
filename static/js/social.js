@@ -87,6 +87,7 @@ function startPolling() {
       const hadNew = me.unread > 0 || me.incoming > 0 || me.trades > 0;
       applyBadges(me);
       noteUfo(me);                                      // wizyta UFO - pokaże się przy następnym wejściu do ekwipunku
+      noteQuest(me.quest);                              // quest dnia: nowy cel, wygrana
       if (hadNew && currentView() === "friends" && !S.opening) renderFriends();
       if (me.market && currentView() === "market" && !S.opening && !dialogOpen()) renderMarket(true);
       S.jpLobby = me.jackpotLobby;
@@ -508,8 +509,9 @@ async function openTradeBuilder(username) {
 
   const mineGroups = {};
   S.items.forEach(i => {
-    const k = `${i.person}|${i.variant}`;
-    (mineGroups[k] ||= { key: k, person: i.person, variant: i.variant, value: i.value, ids: [] }).ids.push(i.id);
+    // „Czysta kartka”: każdy egzemplarz ma inny rysunek, więc osobny kafelek
+    const k = `${i.person}|${i.variant}${isBlank(i.variant) ? `|${i.id}` : ""}`;
+    (mineGroups[k] ||= { key: k, person: i.person, variant: i.variant, value: i.value, ids: [], draw: isBlank(i.variant) ? i.id : 0 }).ids.push(i.id);
   });
   Object.values(mineGroups).forEach(g => g.ids.sort((a, b) => showIds.has(a) - showIds.has(b)));  // najpierw spoza gabloty
   const theirGroups = {};
@@ -546,13 +548,13 @@ async function openTradeBuilder(username) {
     T.give.forEach(id => { const g = Object.values(mineGroups).find(x => x.ids.includes(id)); selMine[g.key] = (selMine[g.key] || 0) + 1; });
     const match = (g, q) => cardMatches(g, q);
     dlg.querySelector("#tbMine").innerHTML = sortG(Object.values(mineGroups), T.sortMine).filter(g => g.ids.length > (selMine[g.key] || 0) && match(g, T.qMine))
-      .map(g => pickHTML({ id: g.key, person: g.person, variant: g.variant, value: g.value }, { extra: `<span class="pc">×${g.ids.length - (selMine[g.key] || 0)}</span>` })).join("")
+      .map(g => pickHTML({ id: g.key, person: g.person, variant: g.variant, value: g.value, draw: g.draw }, { extra: `<span class="pc">×${g.ids.length - (selMine[g.key] || 0)}</span>` })).join("")
       || '<div class="empty">Brak kart</div>';
     dlg.querySelector("#tbTheirs").innerHTML = withRevealMap(reveal, imgq, () => sortG(Object.values(theirGroups), T.sortTheirs)).filter(g => g.count > (T.want[g.key] || 0) &&
       withRevealMap(reveal, imgq, () => match(g, T.qTheirs))).map(tileTheirs).join("") || '<div class="empty">Brak kart</div>';
     dlg.querySelector("#tbGiveSel").innerHTML = Object.entries(selMine).map(([k, n]) => {
       const g = mineGroups[k];
-      return pickHTML({ id: k, person: g.person, variant: g.variant, value: g.value }, { extra: n > 1 ? `<span class="pc">×${n}</span>` : "" });
+      return pickHTML({ id: k, person: g.person, variant: g.variant, value: g.value, draw: g.draw }, { extra: n > 1 ? `<span class="pc">×${n}</span>` : "" });
     }).join("") || '<span class="muted small">Kliknij swoje karty poniżej</span>';
     dlg.querySelector("#tbWantSel").innerHTML = Object.entries(T.want).filter(([, n]) => n > 0).map(([k, n]) => {
       const g = theirGroups[k];
@@ -777,9 +779,14 @@ async function renderProfile() {
       <h3>🏆 Gablota</h3>
       ${mine ? '<p class="muted small">Twoje najlepsze karty na pokaz. Dodasz je przyciskiem <b>📌 Do gabloty</b> w podglądzie karty (🔍).</p>' : ""}
       <div class="showcase-grid">${slots.map(it => it
-        ? `<div class="sc-slot">${profileReveal(() => cardHTML(it.person, it.variant))}</div>`
+        ? `<div class="sc-slot">${profileReveal(() => cardHTML(it.person, it.variant, it.id))}</div>`
         : `<div class="sc-slot empty"><span>${mine ? "📌" : "—"}</span></div>`).join("")}</div>
     </div>
+
+    ${d.drawings?.length ? `<div class="panel">
+      <h3>🖌️ Czyste kartki${mine ? "" : ` gracza ${esc(u.username)}`}</h3>
+      <div class="showcase-grid dr-gallery">${d.drawings.map(it => `<div class="sc-slot">${profileReveal(() => cardHTML(it.person, it.variant, it.id))}</div>`).join("")}</div>
+    </div>` : ""}
 
     <div class="panel">
       <div class="binder-toolbar">
@@ -986,6 +993,6 @@ function bindSocial() {
     if (t.closest("#pfPrev")) { PROF.spread--; return renderProfileBinder(-1); }
     if (t.closest("#pfNext")) { PROF.spread++; return renderProfileBinder(1); }
     const c = t.closest(".pocket.owned .card, .sc-slot .card");
-    if (c) profileReveal(() => openViewer(c.dataset.pid, c.dataset.variant));
+    if (c) profileReveal(() => openViewer(c.dataset.pid, c.dataset.variant, c.dataset.uid));
   });
 }

@@ -23,4 +23,5 @@ const vmId = p => `${p}${++vmIdN}`;
 
 // ---------------------------------------------------------------- PROPOZYCJE
 
-const VARIANT_PROPOSALS = [];
+const VARIANT_PROPOSALS = [
+];

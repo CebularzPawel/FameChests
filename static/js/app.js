@@ -9,7 +9,7 @@ const fmt = n => Math.round(n).toLocaleString("pl-PL") + " gr";   // waluta gry:
 
 const COUNT_CHIPS = [1, 2, 3, 5, 10, 15, 20];
 const INV_PAGE = 120;
-const VARIANT_TAGS = { bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", files: "🗂️ AKTA", copper: "🟠 Cu", reflective: "🦺 HI-VIS", usa: "★ U.S.A. ★", komuna: "★ PRL ★", apollo: "◉ MISJA 69", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
+const VARIANT_TAGS = { claude: "✻ CLAUDE", scratch: "🪙 ZDRAPKA", teletext: "📟 P888", retroos: "💾 OKIENKA 97", receipt: "🧾 PARAGON", tarot: "🔮 TAROT", muertos: "💀 MUERTOS", blank: "🖌️ CZYSTA", bw: "B&W", reverse: "REVERSE", bronze: "BRONZE", silver: "SILVER", platinum: "PLATINUM", steel: "⚙️ STEEL", sapphire: "💙 SAPPHIRE", blackdiamond: "🖤 BLACK DIAMOND", holo: "HOLO", pearl: "🦪 PEARL", gold: "GOLDEN", vintage: "📷 1887", marble: "🏛️ MARBLE", slime: "🟢 SLIME", matte: "MATTE", racing: "🏁 RETRO", bismuth: "🌈 BISMUTH", digital: "💻 DIGITAL", cyber: "🌃 CYBER", fade: "🎨 FADE", wanted: "🤠 WANTED", artdeco: "ART DÉCO", cheese: "🧀 CHEESE", aero: "🫧 AERO", honey: "🍯 HONEY", chinese: "🏮 CHINA", moro: "🪖 MORO", beer: "🍺 BEER", neon: "💡 NEON", electric: "⚡ VOLT", synthwave: "📼 SYNTH", motor: "🏎️ MOTO", toxic: "☢️ TOXIC", pixel: "👾 PIXEL", popart: "💥 POP!", glass: "⛪ VITRAIL", thermal: "🌡️ THERMAL", blueprint: "📐 BLUEPRINT", glitch: "▓ GL1TCH", mosaic: "🧱 MOSAIC", noir: "🕵️ NOIR", chocolate: "🍫 CHOCO", candy: "🍭 CANDY", hollywood: "🎬 1969", cobalt: "🔷 COBALT", banana: "🍌 BANANA", uranium: "☢️ U-238", mercury: "☿ Hg", californium: "⚛️ Cf-252", files: "🗂️ AKTA", copper: "🟠 Cu", reflective: "🦺 HI-VIS", usa: "★ U.S.A. ★", komuna: "★ PRL ★", apollo: "◉ MISJA 69", flag: "FLAG", halloween: "🎃 HALLOWEEN", lantern: "🏮 LAMPION", devil: "😈 DEVIL", joker: "🃏 JOKER", jeans: "👖 DŻINS", ufo: "🛸 ⎍⎎⍜⌰⎍⎅", clear: "🫧 CLEAR", sketch: "✒️ SKETCH", emerald: "💚 EMERALD", amethyst: "💜 AMETHYST", ruby: "❤️ RUBY", mlg: "🎯 MLG", royal: "👑 ROYAL", diamond: "💎 DIAMOND", galaxy: "🌌 GALAXY", negative: "◐ NEGATIVE", rzulty: "💛 RZULTY" };
 const GEMS = ["emerald", "amethyst", "ruby", "sapphire", "diamond", "blackdiamond"];  // warianty z kamieniami szlachetnymi - wspólny wygląd, inne kolory
 
 const S = {
@@ -102,7 +102,7 @@ function crateVariants(crate, p = null) {
     if (v === "flag" && p && !p.country) return false;
     if (variantEvent(v, crate?.id)) return true;
     if (!variantOn(v)) return false;
-    return !!V.cards || (crate?.variants || []).includes(v);
+    return (!!V.cards && !V.crateOnly) || (crate?.variants || []).includes(v);
   });
 }
 // Ustawienia wariantów ze strony /variants (catalog.variant_cfg_json): włączony / wyłączony i wydarzenia - od-do wariant
@@ -178,7 +178,13 @@ const CARD_SORTS = [["value", "💰 Najdroższe"], ["valueAsc", "💰 Najtańsze
 // listy bez sensu dla "Duplikaty" (karty do zdobycia, nie egzemplarze gracza): cele ulepszacza, szukane na rynku, ikona gracza
 const UNIQUE_SORTS = CARD_SORTS.filter(([k]) => k !== "new" && !k.startsWith("dupes"));
 // ile egzemplarzy tej karty w tym wariancie ma gracz (osoba + wariant)
-function dupKey(x) { return x.person + "|" + (x.variant || "normal"); }
+// co jest tą samą kartą przy duplikatach: osoba + wariant, rodzaj piwa to osobna karta, a czysta kartka z rysunkiem nie ma duplikatów
+function dupKey(x) {
+  const v = x.variant || "normal", id = +x.id > 0 ? +x.id : null, base = x.person + "|" + v;
+  if (id && isBlank(v) && S.drawn.has(id)) return `${base}|#${id}`;
+  const sub = id ? beerSub(v, id) : null;
+  return sub ? `${base}|${sub.id}` : base;
+}
 function ownCounts() {
   const m = new Map();
   for (const i of S.items) m.set(dupKey(i), (m.get(dupKey(i)) || 0) + 1);
@@ -860,6 +866,90 @@ function mtGauge() {
 // Noir: pionowe rysy na taśmie filmowej, co chwilę w innym miejscu
 const nrScratches = n => Array.from({ length: n }, () =>
   `<i class="nr-scratch" style="left:${vxN(6, 94)}%;animation-delay:-${vxN(0, 3, 2)}s;animation-duration:${vxN(1.4, 3.2, 2)}s"></i>`).join("");
+// Día de Muertos: duże tła (czaszki na rozetach, aksamitki) są gotowymi obrazkami SVG liczonymi raz na stronę - jako
+// żywe elementy byłyby to tysiące węzłów na każdej karcie
+const dmFlower = (x, y, r, c1 = "#ff8a00", c2 = "#ffc21a") => {
+  const ring = (n, d, rx, ry, c, o = 0) => Array.from({ length: n }, (_, k) =>
+    `<ellipse cx="${x}" cy="${(y - d).toFixed(2)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" fill="${c}" transform="rotate(${(k * 360 / n + o).toFixed(1)} ${x} ${y})"/>`).join("");
+  return ring(12, r * .68, r * .25, r * .36, c1) + ring(10, r * .42, r * .22, r * .3, c2, 18) + ring(7, r * .2, r * .13, r * .2, c1, 8);
+};
+// cukrowa czaszka (40 x 46)
+const dmSkull = (ink, a, b) => `<g fill="none" stroke="${ink}" stroke-width=".9" stroke-linecap="round">
+  <path d="M20 3 C9 3 4 11 4 20 C4 26 7 30 11 32 L11 39 C11 41 13 42 15 42 H25 C27 42 29 41 29 39 L29 32 C33 30 36 26 36 20 C36 11 31 3 20 3 Z"/>
+  <path d="M15 42 V36 M20 42 V36 M25 42 V36"/><path d="M14 8 C16 12 24 12 26 8"/></g>
+  ${[[13, 21], [27, 21]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.4" fill="none" stroke="${a}" stroke-width="1"/><circle cx="${x}" cy="${y}" r="2.6" fill="${b}"/>
+    ${Array.from({ length: 8 }, (_, k) => `<circle cx="${(x + Math.cos(k * .785) * 7).toFixed(1)}" cy="${(y + Math.sin(k * .785) * 7).toFixed(1)}" r=".7" fill="${ink}"/>`).join("")}`).join("")}
+  <path d="M20 27 L17.6 31 H22.4 Z" fill="${a}"/>${dmFlower(20, 11.5, 3.6, a, ink)}`;
+const DM_INKS = [["#ffb81a", "#ff2f92", "#19d3c5"], ["#ff2f92", "#ffb81a", "#19d3c5"], ["#19d3c5", "#ff7a00", "#ffd23a"], ["#fff0dc", "#ff2f92", "#8a3dff"],
+  ["#ff7a00", "#19d3c5", "#ffe2a0"], ["#c58aff", "#ffd23a", "#ff2f92"]];
+// tło karty 630 x 880: rozety ton w ton (ciemny i jaśniejszy fiolet) i czaszki w kolorach, rzędy przesunięte
+function dmWall() {
+  const petals = (cx, cy, n, r, l, w) => Array.from({ length: n }, (_, k) => `<ellipse cx="${cx}" cy="${cy - r}" rx="${w}" ry="${l}" transform="rotate(${(k * 360 / n).toFixed(1)} ${cx} ${cy})"/>`).join("");
+  const ros = (x, y) => `<g fill="#2a0a6a">${petals(x, y, 12, 8, 3.4, 1.3)}</g><g fill="#7a2ec8">${petals(x, y, 12, 4.4, 1.9, .8)}</g><circle cx="${x}" cy="${y}" r="2" fill="#2a0a6a"/>`;
+  let body = "";
+  for (let y = 0; y <= 91; y += 13) for (let x = (Math.round(y / 13) % 2) * 13; x <= 66; x += 26) body += ros(x, y);
+  for (let k = 0; k < 30; k++) {
+    const row = Math.floor(k / 6), [ink, a, b] = DM_INKS[(k * 5 + row) % DM_INKS.length];
+    const x = ((k % 6) * 17 + (row % 2 ? 8 : 0) - 4) * .63, y = (row * 20 - 2) * .88;
+    body += `<g opacity=".7" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${k % 2 ? 9 : -9} 6.3 7.3) scale(.315)">${dmSkull(ink, a, b)}</g>`;
+  }
+  return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 63 88'><defs/><rect width='63' height='88' fill='none'/>${body}</svg>`;
+}
+// aksamitki wzdłuż dolnej krawędzi z listkami
+function dmBorder() {
+  const bunch = ([x, y, r]) => `<ellipse cx="${x - r}" cy="${y + r * .6}" rx="${r * .9}" ry="${r * .36}" fill="#1f7a4a" transform="rotate(-24 ${x} ${y})"/>
+    <ellipse cx="${x + r}" cy="${y + r * .6}" rx="${r * .9}" ry="${r * .36}" fill="#2f9a5a" transform="rotate(24 ${x} ${y})"/>${dmFlower(x, y, r)}`;
+  return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 63 88' preserveAspectRatio='none'>${Array.from({ length: 12 }, (_, k) => bunch([2 + k * 5.4, 86 + (k % 2) * 1.4, 2.8 - (k % 2) * .6])).join("")}</svg>`;
+}
+// papel picado: chorągiewka z wycinanymi wzorami (nieparzyste wypełnienie = dziury)
+function dmPicado(c) {
+  const hole = (x, y, r) => `M${x} ${y - r} L${x + r} ${y} L${x} ${y + r} L${x - r} ${y} Z`;
+  const edge = "M0 0 H20 V21 Q18.3 25 16.6 21 Q15 25 13.3 21 Q11.7 25 10 21 Q8.3 25 6.7 21 Q5 25 3.3 21 Q1.7 25 0 21 Z";
+  const cuts = [hole(10, 10, 3.4), hole(4, 4, 1.5), hole(16, 4, 1.5), hole(4, 16, 1.5), hole(16, 16, 1.5), hole(10, 3, 1), hole(10, 17.4, 1), hole(3.2, 10, 1), hole(16.8, 10, 1)].join(" ");
+  return `<svg viewBox="0 0 20 26" preserveAspectRatio="none" aria-hidden="true"><path fill="${c}" fill-rule="evenodd" d="${edge} ${cuts}"/></svg>`;
+}
+const dmFlags = () => `<i class="dm-string"></i>${["#ff2f92", "#ffb81a", "#19d3c5", "#8a3dff", "#ff5a1f", "#3ddc84"].map((c, k) =>
+  `<i class="dm-flag" style="left:${(k * 16.66).toFixed(2)}%;animation-delay:-${(k * .55).toFixed(2)}s">${dmPicado(c)}</i>`).join("")}`;
+const dmPetals = n => Array.from({ length: n }, () =>
+  `<i class="dm-petal" style="left:${vxN(0, 96)}%;--r:${vxN(-260, 260)}deg;--dx:${vxN(-12, 12)}cqw;animation-delay:-${vxN(0, 10, 1)}s;animation-duration:${vxN(6, 11, 1)}s"></i>`).join("");
+const dmConfetti = n => Array.from({ length: n }, () =>
+  `<i class="dm-petal dm-conf" style="left:${vxN(0, 96)}%;background:${["#ff2f92", "#19d3c5", "#ffd23a", "#8a3dff", "#ff7a00", "#3ddc84"][Math.floor(rand(0, 6))]};--r:${vxN(-420, 420)}deg;--dx:${vxN(-10, 10)}cqw;animation-delay:-${vxN(0, 9, 1)}s;animation-duration:${vxN(5, 9, 1)}s"></i>`).join("");
+const DM_WING = `<svg viewBox="0 0 12 14" aria-hidden="true"><path d="M12 3 C7 -1 1 0 .6 4 C.3 7 4 8 7 8 C3 8.6 2 12 5 13.4 C8 14 11 11 12 9 Z" fill="#ff7a00" stroke="#1a0a02" stroke-width=".8"/>
+  <path d="M12 5 L3 3.4 M12 6 L5 8 M12 8 L6 11" stroke="#1a0a02" stroke-width=".5"/><circle cx="2.4" cy="3" r=".5" fill="#fff"/><circle cx="4" cy="1.8" r=".4" fill="#fff"/></svg>`;
+const dmButterfly = (x, y, s, d) => `<i class="dm-fly" style="left:${x}%;top:${y}%;--s:${s};animation-delay:-${d}s"><b class="l" style="animation-delay:-${d}s">${DM_WING}</b><b class="r" style="animation-delay:-${d}s">${DM_WING}</b></i>`;
+// obrazki tła raz na stronę
+// Paragon: kod kreskowy; Tarot: narożniki i gwiazdy
+const rcBars = () => Array.from({ length: 46 }, () => `<i style="flex:${[1, 1, 2, 3][Math.floor(rand(0, 4))]}" class="${Math.random() < .5 ? "b" : ""}"></i>`).join("");
+const TR_CORNER = '<path d="M2 28 C2 12 12 2 28 2 M6 28 C6 15 15 6 28 6 M10 10 C13 13 13 17 10 20 C7 17 7 13 10 10 Z M10 10 C13 7 17 7 20 10 C17 13 13 13 10 10 Z" fill="none" stroke="#e8c8ff" stroke-width="1"/><circle cx="10" cy="10" r="1.6" fill="#e8c8ff"/>';
+const trCorners = () => ["tl", "tr", "bl", "br"].map(k => `<i class="tr-corner ${k}">${vxSvg(TR_CORNER, "0 0 30 30")}</i>`).join("");
+const trStars = n => Array.from({ length: n }, () => `<i class="tr-star" style="left:${vxN(2, 96)}%;top:${vxN(2, 96)}%;--s:${vxN(.5, 1.5, 2)};animation-delay:-${vxN(0, 2.4, 1)}s"></i>`).join("");
+
+// Telegazeta: sekundy tykają (kolumny cyfr przesuwane schodkami); Okienka 97: lawina błędów
+const ttDigits = (s, cls) => `<span class="tt-dig ${cls}"><b>${s}</b></span>`;
+const w9Dialogs = () => [0, 1, 2, 3, 4].map(k => `<i class="w9-dlg" style="--i:${k}"><b>Błąd</b><u>✖ Program wykonał nieprawidłową operację i zostanie zamknięty.</u></i>`).join("");
+
+// Claude: 8 wiadomości (podwojonych, bez szwu), nowa wchodzi od dołu i wypycha starsze do góry (CSS clFeed, krok 2,5 s);
+// --idx = numer wiersza: kropki przed odpowiedzią startują tuż przed wjazdem wiersza do okna (CSS cl-dots / cl-txt)
+const CL_PAIRS = [["zrób po 6 mockupów XD", "Już się robi."], ["popraw oba", "Naprawione, ramka płynie."], ["zrób commit i push", "Wypchnięte."], ["postaraj się XD", "Postaram się XD"],
+  ["wymyśl 2 nowe warianty", "Okienka 97 i Zdrapka?"], ["dodaj coś do tła", "Dodałem płatki i motyle."], ["włącz grę na localhoście", "Działa na porcie 5002."], ["wybieram 1.", "Przenoszę do gry."],
+  ["super zachowaj tak", "Zostawiam bez zmian."], ["poeksperymentuj", "Mam 6 nowych wersji."], ["jeszcze jedna rzecz", "Słucham."]];
+const clFeed = () => {
+  const pairs = [...CL_PAIRS].sort(() => Math.random() - .5).slice(0, 4);
+  const body = pairs.map(([q, a], k) => `<span class="me"><s>${q}</s></span><span class="ai" style="--idx:${k * 2 + 1}"><q></q><s><em class="cl-dots"><b></b><b></b><b></b></em><em class="cl-txt">${a}</em></s></span>`).join("");
+  return `<i class="cl-window"><b class="cl-mask"><i class="cl-col">${body}${body}</i></b></i>`;
+};
+// Zdrapka: folia zdzierana monetą pas po pasie (czasy w zdCoin i zdStrip), wybuchy z kwotami
+const zdFoil = () => `<i class="vx-photo zd-foil">${Array.from({ length: 7 }, (_, k) => `<u class="${k % 2 ? "r" : ""}" style="--i:${k}"></u>`).join("")}<em class="zd-here">ZDRAP TUTAJ</em><b class="zd-coin"></b></i>`;
+const zdBurst = (t, x, y, r, w, c, ink) => `<b class="zd-burst" style="left:${x}%;top:${y}%;width:${w}%;--r:${r}deg;--c:${c};color:${ink}"><u>${t}</u></b>`;
+const zdStars = n => Array.from({ length: n }, () => `<i class="zd-star" style="left:${vxN(2, 96)}%;top:${vxN(2, 96)}%;--s:${vxN(.6, 1.6, 2)};animation-delay:-${vxN(0, 2.4, 1)}s"></i>`).join("");
+
+function dmImages() {
+  if (dmImages.done) return;
+  dmImages.done = true;
+  const url = svg => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  document.documentElement.style.setProperty("--dm-wall", url(dmWall()));
+  document.documentElement.style.setProperty("--dm-border", url(dmBorder()));
+}
 // Czekoladowa: kostki tabliczki czekolady (siatka wypukłych prostokątów z jasną krawędzią) - jednostki karty 63 x 88
 function coBar(cols = 4, rows = 6) {
   let s = "";
@@ -926,6 +1016,11 @@ const apTick = () => '<span class="ap-tick"><i>0<br>1<br>2<br>3<br>4<br>5<br>6<b
 const apScratches = n => Array.from({ length: n }, () =>
   `<i class="ap-scratch" style="left:${vxN(2, 96)}%;animation-delay:-${vxN(0, 6, 1)}s;animation-duration:${vxN(1.2, 3, 1)}s"></i>`).join("");
 const VX_BG = {
+  scratch: () => `${zdStars(26)}<i class="zd-line a">5 ZŁ ★ 50 ZŁ ★ 500 ZŁ ★ 5 000 ZŁ</i><i class="zd-line b">CENA LOSU 500 GR ★ SZANSA 1:4,2</i>`,
+  teletext: () => '<i class="tt-bars"></i><i class="tt-grid"></i><i class="tt-ticker"><b>PRZEPRASZAMY ZA USTERKI +++ AWARIA NADAJNIKA +++ ZARAZ WRACAMY +++ NIE REGULUJ ODBIORNIKA +++ </b></i>',
+  receipt: () => `<i class="rc-bars">${rcBars()}</i>`,
+  tarot: () => `<i class="tr-eight"></i>${trStars(30)}`,
+  muertos: () => { dmImages(); return '<i class="dm-wallimg"></i>'; },
   // Komunistyczna: nieruchome promienie z prawego dolnego rogu, ciemniejsza czerwień przy dole, ziarno papieru
   komuna: () => '<i class="kv-rays"></i><i class="kv-dark"></i><i class="kv-paper"></i>',
   apollo: () => '<video class="ap-film" src="/static/video/space/lm-orbit.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>' +
@@ -962,6 +1057,9 @@ const VX_BG = {
   cheese: () => `${chHoles(15)}<i class="ch-mold"></i>`,
 };
 const VX_PHOTO = {
+  scratch: zdFoil,
+  receipt: '<i class="vx-photo rc-dots"></i>',
+  muertos: '<i class="vx-photo dm-f1"></i>',
   komuna: '<i class="vx-photo kv-ink"></i><i class="vx-photo kv-offset"></i>',
   copper: '<i class="vx-photo cu-ph"></i>',
   files: '<i class="vx-photo ak-old"></i><b class="ak-stamp">ŚCIŚLE<br>TAJNE</b>',
@@ -985,6 +1083,13 @@ const VX_PHOTO = {
   fade: '<i class="vx-photo fd-tint"></i>',
 };
 const VX_DECO = {
+  // Día de Muertos: płatki i konfetti, motyle, zygzak, chorągiewki, pas aksamitek
+  tarot: () => `<div class="vx-deco">${trCorners()}<i class="tr-frame"></i></div>`,
+  retroos: () => `<div class="vx-deco vx-clip">${w9Dialogs()}</div>`,
+  claude: () => `<div class="vx-deco">${clFeed()}</div>`,
+  scratch: () => `<div class="vx-deco">${zdBurst("DO<br>100 000<br>ZŁ", 16, 30, -12, 31, "#ffd21a", "#c81e1e")}${zdBurst("x20!", 86, 52, 10, 22, "#ff2f92", "#fff")}</div>`,
+  muertos: () => `<div class="vx-deco vx-clip">${dmPetals(6)}${dmConfetti(8)}${dmButterfly(3, 30, 1, 0)}${dmButterfly(84, 46, .85, 3)}</div>
+    <div class="vx-deco vx-clip"><i class="dm-zig"></i><i class="dm-borderimg"></i></div><div class="dm-banners">${dmFlags()}</div>`,
   // Komunistyczna: kremowy margines plakatu i złota gwiazda na rogu zdjęcia
   komuna: () => `<div class="vx-deco"><i class="kv-margin"></i><i class="kv-star">${vxSvg(usStar(10, 10.6, 9.6, "currentColor"), "0 0 20 20")}</i></div>`,
   copper: () => '<div class="vx-deco vx-clip"><i class="cu-shine"></i></div>',
@@ -1116,8 +1221,14 @@ function cvDeco(k) {
 }
 
 // pasek nad nazwą: okno terminala (Cyfrowa), napis WANTED
-function variantTop(variant) {
+function variantTop(variant, p) {
   const parts = variantParts(variant);
+  if (parts.includes("claude")) return '<div class="cl-app"><i class="cl-logo"></i><b>Claude</b><span><u></u>online</span></div>';
+  if (parts.includes("scratch")) return '<div class="zd-title">ZDRAP I WYGRAJ!</div>';
+  if (parts.includes("teletext")) return `<div class="tt-head"><b>P888</b><span>TELEGAZETA</span><i>12:34:${ttDigits("012345", "t")}${ttDigits("0123456789", "u")}</i></div>`;
+  if (parts.includes("retroos")) return `<div class="w9-title"><span>${esc(p?.name || "Karta")}.exe (Brak odpowiedzi)</span><i>_</i><i>□</i><i>×</i></div>`;
+  if (parts.includes("receipt")) return '<div class="rc-shop">SCAMBOX SP. Z O.O.<br>NIP 213-742-00-69</div>';
+  if (parts.includes("tarot")) return '<div class="tr-num">✦ XVII ✦</div>';
   if (parts.includes("digital")) return '<div class="dg-bar"><i></i><i></i><i></i><span>root@scambox: ~/hack</span></div>';
   if (parts.includes("wanted")) return '<div class="ww-title">WANTED</div>';
   if (parts.includes("apollo")) return `<div class="ap2-bar"><span>CAPCOM · HOUSTON</span><span class="ap2-met">MET 102:45:4${apTick()}</span></div>`;
@@ -1142,6 +1253,13 @@ function variantSub(variant, pid) {
   if (parts.includes("mercury")) return "Hg · 80 · 200,59";
   if (parts.includes("californium")) return "Cf-252 · 2,3 MLN NEUTRONÓW/s/µg";
   if (parts.includes("files")) return "SPRAWA NR 2137/K · ŚLEDZTWO W TOKU";
+  if (parts.includes("muertos")) return "CALAVERAS · ¡VIVA LA VIDA!";
+  if (parts.includes("receipt")) return "*** PARAGON FISKALNY ***";
+  if (parts.includes("teletext")) return "PRZERWA W EMISJI";
+  if (parts.includes("claude")) return "Claude pisze…";
+  if (parts.includes("scratch")) return "GŁÓWNA WYGRANA 100 000 ZŁ";
+  if (parts.includes("retroos")) return "Nieprawidłowa operacja";
+  if (parts.includes("tarot")) return "GWIAZDA";
   // Miedziana: etap patyny zmienia się razem z kolorem karty (CSS cuStage)
   if (parts.includes("copper")) return '<span class="cu-stages"><b>Cu · 29 · NOWA MIEDŹ</b><b>Cu · 29 · CIEMNIEJE</b><b>Cu · 29 · ZIELENIEJE</b><b>Cu · 29 · PATYNA</b></span>';
   // Glitch: kod błędu
@@ -1243,7 +1361,7 @@ function cardHTML(pid, variant = "normal", uid = null) {
   const p = person(pid);
   const bs = beerSub(variant, uid);
   if (p.masked) return mysteryCardHTML(p);
-  if (p.rarity === "secret") return secretCardHTML(p, variant);
+  if (p.rarity === "secret") return secretCardHTML(p, variant, uid);
   const r = S.cfg.rarities[p.rarity];
   const type = S.cfg.types[p.type];
   const crate = crateOf(p.crate);
@@ -1257,14 +1375,14 @@ function cardHTML(pid, variant = "normal", uid = null) {
   <div class="card r-${p.rarity} ${vClass(variant)}${bs ? " brs-" + bs.id : ""}${p.style ? " vs-" + p.style : ""}${abils.length > 1 ? " two-atk" : ""}${abils.length > 2 ? ` atk-${abils.length}` : ""}" data-pid="${p.id}" data-variant="${variant}"${uid != null ? ` data-uid="${uid}"` : ""}${flagStyle(p, variant)}>
     <div class="card-inner">
       ${baseVariant(variant) === "reverse" ? '<div class="rev-foil"></div>' : ""}
-      ${galaxyBG(variant)}${devilBG(variant)}${mlgBG(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
-      ${variantTop(variant)}${pxStatus(p, variant)}
+      ${drawingBG(variant, uid)}${galaxyBG(variant)}${devilBG(variant)}${mlgBG(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
+      ${variantTop(variant, p)}${pxStatus(p, variant)}
       <div class="card-head">
         <span class="card-name">${variantParts(variant).includes("digital") ? `<span class="dg-type" style="--n:${[...name].length}">${esc(name)}</span>` : esc(name)}</span>
         <span class="card-hp"><small>${T("hpLabel", "HP")}</small>${T("hp", p.hp)}</span>
         <span class="card-type">${T("type", type.icon)}</span>
       </div>
-      <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(name)}" loading="lazy" draggable="false"${photoFx(variant)}>${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
+      <div class="card-photo"><img src="${imgUrl(p.id, variant)}" alt="${esc(name)}" loading="lazy" draggable="false"${photoFx(variant)}>${drawingPhoto(variant, uid)}${galaxyPhoto(variant)}${halloweenPhoto(variant)}${mlgPhoto(variant)}${variantPhoto(variant, p)}</div>
       <div class="card-sub${p.subtitle || p.texts?.sub ? " has-subtitle" : ""}">${T("sub", p.subtitle ? esc(p.subtitle)
         : bs ? esc(bs.label) : variantSub(variant, pid) ?? `${type.name} · ${esc(crate.short)}`)}</div>
       ${abils.map((a, i) => `<div class="card-attack${i ? " atk2" : ""}${a.kind !== "off" ? " " + a.kind : ""}">
@@ -1289,13 +1407,14 @@ function cardHTML(pid, variant = "normal", uid = null) {
 }
 
 // TAJNA karta - zupełnie inny układ: pełnoekranowe zdjęcie, aureola, złota animowana ramka
-function secretCardHTML(p, variant) {
+function secretCardHTML(p, variant, uid = null) {
   const type = S.cfg.types[p.type];
   const crate = crateOf(p.crate);
   return `
   <div class="card r-secret ${vClass(variant)}" data-pid="${p.id}" data-variant="${variant}"${flagStyle(p, variant)}>
     <div class="sc">
-      <div class="sc-art"><img src="${imgUrl(p.id, variant)}" alt="${esc(p.name)}" loading="lazy" draggable="false"${photoFx(variant)}>${variantPhoto(variant, p)}</div>
+      ${drawingBG(variant, uid)}
+      <div class="sc-art"><img src="${imgUrl(p.id, variant)}" alt="${esc(p.name)}" loading="lazy" draggable="false"${photoFx(variant)}>${drawingPhoto(variant, uid)}${variantPhoto(variant, p)}</div>
       ${galaxyBG(variant)}${devilBG(variant)}${halloweenPhoto(variant)}${mlgBG(variant)}${mlgPhoto(variant)}${variantBG(variant)}${underStickersHTML(variant, p)}
       <div class="sc-halo"></div>
       <div class="sc-stars"></div>
@@ -1391,7 +1510,7 @@ document.documentElement.addEventListener("pointerleave", () => { tiltEvent = nu
 // Pełnoekranowa nakładka (otwieranie skrzynek, wielkie odsłonięcie, kuźnia, podgląd karty, skrzynka z pieniędzmi...)
 // zasłania całą stronę - wtedy body.covered chowa stronę pod spodem (style.css: WYDAJNOŚĆ), żeby przeglądarka nie liczyła
 // animacji setek niewidocznych kart. Wszystkie te nakładki są dodawane bezpośrednio do <body>.
-const COVERS = ["body > #stage:not([hidden])", "body > .epic", "body > .sreveal", "body > .forge-anim", "body > .money-stage",
+const COVERS = ["body > #stage:not([hidden])", "body > .epic", "body > .sreveal", "body > .dr-editor", "body > .forge-anim", "body > .money-stage",
                 "body > .jp-anim", "body > .viewer", "body > .vr-zoom"].join(", ");
 function updateCovered() { document.body.classList.toggle("covered", !!document.querySelector(COVERS)); }
 function watchCovers() {
@@ -1465,6 +1584,7 @@ async function syncInventory(me = null, force = false) {
   if (m !== S.mutations || busy()) return;
   S.items = st.items;
   S.showcase = st.showcase || [];
+  S.drawn = new Set(st.drawn || []);
   S.chests = st.chests || S.chests;
   noteCollected(S.items);
   if (S.items.some(i => !person(i.person) || person(i.person).masked)) await refreshConfig();   // nowe (tajne) karty
@@ -2132,7 +2252,7 @@ function showResults(afterEpic = false) {
       electric: ["#9fdcff", "#ffffff", "#4fb8ff"],
       synthwave: ["#ff2bd6", "#00e5ff", "#ffe14a", "#6a1fb8"], motor: ["#e8202f", "#f2f2f2", "#1b1b1b"],
       chocolate: ["#6b3a1f", "#d4a12a", "#ffe6c8", "#3a1a08"], candy: ["#ff5aa8", "#3ddc84", "#ffffff", "#ffd23f", "#4fb8ff"], hollywood: ["#ffd08a", "#e0683a", "#8a3a5a", "#1a2048"], cobalt: ["#3ab0ff", "#bfe6ff", "#1e4fd8", "#ffffff"], banana: ["#ffe14a", "#9ab82a", "#7a5414", "#fff6b0"],
-      uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e", "#8fd8c0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"], usa: ["#f2f2f2", "#141414", "#8a8a8a"], apollo: ["#f2d27a", "#c8ccd4", "#f4f6f9"], komuna: ["#d4161f", "#111111", "#f6d77a"],
+      claude: ["#e88a55", "#f1e9db", "#1a1614"], scratch: ["#ffd21a", "#7a2ae0", "#c8ccd4"], teletext: ["#ffff00", "#00ffff", "#ff00ff", "#00ff00"], retroos: ["#008080", "#c0c0c0", "#000080"], receipt: ["#ffffff", "#d8d4cc", "#1a1a1a"], tarot: ["#e8c8ff", "#ffe8a8", "#6a2aa8"], muertos: ["#ff2f92", "#ffb81a", "#19d3c5", "#8a3dff", "#ff7a00"], uranium: ["#5dff1f", "#b6ff5a", "#d8ff8a"], mercury: ["#ffffff", "#c8d0d8", "#6a7480"], californium: ["#ffffff", "#dfe6f2", "#9aa2b0"], files: ["#e2c88a", "#b8201a", "#f8f4ea"], copper: ["#e8945a", "#c87533", "#5ab89e", "#8fd8c0"], reflective: ["#e6ff2a", "#d8dde2", "#ffffff"], usa: ["#f2f2f2", "#141414", "#8a8a8a"], apollo: ["#f2d27a", "#c8ccd4", "#f4f6f9"], komuna: ["#d4161f", "#111111", "#f6d77a"],
       vintage: ["#efe4cb", "#b8913d", "#6b4c22"], marble: ["#ffffff", "#d9d4c8", "#d4af37"], toxic: ["#5dff1f", "#b6ff3a", "#ffd400", "#0c1407"], reverse: ["#c9d6ff", "#ffffff", "#9ff6ff"], bw: ["#ffffff", "#111111", "#888888"],
       rzulty: ["#ffe600", "#fff6a0", "#ffffff"], flag: ["#ffffff", "#dc143c", "#ffcf3f"], halloween: ["#ff7a00", "#1a0a12", "#8a2be2", "#ffd84a"],
       lantern: ["#ffb347", "#ff7a00", "#fff1c1", "#3a1a06"], devil: ["#ff1a1a", "#b3001b", "#ffcf5a", "#120002"],
@@ -2384,7 +2504,15 @@ function dupesOf(o, perVariant = false) {
   if (isSpecialCard(S.items.find(i => i.id === o.ids[0])?.person)) return [];
   const favs = new Set(S.items.filter(i => i.fav).map(i => i.id));
   const keepOne = ids => ids.find(id => favs.has(id)) ?? ids[0];
-  const keep = new Set(perVariant ? Object.values(o.byVar).map(keepOne) : [keepOne(o.byVar[o.best])]);
+  // czystych kartek z rysunkiem nie sprzedajemy nigdy; przy „po 1 z wariantu” zostaje też po 1 z każdego rodzaju piwa
+  const drawn = o.ids.filter(id => S.drawn.has(id));
+  const items = new Map(S.items.map(i => [i.id, i]));
+  const free = o.ids.filter(id => !S.drawn.has(id));
+  const byKey = new Map();
+  free.forEach(id => { const k = dupKey(items.get(id)); byKey.set(k, [...(byKey.get(k) || []), id]); });
+  const groups = [...byKey.values()];
+  const best = (o.byVar[o.best] || []).filter(id => !S.drawn.has(id));
+  const keep = new Set([...drawn, ...(perVariant ? groups.map(keepOne) : drawn.length ? [] : [keepOne(best.length ? best : free)])]);
   return o.ids.filter(id => !keep.has(id) && !favs.has(id));
 }
 
@@ -2903,6 +3031,7 @@ function bind() {
   S.state = st.state;
   S.items = st.items;
   S.showcase = st.showcase || [];
+  S.drawn = new Set(st.drawn || []);
   S.chests = st.chests || {};
   S.collected = new Set((st.collected || []).map(([p, v]) => `${p}|${v}`));
   S.crate = S.binderCrate = cfg.crateOrder[0];
@@ -2919,6 +3048,7 @@ function bind() {
   watchCovers();
   renderHeader();
   noteUfo(me);
+  noteQuest(me.quest);
   showRoute("replace");  // widok z adresu strony (/inventory, /player/nazwa...)
   setupInstall();
   updateSellbar();

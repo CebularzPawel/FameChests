@@ -79,6 +79,8 @@ struct ListingView {
     #[serde(flatten)]
     card: CardJson,
     id: i64,
+    /// egzemplarz karty (rysunek na „Czystej kartce”)
+    item: i64,
     kind: ListingKind,
     price: i64,
     step: i64,
@@ -286,6 +288,7 @@ pub async fn market(State(st): State<AppState>, Me(me): Me) -> Res {
             ListingView {
                 card: card(&r.person_id, &r.variant, &found),
                 id: r.id,
+                item: r.item_id,
                 kind: r.kind,
                 price: r.price,
                 step: r.step,

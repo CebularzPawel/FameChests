@@ -2571,6 +2571,283 @@ a.icon-btn { display: grid; place-items: center; text-decoration: none; }
 .pick.v-copper img { filter: sepia(1) saturate(1.6) hue-rotate(-25deg) brightness(.95); }
 .pick.v-copper { box-shadow: inset 0 0 0 2px #e8945a, inset 0 0 0 4px #5ab89e, inset 0 -26px 26px -18px var(--rc); }
 
+/* Día de Muertos - fiesta: fiolet z rozetami ton w ton i kolorowymi czaszkami (--dm-wall z dmImages w app.js), chorągiewki papel picado,
+   tęczowy zygzak, pas aksamitek, płatki, konfetti i motyle monarchy; zdjęcie w złotym filtrze, trochę niższe, żeby było widać tło */
+.card.v-muertos .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-muertos { --frame: #2a0a5a; --panel: #1a0a2ac0; --spin: initial; box-shadow: 0 6px 18px #000a; }
+.card.v-muertos .card-inner { background: radial-gradient(110% 80% at 50% 30%, #6a1fa8, #3a0f7a 60%, #1e0650); color: #fff0dc; }
+.card.v-muertos :is(.card-attack, .card-stats, .card-foot) { background: var(--panel); border: none; border-radius: .3em; text-shadow: 0 0 .25em #1a0a2a, 0 .05em 0 #1a0a2a; }
+.card.v-muertos .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-muertos .card-foot { padding: .1em .35em; }
+.card.v-muertos :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #fff0dc; }
+.card.v-muertos .card-head { position: relative; z-index: 3; margin-top: 9.5%; background: #1a0a2a99; border-radius: .3em; padding: 0 .25em; }
+.card.v-muertos .card-name { font-family: Shrikhand, Rubik, sans-serif; font-weight: 400; color: #ffe2a0; text-shadow: .05em .05em 0 #c81e7a, .1em .1em 0 #1a0a2a; }
+.card.v-muertos .card-sub { background: none; border: none; font-family: Rubik, sans-serif; font-weight: 800; font-style: normal; letter-spacing: .06em; margin-bottom: 1.5%; text-shadow: 0 0 .25em #1a0a2a, 0 0 .5em #1a0a2a, 0 .06em 0 #1a0a2a; }
+.card.v-muertos .card-photo { border-image: none; border: .18em solid #ffe2a0; border-radius: .3em; aspect-ratio: 1.3; margin-bottom: 2%; box-shadow: 0 0 0 .1em #ff2f92, 0 0 0 .2em #19d3c5, 0 .3em .7em #0009; }
+.card.v-muertos .card-photo > img, .r-secret.v-muertos .sc-art img { filter: sepia(.32) saturate(1.5) contrast(1.06) brightness(1.03); }
+.dm-f1 { background: linear-gradient(180deg, #ffc24a59, #ff8a2a4d); mix-blend-mode: soft-light; }
+.dm-wallimg { inset: 0; background: var(--dm-wall) 0 0 / 100% 100% no-repeat; }
+.dm-borderimg { position: absolute; inset: 0; background: var(--dm-border) 0 0 / 100% 100% no-repeat; }
+.dm-zig { position: absolute; inset: 0; border-radius: 4.5%/3.2%; border: 1.5cqw solid transparent;
+  background: repeating-linear-gradient(135deg, #ff2f92 0 2cqw, #ffb81a 2cqw 4cqw, #19d3c5 4cqw 6cqw, #8a3dff 6cqw 8cqw, #ff7a00 8cqw 10cqw) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box exclude, linear-gradient(#000 0 0); animation: dmZig 4s linear infinite; }
+@keyframes dmZig { to { background-position: 14.14cqw 0; } }
+.dm-banners { position: absolute; inset: 0 0 auto 0; height: 10.5%; z-index: 3; overflow: hidden; border-radius: 3cqw 3cqw 0 0; pointer-events: none; }
+.dm-string { position: absolute; left: 0; right: 0; top: 1.2%; height: .35cqw; background: #f4e6c8; box-shadow: 0 .15cqw .2cqw #0006; }
+.dm-flag { position: absolute; top: 1.2%; width: 16.66%; height: 92%; transform-origin: 50% 0; filter: drop-shadow(0 .4cqw .4cqw #0006); animation: dmSway 3s ease-in-out infinite alternate; }
+.dm-flag svg { position: absolute; left: 3%; top: 0; width: 94%; height: 100%; }
+@keyframes dmSway { from { transform: rotate(-3.5deg) skewX(-3deg); } to { transform: rotate(3.5deg) skewX(3deg); } }
+.dm-petal { position: absolute; top: -4%; width: 2.4cqw; aspect-ratio: .7; border-radius: 60% 60% 50% 50%; background: linear-gradient(160deg, #ffc21a, #ff7a00); box-shadow: 0 .2cqw .2cqw #0003; animation: dmFall linear infinite; }
+.dm-conf { width: 1.8cqw; aspect-ratio: 1.6; border-radius: .2cqw; }
+@keyframes dmFall { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), 150cqw) rotate(var(--r)); } }
+.dm-fly { position: absolute; width: calc(16% * var(--s)); aspect-ratio: 1.1; filter: drop-shadow(0 .4cqw .4cqw #0007); animation: dmDrift 9s ease-in-out infinite alternate; }
+.dm-fly b { position: absolute; top: 0; width: 50%; height: 100%; transform-origin: 100% 50%; animation: dmFlap .5s ease-in-out infinite alternate; }
+.dm-fly b.l { left: 0; } .dm-fly b.r { left: 50%; scale: -1 1; transform-origin: 0 50%; }
+.dm-fly b svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+@keyframes dmFlap { from { transform: rotateY(0deg); } to { transform: rotateY(62deg); } }
+@keyframes dmDrift { 0% { transform: translate(0, 0) rotate(-8deg); } 50% { transform: translate(5cqw, -4cqw) rotate(10deg); } 100% { transform: translate(-3cqw, 3cqw) rotate(-14deg); } }
+.dm-flag, .dm-petal, .dm-fly, .dm-fly b { will-change: transform; }
+.var-tag.vt-muertos, .ph.vt-muertos { background: linear-gradient(90deg, #ff2f92, #ffb81a); color: #1a0a2a; border: 1px solid #fff0dc; font-family: Shrikhand, sans-serif; font-weight: 400; letter-spacing: .02em; text-shadow: none; }
+.vdot.vt-muertos { background: conic-gradient(#ff2f92, #ffb81a, #19d3c5, #8a3dff, #ff2f92); }
+.odd.odd-v.vt-muertos { border-left-color: #ff2f92; }
+.r-secret.v-muertos .sc-border { background: linear-gradient(135deg, #ff2f92, #ffb81a 35%, #19d3c5 65%, #8a3dff); animation: none; }
+.pick.v-muertos img { filter: sepia(.32) saturate(1.5) contrast(1.06); }
+.pick.v-muertos { box-shadow: inset 0 0 0 2px #ffb81a, inset 0 0 0 4px #ff2f92, inset 0 -26px 26px -18px var(--rc); }
+
+/* Paragon - karta z papieru termicznego: ząbkowane brzegi (maska na karcie), nagłówek sklepu w variantTop, zdjęcie z drukarki w kropki, kod kreskowy rc-bars */
+.card.v-receipt .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-receipt { --frame: #e8e4da; --spin: initial; box-shadow: none; filter: drop-shadow(0 4px 8px #0008);
+  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% 0 / 4% 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% 100% / 4% 51% repeat-x;
+  mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% 0 / 4% 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% 100% / 4% 51% repeat-x; }
+.card.v-receipt .card-inner { background: linear-gradient(90deg, #0000000a, transparent 5%, transparent 95%, #0000000a), #f7f5ef; color: #1a1a1a; }
+.card.v-receipt :is(.card-name, .card-sub, .atk-name, .card-stats, :where(.card-stats b), .card-foot, .card-hp, .atk-dmg) { font-family: "Share Tech Mono", monospace; font-style: normal; font-weight: 400; color: #1a1a1a; text-shadow: none; }
+.card.v-receipt :is(.card-sub, .card-attack, .card-stats, .card-foot) { background: none; border: none; }
+.card.v-receipt .card-name { font-size: .95em; text-transform: uppercase; letter-spacing: .02em; }
+.card.v-receipt .card-attack { border-top: .08em dashed #1a1a1a; border-radius: 0; margin-top: 1.5%; }
+.card.v-receipt .card-photo { border: none; border-image: none; border-radius: 0; }
+.card.v-receipt:not(.two-atk, .atk-3, .atk-4) .card-photo { aspect-ratio: 1.32; flex: none; }
+.card.v-receipt:not(.two-atk, .atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-receipt .card-photo > img, .r-secret.v-receipt .sc-art img { filter: grayscale(1) contrast(1.5) brightness(1.1); object-position: 50% 18%; }
+.rc-shop { text-align: center; font: 400 .5em/1.25 "Share Tech Mono", monospace; color: #1a1a1a; margin: 3% 0 1%; }
+.rc-dots { background: radial-gradient(circle, #1a1a1a55 30%, transparent 34%) 0 0 / 1cqw 1cqw; mix-blend-mode: multiply; }
+.vx-bg .rc-bars { position: absolute; left: 8%; right: 8%; top: 69.5%; height: 6%; display: flex; }
+.rc-bars i { background: #1a1a1a; } .rc-bars i.b { background: none; }
+.card:is(.two-atk, .atk-3, .atk-4) .vx-bg .rc-bars { display: none; }
+.var-tag.vt-receipt, .ph.vt-receipt { background: #fff; color: #1a1a1a; border: 1px dashed #1a1a1a; font-family: "Share Tech Mono", monospace; text-shadow: none; }
+.vdot.vt-receipt { background: repeating-linear-gradient(90deg, #1a1a1a 0 2px, #f7f5ef 2px 4px); border: 1px solid #888; }
+.odd.odd-v.vt-receipt { border-left-color: #f7f5ef; }
+.r-secret.v-receipt .sc-border { background: linear-gradient(135deg, #f7f5ef, #c8c4bc); animation: none; }
+.pick.v-receipt img { filter: grayscale(1) contrast(1.5) brightness(1.1); }
+.pick.v-receipt { box-shadow: inset 0 0 0 2px #f7f5ef, inset 0 -26px 26px -18px var(--rc); }
+
+/* Tarot - arkan XVII Gwiazda: kosmos z mgławicą, ośmioramienna gwiazda tr-eight za zdjęciem, narożniki tr-corner, numer arkanu w variantTop */
+.card.v-tarot .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-tarot { --frame: linear-gradient(135deg, #e8c8ff, #6a2aa8 50%, #f4e6ff); --spin: initial; --panel: #1e0a3ac0; box-shadow: 0 6px 18px #000a; }
+.card.v-tarot .card-inner { background: radial-gradient(60% 40% at 30% 25%, #c84ad866, transparent), radial-gradient(60% 40% at 75% 70%, #3a6ae866, transparent), #14062e; color: #f4e6ff; }
+.card.v-tarot :is(.card-attack, .card-stats, .card-foot) { background: var(--panel); border: none; border-radius: .25em; }
+.card.v-tarot .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-tarot .card-foot { padding: .1em .35em; }
+.card.v-tarot :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f4e6ff; }
+.card.v-tarot .card-head { position: relative; z-index: 3; }
+.card.v-tarot .card-name { font-family: "IM Fell English", Cinzel, serif; font-weight: 400; font-size: 1.1em; color: #f4e6ff; text-shadow: 0 .05em .2em #0008; }
+.card.v-tarot .card-sub { background: none; border: none; font-family: Cinzel, serif; font-weight: 900; font-style: normal; letter-spacing: .24em; font-size: .62em; text-shadow: 0 0 .25em #14062e, 0 0 .1em #14062e; }
+.card.v-tarot .card-photo { border: .14em solid #e8c8ff; border-image: none; border-radius: .2em; box-shadow: 0 0 0 .08em #1a120a, 0 .3em .7em #0008; }
+.card.v-tarot:not(.two-atk, .atk-3, .atk-4) .card-photo { aspect-ratio: 1.32; flex: none; }
+.card.v-tarot:not(.two-atk, .atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-tarot .card-photo > img, .r-secret.v-tarot .sc-art img { filter: sepia(.3) saturate(1.25) contrast(1.05); object-position: 50% 18%; }
+.tr-num { text-align: center; font: 900 .6em/1 Cinzel, serif; letter-spacing: .2em; color: #f4e6ff; margin: 2.4% 0 .5%; text-shadow: 0 0 .3em #0006; }
+.tr-frame { position: absolute; inset: 2%; border-radius: 3.2%/2.4%; color: #e8c8ff; border: .4cqw solid; box-shadow: inset 0 0 0 .8cqw #0000, inset 0 0 0 1cqw currentColor; }
+.tr-corner { position: absolute; width: 14%; aspect-ratio: 1; }
+.tr-corner svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tr-corner.tl { left: 2.4%; top: 1.8%; } .tr-corner.tr { right: 2.4%; top: 1.8%; transform: scaleX(-1); } .tr-corner.bl { left: 2.4%; bottom: 1.8%; transform: scaleY(-1); } .tr-corner.br { right: 2.4%; bottom: 1.8%; transform: scale(-1); }
+.tr-star { position: absolute; width: calc(.8cqw * var(--s, 1)); aspect-ratio: 1; background: #fff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: trTwinkle 2.4s ease-in-out infinite; }
+.tr-eight { position: absolute; left: 50%; top: 38%; width: 130%; aspect-ratio: 1; translate: -50% -50%; background: #ffe8a8; filter: drop-shadow(0 0 2cqw #ffd98a); clip-path: polygon(50% 0, 56% 38%, 85% 15%, 62% 44%, 100% 50%, 62% 56%, 85% 85%, 56% 62%, 50% 100%, 44% 62%, 15% 85%, 38% 56%, 0 50%, 38% 44%, 15% 15%, 44% 38%); animation: trTwinkle 3s ease-in-out infinite; }
+@keyframes trTwinkle { 50% { opacity: .55; } }
+.var-tag.vt-tarot, .ph.vt-tarot { background: #1a120a; color: #e8c8ff; border: 1px solid #e8c8ff; font-family: Cinzel, serif; text-shadow: none; }
+.vdot.vt-tarot { background: radial-gradient(circle, #ffe8a8 25%, #6a2aa8 60%, #14062e); }
+.odd.odd-v.vt-tarot { border-left-color: #e8c8ff; }
+.r-secret.v-tarot .sc-border { background: linear-gradient(135deg, #e8c8ff, #6a2aa8 50%, #f4e6ff); animation: none; }
+.pick.v-tarot img { filter: sepia(.3) saturate(1.25) contrast(1.05); }
+.pick.v-tarot { box-shadow: inset 0 0 0 2px #e8c8ff, inset 0 0 0 4px #6a2aa8, inset 0 -26px 26px -18px var(--rc); }
+
+/* Telegazeta - plansza kontrolna: pasy tt-bars suną w bok, siatka tt-grid, pasek tt-ticker, sekundy w nagłówku (ttDigits), zdjęcie z pikseli #dgPixel.
+   will-change na zdjęciu jest potrzebne: bez własnej warstwy filtr potrafi nie narysować obrazka */
+.card.v-teletext .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-teletext { --frame: #111; --spin: initial; box-shadow: 0 6px 18px #0009; }
+.card.v-teletext .card-inner { background: #000; color: #fff; }
+.card.v-teletext :is(.card-sub, .card-attack, .card-stats, .card-foot, .card-head) { background: #000; border: none; border-radius: .25em; }
+.card.v-teletext .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-teletext .card-foot { padding: .1em .35em; }
+.card.v-teletext .card-head { padding: .1em .2em; }
+.card.v-teletext :is(.card-name, .card-sub, .atk-name, .card-stats, :where(.card-stats b), .card-foot, .card-hp, .atk-dmg) { font-family: "Press Start 2P", "Share Tech Mono", monospace; font-style: normal; font-weight: 400; color: #fff; text-shadow: none; }
+.card.v-teletext .card-name { color: #ffff00; font-size: .62em; text-transform: uppercase; }
+.card.v-teletext .card-hp { font-size: .6em; color: #00ffff; }
+.card.v-teletext .card-sub { color: #00ff00; font-size: .34em; }
+.card.v-teletext .atk-name { color: #00ffff; font-size: .42em; } .card.v-teletext .atk-dmg { color: #ff00ff; font-size: .55em; }
+.card.v-teletext :is(.card-stats, .card-foot) { font-size: .34em; }
+.card.v-teletext .card-photo { border: none; border-image: none; border-radius: 0; box-shadow: 0 0 0 .1em #00ffff; }
+.card.v-teletext:not(.two-atk, .atk-3, .atk-4) .card-photo { aspect-ratio: 1.32; flex: none; }
+.card.v-teletext:not(.two-atk, .atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-teletext .card-photo > img, .r-secret.v-teletext .sc-art img { filter: url(#dgPixel) contrast(1.25) saturate(1.3); image-rendering: pixelated; will-change: transform; object-position: 50% 18%; }
+.tt-head { display: flex; gap: .6em; justify-content: space-between; align-items: center; padding: .25em .3em; background: #000; font: 400 .34em/1 "Press Start 2P", monospace; color: #fff; margin: 0 0 1.5%; }
+.tt-head > b { color: #ffff00; font-weight: 400; } .tt-head > span { color: #000; background: #00ffff; padding: .15em .3em; } .tt-head > i { font-style: normal; color: #00ff00; }
+.tt-dig { display: inline-block; width: 1ch; height: 1em; overflow: hidden; vertical-align: top; }
+.tt-dig b { display: block; width: 1ch; word-break: break-all; font-weight: 400; line-height: 1em; }
+.tt-dig.u b { animation: ttDigU 10s steps(10) infinite; } .tt-dig.t b { animation: ttDigT 60s steps(6) infinite; }
+@keyframes ttDigU { to { transform: translateY(-10em); } }
+@keyframes ttDigT { to { transform: translateY(-6em); } }
+.vx-bg .tt-bars { inset: 0 auto 0 0; width: 200%; background: repeating-linear-gradient(90deg, #fff 0 7.15%, #ff0 0 14.3%, #0ff 0 21.45%, #0f0 0 28.6%, #f0f 0 35.75%, #f00 0 42.9%, #00f 0 50%); will-change: transform; animation: ttBars 14s linear infinite; }
+@keyframes ttBars { to { transform: translateX(-50%); } }
+.vx-bg .tt-grid { inset: 0; background: repeating-linear-gradient(0deg, #0003 0 .3cqw, transparent .3cqw 8cqw), repeating-linear-gradient(90deg, #0003 0 .3cqw, transparent .3cqw 8cqw); }
+.vx-bg .tt-ticker { left: 0; right: 0; top: 66%; height: 7%; overflow: hidden; background: #000; color: #ffff00; font: 400 2.8cqw/2.5 "Press Start 2P", monospace; font-style: normal; white-space: nowrap; }
+.tt-ticker b { display: inline-block; padding-left: 100%; font-weight: 400; will-change: transform; animation: ttTick 16s linear infinite; }
+@keyframes ttTick { to { transform: translateX(-100%); } }
+.card:is(.two-atk, .atk-3, .atk-4) .vx-bg .tt-ticker { display: none; }
+.var-tag.vt-teletext, .ph.vt-teletext { background: #ff00ff; color: #fff; border: none; border-radius: 0; font-family: "Press Start 2P", monospace; font-size: .34em; text-shadow: none; }
+.vdot.vt-teletext { background: linear-gradient(90deg, #ff0 0 25%, #0ff 0 50%, #0f0 0 75%, #f0f 0); }
+.odd.odd-v.vt-teletext { border-left-color: #00ffff; }
+.r-secret.v-teletext .sc-border { background: linear-gradient(90deg, #fff, #ff0, #0ff, #0f0, #f0f, #f00, #00f); animation: none; }
+.pick.v-teletext img { filter: contrast(1.25) saturate(1.3); }
+.pick.v-teletext { box-shadow: inset 0 0 0 2px #00ffff, inset 0 0 0 4px #ff00ff, inset 0 -26px 26px -18px var(--rc); }
+
+/* Okienka 97 - komputer z lat 90.: turkusowy pulpit, wypukłe szare panele (--up / --down), pasek tytułu w variantTop, lawina błędów w VX_DECO (w9Dlg: 5 okienek po 0,7 s, cykl 10 s) */
+.card.v-retroos .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-retroos { --frame: #c0c0c0; --spin: initial; box-shadow: 0 6px 18px #0009; --up: inset 1px 1px 0 #fff, inset -1px -1px 0 #404040, inset 2px 2px 0 #dfdfdf, inset -2px -2px 0 #808080; --down: inset 1px 1px 0 #404040, inset -1px -1px 0 #fff, inset 2px 2px 0 #808080, inset -2px -2px 0 #dfdfdf; }
+.card.v-retroos .card-inner { background: #008080; color: #000; }
+.card.v-retroos :is(.card-name, .card-sub, .atk-name, .card-stats, :where(.card-stats b), .card-foot, .card-hp, .atk-dmg) { font-family: Tahoma, "MS Sans Serif", Geneva, sans-serif; font-style: normal; color: #000; text-shadow: none; }
+.card.v-retroos .card-name { font-weight: 700; font-size: .78em; }
+.card.v-retroos :is(.card-head, .card-sub, .card-attack, .card-stats, .card-foot) { background: #c0c0c0; border: none; border-radius: 0; }
+.card.v-retroos .card-sub { font-size: .5em; text-align: left; padding: .1em .4em; box-shadow: var(--down); }
+.card.v-retroos :is(.card-head, .card-attack, .card-stats, .card-foot) { box-shadow: var(--up); }
+.card.v-retroos .card-head { padding: .05em .3em; }
+.card.v-retroos .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-retroos .card-foot { padding: .1em .35em; }
+.card.v-retroos .card-photo { border: none; border-image: none; border-radius: 0; padding: .15em; background: #c0c0c0; box-shadow: var(--down); }
+.card.v-retroos:not(.two-atk, .atk-3, .atk-4) .card-photo { aspect-ratio: 1.32; flex: none; }
+.card.v-retroos:not(.two-atk, .atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-retroos .card-photo > img { object-position: 50% 18%; }
+.w9-title { display: flex; align-items: center; gap: .2em; padding: .15em .25em; background: linear-gradient(90deg, #000080, #1084d0); color: #fff; font: 700 .5em/1.2 Tahoma, sans-serif; margin: 0 0 1%; }
+.w9-title span { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.w9-title i { width: 1.3em; height: 1.15em; display: grid; place-items: center; background: #c0c0c0; color: #000; font: 700 .85em/1 Tahoma, sans-serif; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #404040; }
+.vx-deco .w9-dlg { left: calc(6% + var(--i) * 6%); top: calc(14% + var(--i) * 10%); width: 62%; padding: .2cqw; background: #c0c0c0; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #404040, .4cqw .4cqw 0 #0005; opacity: 0; animation: w9Dlg 10s steps(1) infinite; animation-delay: calc(var(--i) * .7s); }
+.w9-dlg b { display: block; padding: .2em .4em; background: #000080; color: #fff; font: 700 2.5cqw/1.2 Tahoma, sans-serif; }
+.w9-dlg u { display: block; padding: .4em; text-decoration: none; color: #000; font: 400 2.4cqw/1.25 Tahoma, sans-serif; }
+@keyframes w9Dlg { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0; } }
+.var-tag.vt-retroos, .ph.vt-retroos { background: #c0c0c0; color: #000; border: none; border-radius: 0; box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #404040; font-family: Tahoma, sans-serif; text-shadow: none; }
+.vdot.vt-retroos { background: linear-gradient(180deg, #000080 0 30%, #008080 0); border: 1px solid #c0c0c0; }
+.odd.odd-v.vt-retroos { border-left-color: #c0c0c0; }
+.r-secret.v-retroos .sc-border { background: linear-gradient(135deg, #c0c0c0, #008080 55%, #000080); animation: none; }
+.pick.v-retroos { box-shadow: inset 0 0 0 2px #c0c0c0, inset 0 0 0 4px #008080, inset 0 -26px 26px -18px var(--rc); }
+
+/* Claude - czat w ciemnym trybie: pasek aplikacji z logo w variantTop, okno rozmowy cl-window w VX_DECO, zdjęcie bez filtra, naklejki od admina.
+   Kolumna 16 wierszy jedzie skokami co 2,5 s (clFeed), wiersz odpowiedzi ma --idx, a okno --rows: kropki startują 0,5 s przed wjazdem wiersza, tekst dopiero po nich */
+.card.v-claude .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-claude { --frame: linear-gradient(135deg, #4a3a30, #1f1b18 55%, #6a4028); --spin: initial; --panel: #2a2420b8; --cl-spark: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-12 -12 24 24'><rect x='-.75' y='-10.5' width='1.5' height='9.1' rx='.75' fill='%23e88a55' transform='rotate(0.0)'/><rect x='-.75' y='-8.6' width='1.5' height='7.2' rx='.75' fill='%23e88a55' transform='rotate(33.7)'/><rect x='-.75' y='-10' width='1.5' height='8.6' rx='.75' fill='%23e88a55' transform='rotate(67.5)'/><rect x='-.75' y='-9' width='1.5' height='7.6' rx='.75' fill='%23e88a55' transform='rotate(98.2)'/><rect x='-.75' y='-11' width='1.5' height='9.6' rx='.75' fill='%23e88a55' transform='rotate(131.9)'/><rect x='-.75' y='-8.4' width='1.5' height='7.0' rx='.75' fill='%23e88a55' transform='rotate(165.6)'/><rect x='-.75' y='-9.8' width='1.5' height='8.4' rx='.75' fill='%23e88a55' transform='rotate(196.4)'/><rect x='-.75' y='-10.8' width='1.5' height='9.4' rx='.75' fill='%23e88a55' transform='rotate(230.1)'/><rect x='-.75' y='-8.8' width='1.5' height='7.4' rx='.75' fill='%23e88a55' transform='rotate(263.8)'/><rect x='-.75' y='-10.2' width='1.5' height='8.8' rx='.75' fill='%23e88a55' transform='rotate(294.5)'/><rect x='-.75' y='-9.2' width='1.5' height='7.8' rx='.75' fill='%23e88a55' transform='rotate(328.3)'/></svg>"); --h: 5.9cqw; box-shadow: 0 6px 18px #0009; }
+.card.v-claude .card-inner { background: #1a1614; color: #f1e9db; }
+.card.v-claude :is(.card-attack, .card-stats, .card-foot) { background: var(--panel); border: none; border-radius: .25em; }
+.card.v-claude .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-claude .card-foot { padding: .1em .35em; }
+.card.v-claude :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #f1e9db; }
+.card.v-claude :is(.card-name, .card-sub) { font-family: "Share Tech Mono", monospace; font-style: normal; font-weight: 400; text-shadow: none; }
+.card.v-claude .card-name { color: #e88a55; font-size: 1.05em; }
+.card.v-claude .card-head { background: var(--panel); border-radius: .25em; padding: 0 .3em; }
+.card.v-claude .card-sub { color: #cdbfae; font-size: .5em; background: none; border: none; }
+.card.v-claude .card-photo { border: .1em solid #e88a55; border-image: none; border-radius: .35em; }
+.card.v-claude:not(.atk-3, .atk-4) .card-photo { aspect-ratio: 1.62; flex: none; }
+.card.v-claude.two-atk:not(.atk-3, .atk-4) .card-photo { aspect-ratio: 1.9; }
+.card.v-claude:not(.atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-claude .card-photo > img { filter: none; object-position: 50% 18%; }
+.cl-logo { display: inline-block; flex: none; width: 1.25em; height: 1.25em; background: var(--cl-spark) center / contain no-repeat; }
+.cl-app { display: flex; align-items: center; gap: .35em; padding: .25em .5em; margin: 0 0 1.5%; border-radius: .3em; background: #2a2420; color: #f1e9db; font: 600 .6em/1.2 "IM Fell English", Georgia, serif; }
+.cl-app b { font-weight: 400; font-size: 1.15em; }
+.cl-app span { margin-left: auto; display: flex; align-items: center; gap: .3em; font: 400 .75em/1 "Share Tech Mono", monospace; color: #cdbfae; }
+.cl-app u { width: .5em; height: .5em; border-radius: 50%; background: #6fcf7a; animation: clOnline 2.4s ease-in-out infinite; }
+@keyframes clOnline { 50% { opacity: .15; } }
+.vx-deco .cl-window { --rows: 4; left: 6%; right: 6%; bottom: 23.6%; font-style: normal; }
+.card.two-atk .vx-deco .cl-window { --rows: 2; bottom: 37%; }
+.card:is(.atk-3, .atk-4) .vx-deco .cl-window { display: none; }
+.cl-mask { position: relative; display: block; height: calc(var(--h) * var(--rows)); overflow: hidden; font-weight: 400; -webkit-mask: linear-gradient(transparent, #000 20%); mask: linear-gradient(transparent, #000 20%); }
+.cl-col { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; font-style: normal; will-change: transform; animation: clFeed 20s infinite; }
+.cl-col > span { display: flex; align-items: center; flex: none; height: var(--h); font: 400 3.3cqw/1.1 Rubik, sans-serif; white-space: nowrap; }
+.cl-col s { text-decoration: none; display: inline-flex; align-items: center; padding: .2em .6em; border-radius: .9em; }
+.cl-col .me { justify-content: flex-end; } .cl-col .me s { background: #e88a55; color: #1a1614; border-bottom-right-radius: .15em; }
+.cl-col .ai { gap: .3em; } .cl-col .ai s { background: #2f2925; color: #f1e9db; border-bottom-left-radius: .15em; }
+.cl-col q { flex: none; width: 1.3em; height: 1.3em; quotes: none; background: var(--cl-spark) center / contain no-repeat; }
+.cl-col em { font-style: normal; }
+.cl-dots, .cl-txt { animation: clDotsShow 20s steps(1) infinite; animation-delay: calc((var(--idx) - var(--rows) + 1) * 2.5s - .5s - 40s); }
+.cl-txt { animation-name: clTxtShow; }
+.cl-dots { display: inline-flex; gap: .2em; padding: .25em 0; }   /* nie display: none - animacja na ukrytym elemencie nie startuje */
+.cl-dots b { width: .4em; height: .4em; border-radius: 50%; background: #e88a55; animation: clHop 1.1s ease-in-out infinite; }
+.cl-dots b:nth-child(2) { animation-delay: .15s; } .cl-dots b:nth-child(3) { animation-delay: .3s; }
+@keyframes clHop { 0%, 60%, 100% { transform: none; opacity: .45; } 30% { transform: translateY(-.25em); opacity: 1; } }
+@keyframes clDotsShow { 0% { display: inline-flex; } 11%, 100% { display: none; } }
+@keyframes clTxtShow { 0% { display: none; } 11%, 100% { display: inline; } }
+@keyframes clFeed { 0% { transform: translateY(0); } 11.0% { transform: translateY(0.00%); } 12.5% { transform: translateY(-6.25%); } 23.5% { transform: translateY(-6.25%); } 25.0% { transform: translateY(-12.50%); } 36.0% { transform: translateY(-12.50%); } 37.5% { transform: translateY(-18.75%); } 48.5% { transform: translateY(-18.75%); } 50.0% { transform: translateY(-25.00%); } 61.0% { transform: translateY(-25.00%); } 62.5% { transform: translateY(-31.25%); } 73.5% { transform: translateY(-31.25%); } 75.0% { transform: translateY(-37.50%); } 86.0% { transform: translateY(-37.50%); } 87.5% { transform: translateY(-43.75%); } 98.5% { transform: translateY(-43.75%); } 100.0% { transform: translateY(-50.00%); } }
+.var-tag.vt-claude, .ph.vt-claude { background: #1a1614; color: #e88a55; border: 1px solid #e88a55; font-family: "Share Tech Mono", monospace; text-shadow: none; }
+.vdot.vt-claude { background: radial-gradient(circle, #e88a55 35%, #1a1614 40%); }
+.odd.odd-v.vt-claude { border-left-color: #e88a55; }
+.r-secret.v-claude .sc-border { background: linear-gradient(135deg, #e88a55, #1a1614 55%, #e88a55); animation: none; }
+.pick.v-claude { box-shadow: inset 0 0 0 2px #e88a55, inset 0 0 0 4px #1a1614, inset 0 -26px 26px -18px var(--rc); }
+
+/* Zdrapka - los na loterię: fiolet ze złotem, moneta zdziera folię ze zdjęcia (cykl 12 s, 7 pasów po 0,55 s od 8% cyklu: zdStrip + zdCoin), wybuchy zd-burst, linie z nagrodami */
+.card.v-scratch .card-inner > :where(:not(.vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-scratch { --frame: linear-gradient(135deg, #ffd21a, #ff8a1a 50%, #fff3a0); --spin: initial; --panel: #ffffffd8; box-shadow: 0 6px 18px #0009; }
+.card.v-scratch .card-inner { background: radial-gradient(110% 80% at 50% 30%, #7a2ae0, #3a0f8a 70%); color: #2a1040; }
+.card.v-scratch :is(.card-sub, .card-attack, .card-stats, .card-foot, .card-head) { background: var(--panel); border: none; border-radius: .25em; }
+.card.v-scratch .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.card.v-scratch .card-foot { padding: .1em .35em; }
+.card.v-scratch .card-head { padding: 0 .3em; }
+.card.v-scratch :is(.card-name, .card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #2a1040; text-shadow: none; }
+.card.v-scratch .card-sub { font-family: Rubik, sans-serif; font-weight: 800; font-style: normal; letter-spacing: .05em; }
+.card.v-scratch .card-name { font-family: Bungee, Rubik, sans-serif; font-weight: 400; font-size: .85em; }
+.card.v-scratch .card-photo { border: .12em dashed #ffd21a; border-image: none; border-radius: .25em; overflow: hidden; }
+.card.v-scratch:not(.two-atk, .atk-3, .atk-4) .card-photo { aspect-ratio: 1.32; flex: none; }
+.card.v-scratch:not(.two-atk, .atk-3, .atk-4) .card-sub { margin-bottom: auto; }
+.card.v-scratch .card-photo > img { object-position: 50% 18%; }
+.zd-title { text-align: center; font: 400 .66em/1.15 Bungee, Rubik, sans-serif; color: #ffd21a; text-shadow: .06em .06em 0 #2a1040, 0 0 .3em #ff8a1a; margin: 1% 0 1.5%; }
+.vx-bg .zd-star { width: calc(1.3cqw * var(--s, 1)); aspect-ratio: 1; background: #ffd21a; clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%); animation: zdTwinkle 2.4s ease-in-out infinite; }
+@keyframes zdTwinkle { 50% { opacity: .55; } }
+.zd-burst { position: absolute; z-index: 3; aspect-ratio: 1; translate: -50% -50%; rotate: var(--r); display: grid; place-items: center; text-align: center; background: var(--c); clip-path: polygon(50.0% 0.0%, 59.3% 15.2%, 75.0% 6.7%, 75.5% 24.5%, 93.3% 25.0%, 84.8% 40.7%, 100.0% 50.0%, 84.8% 59.3%, 93.3% 75.0%, 75.5% 75.5%, 75.0% 93.3%, 59.3% 84.8%, 50.0% 100.0%, 40.7% 84.8%, 25.0% 93.3%, 24.5% 75.5%, 6.7% 75.0%, 15.2% 59.3%, 0.0% 50.0%, 15.2% 40.7%, 6.7% 25.0%, 24.5% 24.5%, 25.0% 6.7%, 40.7% 15.2%); font: 400 2.9cqw/1.05 Bungee, Rubik, sans-serif; animation: zdBeat 1.8s ease-in-out infinite; }
+.zd-burst u { text-decoration: none; }
+@keyframes zdBeat { 50% { scale: 1.07; } }
+.vx-bg .zd-line { left: 0; right: 0; text-align: center; color: #ffd21a; font: 400 3cqw/1.2 Bungee, sans-serif; font-style: normal; text-shadow: .15cqw .15cqw 0 #2a1040; }
+.vx-bg .zd-line.a { top: 68%; } .vx-bg .zd-line.b { top: 72.5%; color: #fff; font-size: 2.7cqw; }
+.card:is(.two-atk, .atk-3, .atk-4) .vx-bg .zd-line { display: none; }
+.vx-photo.zd-foil { inset: 0; z-index: 2; overflow: hidden; }
+.zd-foil u { position: absolute; left: 0; right: 0; top: calc(var(--i) * 14.28%); height: 14.6%; transform-origin: left; background: var(--tx-grain) 0 0 / 90px, linear-gradient(100deg, #e4e8ee, #aab0ba 40%, #eef1f5 60%, #a0a6b0); background-blend-mode: multiply; animation: zdStrip 12s infinite; animation-delay: calc(var(--i) * .55s); }
+.zd-foil u.r { transform-origin: right; }
+@keyframes zdStrip { 0%, 8% { transform: scaleX(1); opacity: 1; } 12.5% { transform: scaleX(0); opacity: 1; } 80% { transform: scaleX(0); opacity: 0; } 81% { transform: scaleX(1); opacity: 0; } 90%, 100% { transform: scaleX(1); opacity: 1; } }
+.zd-here { position: absolute; left: 0; right: 0; top: 42%; z-index: 1; text-align: center; font: 400 .85em/1 Bungee, sans-serif; font-style: normal; color: #2a2a30; text-shadow: 0 .05em 0 #fff8; animation: zdHere 12s infinite; }
+@keyframes zdHere { 0%, 8% { opacity: 1; } 12%, 88% { opacity: 0; } 93%, 100% { opacity: 1; } }
+.zd-coin { position: absolute; z-index: 1; width: 18%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3a0, #ffd21a 45%, #b8860b); box-shadow: inset 0 0 0 .5cqw #b8860b, 0 .4cqw .8cqw #0007; animation: zdCoin 12s linear infinite; }
+@keyframes zdCoin { 0%, 8% { left: -4%; top: 7%; opacity: 1; } 12.5% { left: 104%; top: 7.0%; } 12.6% { left: 104%; top: 21.3%; } 17.1% { left: -4%; top: 21.3%; } 17.2% { left: -4%; top: 35.6%; } 21.7% { left: 104%; top: 35.6%; } 21.8% { left: 104%; top: 49.9%; } 26.3% { left: -4%; top: 49.9%; } 26.4% { left: -4%; top: 64.2%; } 30.9% { left: 104%; top: 64.2%; } 31.0% { left: 104%; top: 78.5%; } 35.5% { left: -4%; top: 78.5%; } 35.6% { left: -4%; top: 92.8%; } 40.1% { left: 104%; top: 92.8%; } 41%, 100% { left: 104%; top: 93%; opacity: 0; } }
+.var-tag.vt-scratch, .ph.vt-scratch { background: #ffd21a; color: #2a1040; border: 1px solid #2a1040; font-family: Bungee, sans-serif; text-shadow: none; }
+.vdot.vt-scratch { background: linear-gradient(135deg, #ffd21a 50%, #aab0ba 50%); }
+.odd.odd-v.vt-scratch { border-left-color: #ffd21a; }
+.r-secret.v-scratch .sc-border { background: linear-gradient(135deg, #ffd21a, #7a2ae0 55%, #ffd21a); animation: none; }
+.pick.v-scratch { box-shadow: inset 0 0 0 2px #ffd21a, inset 0 0 0 4px #7a2ae0, inset 0 -26px 26px -18px var(--rc); }
+
+/* Czysta kartka - pusta karta, którą właściciel rysuje sam (drawing.js, routes/drawings.rs). Bez ozdób: .dr-flat = kolor tła
+   z rysunkiem, .dr-ph = rysunek na zdjęciu; --dr-color ustawia edytor */
+.card.v-blank .card-inner > :where(:not(.dr-flat, .dr-c, .vx-bg, .galaxy-bg, .dv-bg, .mlg-bg, .v-stickers)) { position: relative; z-index: 1; }
+.card.v-blank :is(.card-sub, .card-attack, .card-stats) { background: #ffffffb8; border: none; border-radius: .3em; }
+.card.v-blank .card-attack { padding-inline: .35em; margin-top: 1.5%; }
+.var-tag.vt-blank, .ph.vt-blank { background: #fbf9f4; color: #222; border: 1px dashed #666; text-shadow: none; }
+.vdot.vt-blank { background: #fbf9f4; box-shadow: 0 0 0 1px #888; }
+.odd.odd-v.vt-blank { border-left-color: #fbf9f4; }
+.card.v-blank { --frame: linear-gradient(135deg, #e8e4da, #fbf9f4 50%, #d8d4ca); --spin: initial; box-shadow: 0 6px 18px #0008; }
+.card.v-blank .card-inner { background: var(--dr-color, #fff); color: #222; }
+.card.v-blank :is(.card-sub, .card-stats, :where(.card-stats b), .card-foot, .atk-dmg, .atk-name, .card-hp) { color: #222; }
+.card.v-blank .card-name { color: #222; text-shadow: 0 0 .2em #fff, 0 0 .4em #fff; }
+.card.v-blank .card-head { background: #ffffffb8; border-radius: .3em; padding: 0 .25em; }
+.card.v-blank .card-photo { border-image: none; border: .12em solid #999; border-radius: .2em; }
+.dr-flat { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; }
+.card .dr-ph { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: fill; filter: none; pointer-events: none; }
+.pick .dr-tile { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.r-secret.v-blank .sc-border { background: #d8d4ca; animation: none; }
+.pick.v-blank { box-shadow: inset 0 0 0 2px #fbf9f4, inset 0 -26px 26px -18px var(--rc); }
+
 /* ============================================================ WARIANTY Z KREATORA (panel admina, strona /designer)
    Kolory i układ z projektu - CSS generuje customVariantCSS w app.js; tu wspólne efekty (cvBG / cvDeco, kolor --cvc). */
 .vx-bg > .cvx-pat { inset: 0; }

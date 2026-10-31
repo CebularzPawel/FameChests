@@ -21,7 +21,12 @@ function upgPoolValues() {
     !S.cfg.variants[v].combo && !S.cfg.variants[v].special && !S.cfg.variants[v].cards));
   const out = new Set();
   Object.values(S.cfg.people).filter(p => p.forge && p.rarity !== "secret" && p.rarity !== "special")
-    .forEach(p => vs.forEach(v => out.add(cardValue(p.id, v))));
+    .forEach(p => {
+      vs.forEach(v => out.add(cardValue(p.id, v)));
+      // warianty ekskluzywne dla tej karty
+      S.cfg.variantOrder.filter(v => { const V = S.cfg.variants[v]; return V.cards?.includes(p.id) && !V.exclusive && !V.crateOnly && variantOn(v) && houseVariant(v); })
+        .forEach(v => out.add(cardValue(p.id, v)));
+    });
   return [...out].sort((a, b) => a - b);
 }
 // wartość celu dla wkładu i mnożnika (najniższa >= wkład × mnożnik) albo 0, gdy nie ma tak drogiej karty

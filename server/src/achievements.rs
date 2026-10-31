@@ -14,6 +14,7 @@
 //!   casino_streak  wygrane z rzędu (remis nie przerywa) - liczy się najlepsza seria
 //!   drop_together  2-4 karty, które wypadły naraz przy jednym otwieraniu (powtórzenia = tyle sztuk)
 //!   arena          "mode": win albo finisher (ostatni cios kartą "person")
+//!   quest          wypełnione codzienne questy (pierwszy gracz danego dnia)
 //! Warunki "cards" (bez "unique") liczą max(liczniki, karty w ekwipunku teraz) - działają też karty z wymiany i rynku.
 
 use std::cell::Cell;
@@ -46,7 +47,7 @@ pub const GAMES: [(&str, &str); 5] = [
     ("jackpot", "Jackpot"),
     ("horses", "Wyścigi konne"),
 ];
-const TYPES: [(&str, &str); 7] = [
+const TYPES: [(&str, &str); 8] = [
     ("cards", "Zdobyte karty"),
     ("open", "Otwarte skrzynki"),
     ("casino_plays", "Gry w kasynie"),
@@ -54,6 +55,7 @@ const TYPES: [(&str, &str); 7] = [
     ("casino_streak", "Wygrane w kasynie z rzędu"),
     ("drop_together", "Wypadnięcie kart naraz"),
     ("arena", "Arena"),
+    ("quest", "Codzienne questy"),
 ];
 const WEEKDAYS: [&str; 7] = ["poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota", "niedziela"];
 const WEEKDAYS_IN: [&str; 7] =
@@ -189,6 +191,7 @@ fn criterion_key(c: &Value) -> Option<String> {
         "arena" if s(c, "mode") == "finisher" && !p.is_empty() => format!("arena:fin:{p}"),
         "arena" if s(c, "mode") == "finisher" => "arena:fin".into(),
         "arena" => "arena:win".into(),
+        "quest" => "quest:win".into(),
         _ => return None,
     })
 }
@@ -319,6 +322,7 @@ fn describe(c: &Value, names: &Names) -> String {
             )
         }
         "arena" => format!("Wygraj walki w Arenie: {n}×"),
+        "quest" => format!("Wypełnij codzienny quest przed innymi graczami: {n}×"),
         _ => "?".into(),
     }
 }
@@ -635,6 +639,11 @@ pub async fn count_casino(c: &mut Conn, uid: i64, game: &str, won: Option<bool>,
 }
 
 /// Wygrana walka w Arenie; finisher = karta, która zadała ostatni cios (wygrana przez nokaut)
+/// Gracz wypełnił codzienny quest
+pub async fn count_quest(c: &mut Conn, uid: i64) -> sqlx::Result<()> {
+    count(c, uid, ones(vec!["quest:win".to_owned()])).await
+}
+
 pub async fn count_arena(c: &mut Conn, uid: i64, finisher: Option<&str>) -> sqlx::Result<()> {
     let mut keys = vec!["arena:win".to_owned()];
     if let Some(pid) = finisher {

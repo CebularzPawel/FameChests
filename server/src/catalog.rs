@@ -803,10 +803,11 @@ impl Catalog {
             .variants
             .iter()
             .filter(|v| (*v != "flag" || person.is_none_or(|p| !p.country.is_empty())) && self.variant_released(v))
+            .filter(|v| g().variant(v).cards.is_empty() || person.is_some_and(|p| g().variant(v).cards.contains(&p.id)))
             .cloned()
             .collect();
         if let Some(p) = person {
-            out.extend(g().card_variants(&p.id));
+            out.extend(g().card_variants(&p.id).into_iter().filter(|v| !g().variant(v).crate_only));
         }
         out
     }
@@ -862,7 +863,7 @@ impl Catalog {
                 if ev.boost != 1.0 {
                     boost.insert(v.clone(), ev.boost);
                 }
-            } else if !self.vs.enabled(v) || (g.variants[v].cards.is_empty() && !c.variants.contains(v)) {
+            } else if !self.vs.enabled(v) || ((g.variants[v].cards.is_empty() || g.variants[v].crate_only) && !c.variants.contains(v)) {
                 continue;
             }
             avail.push(v.clone());
@@ -884,6 +885,16 @@ impl Catalog {
                 self.variant_fits(v, None) && !g.variants[*v].exclusive && self.vs.enabled(v) && self.variant_house_ok(v)
             })
             .cloned()
+            .collect()
+    }
+
+    /// Warianty tej karty (ekskluzywne dla niej), które dają też kuźnia i kasyno: włączone, bez ograniczenia do skrzynki,
+    /// nie wyjątkowe, nie zablokowane przez admina
+    pub fn house_extra(&self, p: &Person) -> Vec<String> {
+        let g = g();
+        g.card_variants(&p.id)
+            .into_iter()
+            .filter(|v| !g.variants[v].exclusive && !g.variants[v].crate_only && self.vs.enabled(v) && self.variant_house_ok(v))
             .collect()
     }
 
@@ -919,8 +930,9 @@ impl Catalog {
             let g = g();
             let saved = match self.vs.cfg.get(v) {
                 Some(s) => json!({"enabled": s.enabled, "chance": s.chance, "weight": s.weight, "desc": s.desc,
-                                  "mult": s.mult, "noHouse": s.no_house}),
-                None => json!({"enabled": null, "chance": null, "weight": null, "desc": null, "mult": null, "noHouse": null}),
+                                  "mult": s.mult, "noHouse": s.no_house, "cards": s.cards, "crateOnly": s.crate_only}),
+                None => json!({"enabled": null, "chance": null, "weight": null, "desc": null, "mult": null, "noHouse": null,
+                               "cards": [], "crateOnly": false}),
             };
             out["saved"] = saved;
             out["defaults"] = json!(g.variant_defaults.get(v));

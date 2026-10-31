@@ -182,6 +182,8 @@ struct StateResponse {
     showcase: Vec<i64>,
     chests: Chests,
     collected: Vec<(String, String)>,
+    /// moje czyste kartki z rysunkiem (nie są duplikatami)
+    drawn: Vec<i64>,
 }
 
 pub async fn state(State(st): State<AppState>, Me(me): Me) -> Res {
@@ -193,6 +195,7 @@ pub async fn state(State(st): State<AppState>, Me(me): Me) -> Res {
         showcase: showcase_ids(&mut c, me.id).await?,
         chests: get_chests(&mut c, &cat, me.id).await?,
         collected: collected_list(&mut c, &cat, me.id).await?,
+        drawn: super::drawings::drawn_items(&mut c, me.id).await?,
     })
 }
 
@@ -464,7 +467,9 @@ async fn contract_exec(c: &mut Conn, cx: &Ctx, plan: &Plan) -> Res<ContractResul
     };
     delete_items(c, cx.uid(), &plan.ids).await?;
     let factor = 1.0 + g().contract_variant_bonus * plan.specials as f64;
-    let variant = roll_variant(&cx.cat.base_variants(), &Default::default(), factor);
+    let mut variants = cx.cat.base_variants();
+    variants.extend(cx.cat.person(&person_id).map(|p| cx.cat.house_extra(p)).unwrap_or_default());
+    let variant = roll_variant(&variants, &Default::default(), factor);
     let item = insert_item(c, cx, &person_id, &variant, "contract").await?;
     add_state(c, cx.uid(), "contracts", 1).await?;
     metrics::counter!("scambox_forge_total", "kind" => "contract").increment(1);
@@ -543,7 +548,7 @@ fn upgrade_pool(cat: &Catalog) -> Vec<(i64, &Arc<Person>, String)> {
     cat.people
         .values()
         .filter(|p| p.forge && !p.is_secret() && !p.is_special())
-        .flat_map(|p| variants.iter().map(move |v| (p.value(v), p, v.clone())))
+        .flat_map(|p| variants.iter().cloned().chain(cat.house_extra(p)).map(move |v| (p.value(&v), p, v)))
         .collect()
 }
 

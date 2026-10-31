@@ -5,9 +5,11 @@ pub mod account;
 pub mod admin;
 pub mod arena;
 pub mod casino;
+pub mod drawings;
 pub mod horses;
 pub mod market;
 pub mod pages;
+pub mod quests;
 pub mod shop;
 pub mod social;
 pub mod variants;
@@ -74,6 +76,7 @@ pub fn router(st: AppState) -> Router {
         .route("/img/{person_id}", get(image_main))
         .route("/img/{person_id}/{kind}", get(image_kind))
         .route("/avatar/{name}", get(avatar_image))
+        .route("/drawing/{id}/{layer}", get(drawings::drawing_image))
         // konta
         .route("/api/register", post(register))
         .route("/api/login", post(login))
@@ -147,6 +150,8 @@ pub fn router(st: AppState) -> Router {
         .route("/api/casino/horses/solo", post(horses::casino_horses_solo))
         .route("/api/casino/horses/debug", post(horses::casino_horses_debug))
         .route("/api/admin/horses", get(horses::admin_horses).post(horses::admin_horses_save))
+        .route("/api/admin/quests", get(quests::admin_quests).post(quests::admin_quests_save))
+        .route("/api/items/{id}/drawing", get(drawings::drawing_info).post(drawings::drawing_save))
         // arena (tylko admini)
         .route("/api/arena/inbox", get(arena_inbox))
         .route("/api/arena/start", post(arena_start))

@@ -766,6 +766,8 @@ struct ProfileResponse {
     collection: Vec<CollectionEntry>,
     collected: Vec<(String, String)>,
     showcase: Vec<ItemJson>,
+    /// karty „Czysta kartka” gracza (każda ze swoim rysunkiem)
+    drawings: Vec<ItemJson>,
 }
 
 pub async fn profile(State(st): State<AppState>, Me(me): Me, Path(name): Path<String>) -> Res {
@@ -800,6 +802,7 @@ pub async fn profile(State(st): State<AppState>, Me(me): Me, Path(name): Path<St
             }
         }
     }
+    let drawings = super::drawings::blank_items(&mut c, &cat, u.id).await?;
     let stat = |k: &str| state.get(k).copied().unwrap_or(0);
     ok(ProfileResponse {
         user: ProfileUser { brief: UserBrief::new(&cat, &u, &stats), created: u.created_at },
@@ -814,6 +817,7 @@ pub async fn profile(State(st): State<AppState>, Me(me): Me, Path(name): Path<St
         collection,
         collected,
         showcase,
+        drawings,
     })
 }
 
@@ -864,6 +868,8 @@ struct AdminMessage {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct MeResponse {
+    /// dzisiejszy quest (None = questy wyłączone)
+    quest: Option<super::quests::QuestView>,
     /// karta, którą przy wejściu do ekwipunku zabierze UFO (easter egg, bez powiadomień)
     ufo: Option<String>,
     user: UserView,
@@ -929,6 +935,7 @@ pub async fn me(State(st): State<AppState>, Me(me): Me, jar: SignedCookieJar) ->
     .await?;
     let seen = state["patch_seen"];
     let body = MeResponse {
+        quest: super::quests::quest_view(&mut c, &cx.cat, uid).await?,
         ufo: super::variants::ufo_visit(&mut c, &cx.cat, uid, state["ufo_visit"]).await?,
         user: cx.me.view(&cx.cat),
         daily_claimable: super::shop::daily_info(&mut c, uid).await?.claimable,

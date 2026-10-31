@@ -163,6 +163,25 @@ CREATE TABLE IF NOT EXISTS horse_bets (
 );
 CREATE INDEX IF NOT EXISTS horse_bets_race ON horse_bets (race);
 CREATE INDEX IF NOT EXISTS horse_bets_user ON horse_bets (user_id);
+-- Czysta kartka: rysunek gracza na egzemplarzu karty (idzie za kartą przy każdym przekazaniu, znika razem z nią)
+CREATE TABLE IF NOT EXISTS card_drawings (
+    item_id BIGINT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE,
+    color TEXT NOT NULL DEFAULT '#ffffff',
+    bg BYTEA,
+    photo BYTEA,
+    flat BYTEA,
+    updated_at DOUBLE PRECISION NOT NULL
+);
+-- codzienny quest: person_id albo variant = cel; winner_id = kto pierwszy go wypełnił
+CREATE TABLE IF NOT EXISTS daily_quests (
+    day TEXT PRIMARY KEY,
+    person_id TEXT,
+    variant TEXT,
+    winner_id BIGINT,
+    won_at DOUBLE PRECISION,
+    won_person TEXT,
+    money BIGINT NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS horse_settings (
     horse INTEGER PRIMARY KEY, name TEXT NOT NULL DEFAULT '', pays DOUBLE PRECISION NOT NULL DEFAULT 0
 );

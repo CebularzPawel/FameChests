@@ -45,6 +45,7 @@ async function load() {
   loadLinks();
   loadMessages();
   loadHorses();
+  loadQuests();
   renderEgg();
   if (!A.crate || !A.cat.crates.some(c => c.id === A.crate)) A.crate = A.cat.crates.find(c => !c.hidden)?.id || null;
   render();
@@ -512,6 +513,25 @@ async function loadHorses() {
   }).join("");
 }
 
+// ================================================================ CODZIENNE QUESTY
+
+async function loadQuests() {
+  let d;
+  try { d = await api("/api/admin/quests"); } catch (e) { return toast(e.message, true); }
+  $("#questOn").checked = d.enabled;
+  $("#questReroll").hidden = !d.enabled;
+  $("#questInfo").innerHTML = `Można wylosować ${d.cards} kart i ${d.variants} wariantów.` + (d.history.length ? `<ul>${d.history.map(q =>
+    `<li><b>${esc(q.day)}</b>: ${esc(q.target)} · ${q.winner ? `${esc(q.winner)} (+${q.money} gr)` : "nikt"}</li>`).join("")}</ul>` : "");
+}
+
+async function saveQuests(body, msg) {
+  try {
+    await api("/api/admin/quests", { method: "POST", json: body });
+    toast(msg);
+    loadQuests(); loadLog();
+  } catch (err) { toast(err.message, true); loadQuests(); }
+}
+
 function resetMessageForm() {
   const f = $("#msgForm"), start = Date.now();
   f.reset();
@@ -751,6 +771,8 @@ function bind() {
       loadLinks(); loadLog();
     } catch (err) { toast(err.message, true); }
   });
+  $("#questOn").addEventListener("change", e => saveQuests({ enabled: e.target.checked }, e.target.checked ? "🎯 Questy włączone" : "Questy wyłączone"));
+  $("#questReroll").addEventListener("click", () => saveQuests({ reroll: true }, "🎲 Nowy cel na dziś"));
   $("#horseRows").addEventListener("click", e => {
     const b = e.target.closest("[data-hreset]"); if (!b) return;
     const row = b.closest("[data-horse]"), def = A.horses.defaults[+row.dataset.horse];

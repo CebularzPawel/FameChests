@@ -168,6 +168,7 @@ function vrFormHTML(v) {
       <small class="muted">Wartość karty = wartość rzadkości × ten mnożnik (połączenia z flagą itp. — iloczyn). Zmienia wartość także kart, które gracze już mają.</small></label>
     ${V.exclusive ? "" : `<label class="vr-switch"><input type="checkbox" name="noHouse"${saved.noHouse ? " checked" : ""}>
       <span><b>🔒 Ekskluzywny</b><small class="muted">Wypada tylko ze skrzynek — nie da się go dostać z kuźni (kontrakt), ulepszacza ani wygranych w kasynie.</small></span></label>`}
+    ${V.always || V.layer || (V.cards && !saved.cards?.length) ? "" : vrCardLockHTML(saved)}
     <div class="vr-facts">
       <span>Teraz: <b>${V.always ? `waga ${V.weight}` : vrPct(V.chance)}</b>${V.chance ? ` · 1 na ${Math.round(1 / V.chance).toLocaleString("pl-PL")} kart` : ""}</span>
       <span>Wartość: <b>×${String(V.mult).replace(".", ",")}</b>${def.mult != null && def.mult !== V.mult ? ` <small class="muted">(w kodzie ×${String(def.mult).replace(".", ",")})</small>` : ""}</span>
@@ -183,8 +184,28 @@ function vrFormHTML(v) {
   </form>`;
 }
 
+// wariant ekskluzywny dla karty: wybrane karty dostają go ze wszystkich swoich skrzynek, kuźni i kasyna,
+// a z „ekskluzywny dla skrzynki” - tylko ze skrzynek, do których jest przypięty (📌 w „Gdzie wypada teraz”)
+function vrCardLockHTML(saved) {
+  VR.cards = [...(saved.cards || [])];
+  return `<div class="vr-lock">
+    <label class="vr-switch"><input type="checkbox" name="cardLock"${VR.cards.length ? " checked" : ""}>
+      <span><b>🎯 Ekskluzywny dla karty</b><small class="muted">Tylko wybrane karty mogą mieć ten wariant — wypada im ze wszystkich ich skrzynek, kuźni i kasyna.</small></span></label>
+    <div class="vr-lock-box"${VR.cards.length ? "" : " hidden"}>
+      <input type="text" id="vrCardAdd" list="vrCardList" placeholder="Wpisz nazwę karty i wybierz z listy…">
+      <datalist id="vrCardList">${Object.values(S.cfg.people).filter(p => !p.masked && !isSpecialCard(p)).map(p => `<option value="${esc(p.name)}">`).join("")}</datalist>
+      <div class="vr-chips" id="vrCardChips">${vrCardChips()}</div>
+      <label class="vr-switch"><input type="checkbox" name="crateOnly"${saved.crateOnly ? " checked" : ""}>
+        <span><b>📦 Ekskluzywny też dla skrzynki</b><small class="muted">Te karty mają ten wariant tylko ze skrzynek, do których jest przypięty 📌 (po zapisaniu przypniesz go w „Gdzie wypada teraz”).</small></span></label>
+    </div>
+  </div>`;
+}
+function vrCardChips() {
+  return VR.cards.map(id => `<button type="button" class="btn tiny" data-vrcard="${esc(id)}" title="Usuń">✕ ${esc(person(id)?.name || id)}</button>`).join("");
+}
+
 // wariant przypinany do skrzynek (wszystkie poza wariantami konkretnych kart i kart specjalnych - data.CRATE_VARIANTS)
-function vrPinnable(v) { const V = vrV(v); return !V.cards && !V.special && !V.combo; }
+function vrPinnable(v) { const V = vrV(v); return (!V.cards || V.crateOnly) && !V.special && !V.combo; }
 
 // gdzie wariant może wypaść TERAZ: każda skrzynka (bez skrzynki kart specjalnych) z powodem i przełącznikiem "przypięty"
 // - każdy wariant wypada tylko ze skrzynek, do których jest przypięty (catalog.drop_variants)
@@ -267,6 +288,8 @@ function vrEventsHTML(v) {
 // ================================================================ ZAPIS
 
 function vrApply(res) {
+  delete S.cfg.variants[VR.variant].cards;
+  delete S.cfg.variants[VR.variant].crateOnly;
   Object.assign(S.cfg.variants[VR.variant], res.variant);
   S.cfg.variantCfg[VR.variant] = res.cfg;
   // mnożnik wartości: połączenia z warstwami (flag+gold) i kolejność wariantów liczą się od nowa
@@ -279,6 +302,11 @@ async function vrSave(form) {
   const f = new FormData(form), V = vrV(VR.variant);
   const num = k => f.get(k) === null || f.get(k) === "" ? null : +String(f.get(k)).replace(",", ".");
   const body = { enabled: form.enabled.checked, desc: f.get("desc").trim() || null, mult: num("mult"), noHouse: !!form.noHouse?.checked };
+  if (form.cardLock) {
+    body.cards = form.cardLock.checked ? VR.cards : [];
+    body.crateOnly = form.cardLock.checked && !!form.crateOnly?.checked;
+    if (form.cardLock.checked && !VR.cards.length) return toast("Wybierz co najmniej jedną kartę", true);
+  }
   if (V.always) body.weight = num("weight");
   else body.chance = num("chance") === null ? null : num("chance") / 100;
   try {
@@ -367,7 +395,7 @@ function vrBind() {
     if (other) { Sound.click(); VR.pid = other.dataset.pid; return renderVariants(); }
     if (t.closest('[data-vr="defaults"]')) {
       if (!confirm(`Przywrócić ustawienia z kodu dla „${vrV(VR.variant).name}”? (wydarzenia zostają)`)) return;
-      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null, noHouse: false })); toast("↩️ Przywrócono"); }
+      try { vrApply(await api(`/api/admin/variants/${VR.variant}`, { enabled: null, chance: null, weight: null, desc: null, mult: null, noHouse: false, cards: [], crateOnly: false })); toast("↩️ Przywrócono"); }
       catch (err) { toast(err.message, true); }
       return;
     }
@@ -404,6 +432,23 @@ function vrBind() {
     if (t.name === "crates" && t.checked) { const r = $('#vrEvForm input[name="scope"][value="some"]'); if (r) r.checked = true; }
     if (t.matches("[data-pin]")) { Sound.click(); vrPin([t.dataset.pin], t.checked); }
   };
+  if (!VR.boundCards) {
+    VR.boundCards = true;
+  body.addEventListener("change", e => {
+    if (e.target.name === "cardLock") $(".vr-lock-box", body).hidden = !e.target.checked;
+    if (e.target.id !== "vrCardAdd") return;
+    const name = e.target.value.trim().toLowerCase(), p = Object.values(S.cfg.people).find(x => !x.masked && x.name.toLowerCase() === name);
+    if (p && !VR.cards.includes(p.id)) VR.cards.push(p.id);
+    e.target.value = "";
+    $("#vrCardChips").innerHTML = vrCardChips();
+  });
+  body.addEventListener("click", e => {
+    const b = e.target.closest("[data-vrcard]");
+    if (!b) return;
+    VR.cards = VR.cards.filter(id => id !== b.dataset.vrcard);
+    $("#vrCardChips").innerHTML = vrCardChips();
+  });
+  }
   body.onsubmit = e => {
     e.preventDefault();
     if (e.target.id === "vrForm") vrSave(e.target);

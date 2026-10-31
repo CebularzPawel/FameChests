@@ -51,6 +51,8 @@ pub struct VariantDef {
     pub photo_fallback: Option<String>,
     pub no_combo: bool,
     pub cards: Vec<String>,
+    /// wariant kart "cards" tylko ze skrzynek, do których jest przypięty
+    pub crate_only: bool,
     pub special: bool,
     pub combo: bool,
     pub layers: Vec<String>,
@@ -493,6 +495,10 @@ impl GameData {
                 if let Some(m) = s.mult {
                     x.insert("mult".into(), json!(m));
                 }
+                if !s.cards.is_empty() {
+                    x.insert("cards".into(), json!(s.cards));
+                    x.insert("crateOnly".into(), json!(s.crate_only));
+                }
             }
         }
         match VariantTables::build(&raw, &custom_raw) {
@@ -594,7 +600,7 @@ impl VariantTables {
         // i konkretnych kart (jak CRATE_VARIANTS w data.py)
         let crate_variants = variants
             .iter()
-            .filter(|(k, x)| *k != "normal" && x.cards.is_empty() && !x.combo && !x.special)
+            .filter(|(k, x)| *k != "normal" && (x.cards.is_empty() || x.crate_only) && !x.combo && !x.special)
             .map(|(k, _)| k.clone())
             .collect();
         let special_variants = variants.iter().filter(|(_, x)| x.special).map(|(k, _)| k.clone()).collect();

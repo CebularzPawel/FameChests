@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="{{ asset('css/achievements.css') }}">
   <link rel="stylesheet" href="{{ asset('css/stickers.css') }}">
   <link rel="stylesheet" href="{{ asset('css/designer.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/drawing.css') }}">
   <link rel="stylesheet" href="{{ asset('css/variants.css') }}">
   <link rel="stylesheet" href="{{ asset('css/variant-mockups.css') }}">
 </head>
@@ -166,6 +167,7 @@
         <h2>🛒 Sklep ze skrzynkami</h2>
         <span class="muted">Wybierz skrzynkę — kup ją od razu do otwarcia albo na później do ekwipunku.</span>
       </div>
+      <div id="questBox" hidden></div>
       <!-- karuzela skrzynek: środkowa = wybrana, sama się obraca (app.js: renderCrates / shopRotate) -->
       <div class="shop-carousel" id="shopCarousel">
         <button class="car-arrow prev" data-car="-1" title="Poprzednia skrzynka">‹</button>
@@ -366,6 +368,8 @@
   <script src="{{ asset('js/hof.js') }}"></script>
   <script src="{{ asset('js/stickers.js') }}"></script>
   <script src="{{ asset('js/designer.js') }}"></script>
+  <script src="{{ asset('js/drawing.js') }}"></script>
+  <script src="{{ asset('js/quests.js') }}"></script>
   <script src="{{ asset('js/variant-mockups.js') }}"></script>
   <script src="{{ asset('js/variants.js') }}"></script>
   <script src="{{ asset('js/app.js') }}"></script>

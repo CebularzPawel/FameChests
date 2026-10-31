@@ -290,6 +290,13 @@ pub async fn collected_list(c: &mut Conn, cat: &Catalog, uid: i64) -> sqlx::Resu
 /// Nowa karta gracza (source: drop = ze skrzynki, contract, upgrade, joker = karta specjalna z kasyna, link = z linku
 /// od admina - do Hall of Fame; casino - zwykła wygrana w kasynie, bez Hall of Fame)
 pub async fn insert_item(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, source: &str) -> sqlx::Result<NewItem> {
+    let item = insert_plain(c, cx, pid, variant, source).await?;
+    crate::routes::quests::after_item(c, cx, pid, variant, source).await?;
+    Ok(item)
+}
+
+/// insert_item bez sprawdzania codziennego questa (nagroda za questa nie może wypełnić kolejnego)
+pub async fn insert_plain(c: &mut Conn, cx: &Ctx, pid: &str, variant: &str, source: &str) -> sqlx::Result<NewItem> {
     let now = now();
     let new_for_me = note_collected(c, cx.uid(), pid, variant, source).await?;
     crate::achievements::count_card(c, cx.uid(), &cx.cat.people[pid], variant).await?;

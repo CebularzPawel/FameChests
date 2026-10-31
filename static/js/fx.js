@@ -298,6 +298,7 @@ function openViewer(pid, variant = "normal", uid = null) {
         ${myItemFor(pid, variant) ? `<div class="vi-actions vi-social">
           <button class="btn primary" data-act="share">📣 Pokaż znajomym</button>
           <button class="btn" data-act="pin">${showcaseHas(pid, variant) ? "📌 Zdejmij z gabloty" : "📌 Do gabloty"}</button>
+          ${isBlank(variant) && S.items.some(i => i.id === +uid) ? '<button class="btn primary" data-act="draw">🖌️ Rysuj na karcie</button>' : ""}
         </div>` : ""}
         <div class="muted small">Porusz kursorem nad kartą, aby ją przechylić. Kliknij kartę, aby ją obrócić.</div>
       </div>`;
@@ -312,6 +313,7 @@ function openViewer(pid, variant = "normal", uid = null) {
     if (v) return openViewer(pid, v, v === variant ? uid : null);
     if (act === "share") return openShowDialog(pid, variant);
     if (act === "pin") return toggleShowcase(pid, variant).then(() => openViewer(pid, variant, uid));
+    if (act === "draw") return openDrawing(+uid);
     if (act === "flip" || e.target.closest(".viewer-flipper")) {
       el.querySelector(".viewer-flipper").classList.toggle("flipped");
       Sound.page();

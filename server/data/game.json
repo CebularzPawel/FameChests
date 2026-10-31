@@ -517,6 +517,63 @@
    "off": true,
    "desc": "Tekturowa teczka ze ściśle tajnymi aktami: zakładka z sygnaturą, zdjęcie przypięte spinaczem, czerwona pieczątka ŚCIŚLE TAJNE i napisy z maszyny do pisania."
   },
+  "muertos": {
+   "name": "Día de Muertos",
+   "chance": 0.006,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Fiesta: czaszki w kolorach na fioletowych rozetach, chorągiewki papel picado, aksamitki, płatki, konfetti i motyle monarchy, zdjęcie w złotym filtrze."
+  },
+  "receipt": {
+   "name": "Paragon",
+   "chance": 0.008,
+   "mult": 8.0,
+   "off": true,
+   "desc": "Karta wydrukowana na papierze termicznym: ząbkowane brzegi, nagłówek sklepu, czarno-białe zdjęcie z drukarki i kod kreskowy."
+  },
+  "tarot": {
+   "name": "Tarot",
+   "chance": 0.005,
+   "mult": 11.0,
+   "off": true,
+   "desc": "Arkan XVII Gwiazda: fioletowy kosmos z mgławicą, pulsująca ośmioramienna gwiazda za zdjęciem i ornamentowane narożniki."
+  },
+  "teletext": {
+   "name": "Telegazeta",
+   "chance": 0.007,
+   "mult": 9.0,
+   "off": true,
+   "desc": "Plansza kontrolna z telewizora lat 90.: kolorowe pasy suną w bok, zegar tyka, pasek przeprasza za usterki, a zdjęcie składa się z dużych pikseli."
+  },
+  "retroos": {
+   "name": "Okienka 97",
+   "chance": 0.007,
+   "mult": 9.0,
+   "off": true,
+   "desc": "Stary komputer na turkusowym pulpicie: karta nie odpowiada, a okienka z błędem wyskakują jedno po drugim."
+  },
+  "claude": {
+   "name": "Claude",
+   "chance": 0.004,
+   "mult": 12.0,
+   "off": true,
+   "stickers": true,
+   "desc": "Czat w ciemnym trybie: prompty z prawdziwych rozmów, kropki przed odpowiedzią i nowe wiadomości wypychające starsze do góry. Zdjęcie bez filtra."
+  },
+  "scratch": {
+   "name": "Zdrapka",
+   "chance": 0.006,
+   "mult": 10.0,
+   "off": true,
+   "desc": "Los na loterię: fiolet ze złotem, moneta zdziera srebrną folię ze zdjęcia, a dookoła wybuchy z kwotami i pula nagród."
+  },
+  "blank": {
+   "name": "Czysta kartka",
+   "chance": 0.01,
+   "mult": 7.0,
+   "off": true,
+   "desc": "Pusta karta do własnoręcznego rysowania: właściciel rysuje na tle i na zdjęciu i wybiera kolor tła, a rysunek zostaje na karcie także u kolejnych właścicieli."
+  },
   "copper": {
    "name": "Miedziana",
    "chance": 0.012,
@@ -3956,6 +4013,26 @@
   }
  ],
  "achievements": [
+  {
+   "id": "lowca_nagrod",
+   "name": "Łowca nagród",
+   "desc": "Wypełnij codzienny quest przed wszystkimi innymi graczami.",
+   "icon": "🎯",
+   "hidden": false,
+   "enabled": true,
+   "criteria": [
+    {
+     "type": "quest",
+     "count": 1
+    }
+   ],
+   "rewards": [
+    {
+     "type": "money",
+     "amount": 50000
+    }
+   ]
+  },
   {
    "id": "dwoch_papiezy",
    "name": "Dwóch papieży",

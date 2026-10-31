@@ -26,6 +26,7 @@ function aeCritLine(c) {
   if (c.type === "casino_streak") bits.push(`${c.count} z rzędu`, m.games[c.game] || "dowolna gra");
   if (c.type === "casino_win") bits.push(n, m.games[c.game] || "dowolna gra", c.person ? `kartą ${person(c.person)}` : "", c.variant ? `wariant ${c.variant}` : "");
   if (c.type === "drop_together") bits.push((c.persons || []).map(person).join(" + "));
+  if (c.type === "quest") bits.push(n);
   if (c.type === "arena") bits.push(c.mode === "finisher" ? `ostatni cios: ${person(c.person)}` : `${n}wygrane walki`);
   return bits.filter(Boolean).join(" ");
 }
@@ -61,6 +62,7 @@ function aeCritFields(c, i) {
       `<label class="chk"><input type="checkbox" ${at("unique")} ${c.unique ? "checked" : ""}> liczą się różne karty z klasera (bez duplikatów)</label>
        <p class="muted small wide">Karta i wariant razem = konkretna karta w konkretnym wariancie. Rzadkość i skrzynka razem = karty tej rzadkości z tej skrzynki.</p>`;
     case "open": return `<label>Skrzynka<select ${at("crate")}>${aeOpt(AE.meta.crates, c.crate, "— dowolna —")}</select></label>` + count;
+    case "quest": return count;
     case "casino_plays": return games + `<label>Dzień tygodnia<select ${at("weekday")} data-num="1">${aeOpt(AE.meta.weekdays.map((name, id) => ({ id: String(id), name })), Number.isInteger(c.weekday) ? String(c.weekday) : "", "— dowolny —")}</select></label>` + count;
     case "casino_streak": return games + `<label>Ile wygranych z rzędu<input type="number" min="1" ${at("count")} value="${c.count || 1}"></label>
       <p class="muted small wide">Przegrana zeruje serię, remis (blackjack) i zwrot (wyścig bez zwycięzcy) jej nie przerywają.</p>`;

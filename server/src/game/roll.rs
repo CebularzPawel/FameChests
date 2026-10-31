@@ -107,20 +107,20 @@ pub fn house_cards(cat: &Catalog, value: i64) -> (Vec<(Arc<Person>, String)>, i6
         .filter(|v| *v == "normal" || (cat.variant_enabled(v) && cat.variant_house_ok(v)))
         .cloned()
         .collect();
-    let mut pool: Vec<(i64, &Arc<Person>, &String)> = cat
+    let mut pool: Vec<(i64, &Arc<Person>, String)> = cat
         .people
         .values()
         .filter(|p| p.forge && !p.is_secret())
-        .flat_map(|p| casino.iter().map(move |v| (p.value(v), p, v)))
+        .flat_map(|p| casino.iter().cloned().chain(cat.house_extra(p)).map(move |v| (p.value(&v), p, v)))
         .collect();
     pool.sort_by_key(|x| -x.0); // stabilne, jak sorted()
     let (mut out, mut left) = (vec![], value);
     let mut rng = rand::thread_rng();
     while out.len() < g.roulette.max_payout_cards {
-        let fit: Vec<&(i64, &Arc<Person>, &String)> = pool.iter().filter(|x| x.0 <= left).collect();
+        let fit: Vec<&(i64, &Arc<Person>, String)> = pool.iter().filter(|x| x.0 <= left).collect();
         let Some(top) = fit.first() else { break };
         let limit = top.0 as f64 * g.casino_top;
-        let best: Vec<&&(i64, &Arc<Person>, &String)> = fit.iter().filter(|x| x.0 as f64 >= limit).collect();
+        let best: Vec<&&(i64, &Arc<Person>, String)> = fit.iter().filter(|x| x.0 as f64 >= limit).collect();
         let Some(pick) = best.choose(&mut rng) else { break };
         out.push(((*pick.1).clone(), pick.2.clone()));
         left -= pick.0;

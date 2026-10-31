@@ -116,7 +116,7 @@ function mkListingHTML(l, { showSeller = true } = {}) {
   }
   const diff = l.value ? Math.round(((auction ? l.topBid || l.price : l.price) / l.value - 1) * 100) : 0;
   return `<div class="mk-item${auction ? " auction" : ""}${l.mine ? " mine" : ""}" data-lid="${l.id}">
-    <div class="mk-card">${mkCard(l, `market=${l.id}`, () => cardHTML(l.person, l.variant))}</div>
+    <div class="mk-card">${mkCard(l, `market=${l.id}`, () => cardHTML(l.person, l.variant, l.item))}</div>
     <div class="mk-info">
       <div class="mk-kind">${auction ? `🔨 Licytacja · <span class="mk-time" data-end="${l.endsAt}">${mkTimeLeft(l.endsAt)}</span>` : "🏷️ Kup teraz"}</div>
       <div class="mk-price">${top}</div>

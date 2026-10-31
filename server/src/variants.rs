@@ -117,6 +117,10 @@ pub struct VariantSettings {
     pub no_house: bool,
     pub desc: Option<String>,
     pub events: Vec<VariantEvent>,
+    /// wariant ekskluzywny dla tych kart: wypada tylko na nich, z każdej ich skrzynki, kuźni i kasyna...
+    pub cards: Vec<String>,
+    /// ...chyba że jest też ekskluzywny dla skrzynki: wtedy tylko te karty i tylko ze skrzynek, do których jest przypięty
+    pub crate_only: bool,
 }
 
 /// Wydarzenia wariantu: [{"id", "start", "end" (sekundy unix), "crates": [] = wszystkie, "boost", "note"}]
@@ -172,6 +176,13 @@ pub fn clean_variant_settings(v: &str, raw: &Value) -> VariantSettings {
         events: if x.special { vec![] } else { clean_variant_events(raw.get("events")) },
         ..Default::default()
     };
+    if !x.special && !x.layer && !x.always {
+        let list = raw.get("cards").and_then(Value::as_array);
+        let mut cards: Vec<String> = list.into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+        cards.dedup();
+        out.crate_only = !cards.is_empty() && raw.get("crateOnly").is_some_and(truthy);
+        out.cards = cards;
+    }
     let given = |k: &str| raw.get(k).is_some_and(|v| !v.is_null());
     if given("chance") && !x.always && !x.special {
         out.chance = raw.get("chance").and_then(py_float).map(|c| c.clamp(0.0, g.variant_chance_max));

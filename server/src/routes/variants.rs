@@ -303,7 +303,7 @@ pub async fn admin_variant_save(
     }
     let mut tx = st.db.begin().await?;
     let mut settings = settings_row(&mut tx, &variant).await?;
-    for k in ["enabled", "chance", "weight", "desc", "mult", "noHouse"] {
+    for k in ["enabled", "chance", "weight", "desc", "mult", "noHouse", "cards", "crateOnly"] {
         if let Some(v) = body.get(k) {
             settings.insert(k.into(), v.clone());
         }
