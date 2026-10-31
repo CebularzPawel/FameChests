@@ -12,6 +12,11 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS build
 COPY --from=planner /src/server/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
+# rust-embed / include_str! wkompilowują te pliki w exe (src/assets.rs: ../static/, ../../catalog_export.json)
+COPY static /src/static
+COPY templates /src/templates
+COPY custom_images /src/custom_images
+COPY catalog_export.json /src/
 COPY server/ .
 # zapytania sqlx::query! sprawdzane z .sqlx/ (cargo sqlx prepare) - bez bazy przy budowaniu
 ENV SQLX_OFFLINE=true
