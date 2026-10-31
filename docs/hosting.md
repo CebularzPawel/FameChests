@@ -32,6 +32,28 @@ Na Azure serwer sam włącza `COOKIE_SECURE` i `TRUST_PROXY` (HTTPS i adres grac
 port bierze z `HTTP_PLATFORM_PORT`. Pierwszy start na bazie z wersji Python uzupełnia brakujące tabele i kolumny -
 dane graczy zostają (szczegóły: [przejscie-z-pythona.md](przejscie-z-pythona.md)).
 
+## Azure App Service (Linux) - obraz Dockera
+
+Wdrażanie robi `.github/workflows/azure.yml` po każdym pushu do `main`: buduje `server/Dockerfile`, wysyła obraz do
+`ghcr.io/<właściciel repo>/famechests` i podmienia go w aplikacji. Jednorazowo:
+
+1. **Logowanie GitHub -> Azure**: Deployment Center -> GitHub, *Authentication type: User-assigned identity* - portal
+   dopisuje do repo sekrety `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` i własny workflow
+   (do usunięcia). W repo zmienna `AZURE_WEBAPP_NAME`.
+2. **Dostęp do obrazu**: pakiet w ghcr.io jest prywatny - aplikacja potrzebuje tokena GitHub (classic, `read:packages`):
+   ```sh
+   az webapp config container set -g <grupa> -n <aplikacja> \
+     --container-image-name ghcr.io/<właściciel>/famechests:latest \
+     --container-registry-url https://ghcr.io \
+     --container-registry-user <login GitHub> --container-registry-password <token>
+   ```
+   (to też przełącza aplikację z Pythona na kontener).
+3. **Ustawienia** (*Environment variables*): `DATABASE_URL`, `SECRET_KEY`, `DB_SCHEMA` jak wyżej oraz
+   - `WEBSITES_PORT=8000` - port serwera w obrazie
+   - `WEBSITES_ENABLE_APP_SERVICE_STORAGE=true` i `DATA_DIR=/home/data` - zdjęcia i klucz przetrwają restart i wdrożenie
+   - `WEBSITES_CONTAINER_START_TIME_LIMIT=600` - pierwszy start na pustej bazie trwa dłużej niż domyślne 230 s
+4. *Configuration -> General settings*: **Always On** włączone. Jedna instancja (bez skalowania w poziomie).
+
 ## Obraz
 
 ```sh
